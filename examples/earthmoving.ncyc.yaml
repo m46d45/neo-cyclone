@@ -1,0 +1,108 @@
+# Neo-CYCLONE DSL v0.1 — classic Halpin earthmoving fleet
+# Copy-paste into the Syntax panel, review, then Run.
+
+dsl: "neo-cyclone/v0.1"
+
+model:
+  id: earthmoving
+  name: Earthmoving Fleet
+  description: >
+    Loader fills trucks; trucks haul, dump, and return.
+    Link order at Load: trucks then loader in; haul then loader out.
+  time_unit: min
+  production_unit: m3
+
+  nodes:
+    - id: trucks
+      type: QUEUE
+      label: Trucks Idle
+      initial: 5
+      x: 80
+      y: 200
+
+    - id: loader
+      type: QUEUE
+      label: Loader Idle
+      initial: 1
+      x: 80
+      y: 80
+
+    - id: load
+      type: COMBI
+      label: Load
+      duration:
+        kind: triangular
+        min: 1.5
+        mode: 2.0
+        max: 3.0
+      x: 260
+      y: 140
+
+    - id: haul
+      type: NORMAL
+      label: Haul
+      duration:
+        kind: triangular
+        min: 6
+        mode: 8
+        max: 12
+      x: 440
+      y: 200
+
+    - id: dump
+      type: NORMAL
+      label: Dump
+      duration:
+        kind: constant
+        value: 1.2
+      x: 620
+      y: 200
+
+    - id: return
+      type: NORMAL
+      label: Return
+      duration:
+        kind: triangular
+        min: 5
+        mode: 7
+        max: 10
+      x: 440
+      y: 320
+
+    - id: loads_done
+      type: COUNTER
+      label: Loads Done
+      production: 12
+      x: 620
+      y: 80
+
+  links:
+    - id: l1
+      from: trucks
+      to: load
+    - id: l2
+      from: loader
+      to: load
+    - id: l3
+      from: load
+      to: haul
+    - id: l4
+      from: load
+      to: loader
+    - id: l5
+      from: haul
+      to: dump
+    - id: l6
+      from: dump
+      to: loads_done
+    - id: l7
+      from: loads_done
+      to: return
+    - id: l8
+      from: return
+      to: trucks
+
+run:
+  seed: 42
+  max_time: 480
+  max_cycles: 500

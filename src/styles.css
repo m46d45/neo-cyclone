@@ -1,0 +1,142 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/*
+  Neo-CYCLONE — light Halpin / Purdue heritage
+  White paper field + black ink + Old Gold accent.
+*/
+@theme {
+  --font-sans: "Georgia", "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman",
+    serif;
+  --font-display: "Georgia", "Iowan Old Style", Palatino, serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-ui: "Segoe UI", ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* White paper + warm ivory surfaces */
+  --color-background: #ffffff;
+  --color-foreground: #0b0b0a;
+  --color-card: #faf8f4;
+  --color-card-foreground: #0b0b0a;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #0b0b0a;
+
+  /* Purdue Old Gold */
+  --color-primary: #b89b5e;
+  --color-primary-foreground: #0b0b0a;
+
+  --color-secondary: #f0ebe1;
+  --color-secondary-foreground: #0b0b0a;
+  --color-muted: #f3efe6;
+  --color-muted-foreground: #5c564a;
+  --color-accent: #f0ebe1;
+  --color-accent-foreground: #0b0b0a;
+  --color-destructive: #b54a3c;
+  --color-destructive-foreground: #ffffff;
+  --color-border: #e0d8c8;
+  --color-input: #e0d8c8;
+  --color-ring: #b89b5e;
+
+  /* Textbook ACD sheet */
+  --color-diagram: #f7f3ea;
+  --color-diagram-ink: #0b0b0a;
+  --color-diagram-grid: #e4dcc8;
+  --color-diagram-muted: #6b6354;
+
+  --color-node-queue: #0b0b0a;
+  --color-node-combi: #b89b5e;
+  --color-node-normal: #3d3830;
+  --color-node-counter: #8b7355;
+  --color-node-consolidate: #5c5346;
+
+  --color-chart-1: #b89b5e;
+  --color-chart-2: #0b0b0a;
+  --color-chart-3: #8b7355;
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  --motion-quick: 150ms;
+  --motion-fast: 250ms;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-ui);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+:root {
+  --background: var(--color-background);
+  --foreground: var(--color-foreground);
+  --card: var(--color-card);
+  --muted-foreground: var(--color-muted-foreground);
+  --border: var(--color-border);
+  --border-strong: #1a1610;
+  --primary: var(--color-primary);
+  --chart-1: var(--color-chart-1);
+  --chart-2: var(--color-chart-2);
+  --chart-3: var(--color-chart-3);
+  --node-queue: var(--color-node-queue);
+  --node-combi: var(--color-node-combi);
+  --node-normal: var(--color-node-normal);
+  --node-counter: var(--color-node-counter);
+  --node-consolidate: var(--color-node-consolidate);
+  --diagram: var(--color-diagram);
+  --diagram-ink: var(--color-diagram-ink);
+  --diagram-grid: var(--color-diagram-grid);
+  --diagram-muted: var(--color-diagram-muted);
+}
+
+.halpin-shell {
+  background:
+    radial-gradient(ellipse 90% 45% at 50% -15%, color-mix(in oklab, #cfb991 14%, transparent), transparent),
+    #ffffff;
+}
+
+.gold-rule {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, #b89b5e 65%, transparent),
+    transparent
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

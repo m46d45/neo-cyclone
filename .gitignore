@@ -1,0 +1,30 @@
+# dependencies
+node_modules/
+
+# build / deploy
+.vercel/
+.tanstack/
+dist/
+.output/
+*.log
+npm-debug.log*
+
+# env & secrets
+.env
+.env.*
+!.env.example
+
+# local / agent / builder (not for Vercel deploy)
+screenshots/
+artifacts/
+attachments/
+.grok/
+AGENTS.md
+.node_modules.lock
+.tmp/
+.DS_Store
+
+# editor
+.idea/
+.vscode/
+*.swp
