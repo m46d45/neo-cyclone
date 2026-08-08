@@ -1,6 +1,6 @@
 # Neo-CYCLONE — User Manual
 
-**Version:** 0.7  
+**Version:** 0.8  
 **Language:** English  
 **Tagline:** AI-agent of Daniel W. Halpin's CYCLONE
 
@@ -12,7 +12,18 @@ This work is first of all a **tribute to Professor Daniel W. Halpin**.
 
 I am a construction management educator and researcher who studied under Professor Halpin and also had the privilege of working for him. Through him I first met **construction operations** as a serious subject: the idea that production on site is a **flow**, and that **idleness** (waiting, waste) is not an accident but something we can see, model, and improve. That way of seeing construction shaped how I think about process design.
 
-Professor Halpin did not stop at a single program. His long effort to make cyclic simulation practical—and the work continued with students and colleagues—grew into a family of tools and teaching systems. At the core stands **CYCLONE**, with later and related lines of development such as **MicroCYCLONE**, **DISCO**, **Symphony.Net**, **PROSIDYC**, **COST**, and **WebCYCLONE**. Those systems were hard-won: built in an era when explaining operations, queues, and simulation to students and industry was already an uphill fight.
+### CYCLONE as model, MicroCYCLONE as early application
+
+In the literature, it is important to keep two layers distinct:
+
+| Layer | What it is |
+|-------|------------|
+| **CYCLONE** | The **modeling methodology** — *CYCLic Operations NEtwork* (also written CYCLic Operation Networks) — introduced by Halpin in the 1970s (commonly cited from the mid‑1970s, including work with Woodhead and the 1977 job-site process paper). It defines the conceptual building blocks (queues, constrained and unconstrained work, counters, cyclic resource logic) for construction operations. |
+| **MicroCYCLONE** | An early **computer application** of that methodology: a microcomputer-based discrete-event / Monte Carlo system (process-interaction style) with user manuals from Purdue (e.g. Halpin, *MicroCYCLONE System / User’s Manual*, ~1990). It made CYCLONE models runnable on personal computers and became a main teaching and research vehicle in academia. |
+
+In short: **CYCLONE is the model; MicroCYCLONE was a principal early software embodiment.** Later systems did not replace the model so much as **extend platforms and interfaces** around the same cyclic-network idea—for example **DISCO** (graphical pre/post processing often used with MicroCYCLONE), **PROSIDYC**, **COST**, **WebCYCLONE**, and related teaching or industry-oriented environments such as **Symphony.Net**, among others developed with students and colleagues. Many other construction simulators (e.g. INSIGHT, UM-CYCLONE, COOPS, STROBOSCOPE) also employ CYCLONE or CYCLONE-like building blocks.
+
+Those systems were hard-won: built when explaining operations, queues, and simulation to students and industry was already an uphill fight.
 
 **Neo-CYCLONE is not a special-purpose industrial simulator** meant to replace research-grade or commercial engines. Its purpose is **education** and **first contact**:
 
@@ -22,11 +33,19 @@ Professor Halpin did not stop at a single program. His long effort to make cycli
 
 **What you should leave with:** after a short session, you can state one resource cycle (home queue → work → return), read idleness and utilization from the results, and see why process design matters before “optimizing” with more technology.
 
-I know how scarce this literacy still is. Even today, the importance of operations and of simulation for high-performing construction is too little known, too little taught, and too rarely implemented. Looking back, one might even feel that the struggle of the 1970s and after—to put CYCLONE and its descendants in front of students and practitioners—was somehow made obsolete by AI. **It was not wasted.**
+I know how scarce this literacy still is. Even today, the importance of operations and of simulation for high-performing construction is too little known, too little taught, and too rarely implemented. Looking back, one might even feel that the struggle of the 1970s and after—to put CYCLONE and MicroCYCLONE in front of students and practitioners—was somehow made obsolete by AI. **It was not wasted.**
 
 That work laid a **foundation**. Without clear concepts of resources, queues, constrained work, cycles, and production, “AI for construction simulation” would have nothing solid to stand on. Halpin’s legacy is what makes it possible, now and in the future, to use AI **with** rigorous operations models rather than instead of them.
 
-Neo-CYCLONE is my way of looking back with gratitude—and looking forward: an **AI-assisted** doorway into the same Halpin tradition, so that the next generation can learn faster, go deeper, and still respect the craft of modeling construction as a production system.
+Neo-CYCLONE is my way of looking back with gratitude—and looking forward: an **AI-assisted** doorway into the same Halpin tradition—**the CYCLONE model**, first widely practiced through **MicroCYCLONE** and then through its descendants—so that the next generation can learn faster, go deeper, and still respect the craft of modeling construction as a production system.
+
+### Selected literature anchors (for readers)
+
+- Halpin, D. W. — CYCLONE methodology for job-site / cyclic construction operations (1970s; e.g. J. Constr. Div. / related publications).  
+- Halpin, D. W., & Woodhead, R. W. — construction operations / planning texts of the same era.  
+- Halpin, D. W. — *MicroCYCLONE* system / user’s manuals, Purdue University (c. 1990).  
+- Halpin, D. W., & Riggs, L. S. — *Planning and Analysis of Construction Operations* (Wiley, 1992) — standard teaching reference for CYCLONE-style models.  
+- Later CYCLONE-format tools and services: DISCO, PROSIDYC, COST, WebCYCLONE, and related systems in the construction simulation literature.
 
 ---
 
@@ -117,9 +136,9 @@ QUEUE = Q-circle · COMBI = cut corner · NORMAL = rectangle · COUNTER = golf f
 
 | This is | This is not |
 |---------|-------------|
-| Educational first contact with construction operations & CYCLONE | A full special-purpose industrial simulator |
-| A tribute to Halpin’s methodology and teaching | A replacement of MicroCYCLONE / DISCO / WebCYCLONE / research-grade engines |
-| AI-assisted modeling on a clear conceptual foundation | AI without operations theory |
+| Educational first contact with the **CYCLONE model** | A full special-purpose industrial simulator |
+| AI-assisted heir to the **MicroCYCLONE** teaching tradition | A drop-in replacement of MicroCYCLONE / DISCO / WebCYCLONE |
+| A tribute to Halpin’s methodology and teaching | AI without operations theory |
 
 ---
 
