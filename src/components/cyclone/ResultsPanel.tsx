@@ -5,6 +5,7 @@ import {
   LabelList,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -15,6 +16,79 @@ import { formatNum, formatPct } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+/** Relative change threshold between consecutive cumulative units/hour (teaching rule). */
+const SS_REL_EPS = 0.05;
+/** Minimum consecutive stable steps required before declaring steady state. */
+const SS_MIN_STREAK = 5;
+
+type CyclePoint = {
+  t: number;
+  cycle: number;
+  production: number;
+  rate: number;
+  unitsPerHour: number;
+};
+
+/**
+ * Steady-state heuristic for cumulative units/hour (MicroCYCLONE teaching use):
+ * find the earliest index i such that from i..end-1 every consecutive relative
+ * change is < 5% and at least SS_MIN_STREAK such steps exist.
+ * SS productivity = mean of units/hour over that region.
+ * Fallback: last 30% of cycles (min 5 points) if the curve never fully stabilizes.
+ */
+function detectSteadyState(series: CyclePoint[]): {
+  startCycle: number;
+  level: number;
+  method: "5%-streak" | "tail-fallback";
+  stable: boolean;
+} | null {
+  if (series.length < 3) return null;
+  const rates = series.map((p) => p.unitsPerHour);
+
+  let startIdx = -1;
+  for (let i = 1; i < rates.length; i++) {
+    let ok = true;
+    let steps = 0;
+    for (let j = i; j < rates.length; j++) {
+      const prev = rates[j - 1]!;
+      const cur = rates[j]!;
+      const base = Math.max(Math.abs(prev), 1e-9);
+      if (Math.abs(cur - prev) / base >= SS_REL_EPS) {
+        ok = false;
+        break;
+      }
+      steps += 1;
+    }
+    if (ok && steps >= SS_MIN_STREAK) {
+      startIdx = i - 1;
+      break;
+    }
+  }
+
+  if (startIdx >= 0) {
+    const region = rates.slice(startIdx);
+    const level = region.reduce((s, x) => s + x, 0) / region.length;
+    return {
+      startCycle: series[startIdx]!.cycle,
+      level: Math.round(level * 1000) / 1000,
+      method: "5%-streak",
+      stable: true,
+    };
+  }
+
+  // Tail fallback: last ~30% of points
+  const n = Math.max(5, Math.ceil(series.length * 0.3));
+  const from = Math.max(0, series.length - n);
+  const region = rates.slice(from);
+  const level = region.reduce((s, x) => s + x, 0) / region.length;
+  return {
+    startCycle: series[from]!.cycle,
+    level: Math.round(level * 1000) / 1000,
+    method: "tail-fallback",
+    stable: false,
+  };
+}
 
 export function ResultsPanel() {
   const result = useCycloneStore((s) => s.result);
@@ -55,8 +129,9 @@ export function ResultsPanel() {
     util: Math.round(a.utilization * 1000) / 10,
     starts: a.starts,
   }));
-  const series = result.productivitySeries.filter((p) => p.cycle > 0);
+  const series = result.productivitySeries.filter((p) => p.cycle > 0) as CyclePoint[];
   const cycleTable = series;
+  const ss = detectSteadyState(series);
 
   return (
     <Card id="results" className="border-primary/15">
@@ -241,14 +316,30 @@ export function ResultsPanel() {
 
           <TabsContent value="cycle" className="mt-3 space-y-3">
             <p className="text-[11px] text-muted-foreground">
-              <strong className="text-foreground">Units per hour</strong> by cycle — use this to see
-              startup vs <strong className="text-foreground">steady state</strong> (low variation).
-              Read the productivity level once the curve stabilizes.
+              <strong className="text-foreground">Units per hour</strong> by cycle. Steady state is
+              declared when consecutive changes stay under{" "}
+              <strong className="text-foreground">5%</strong> for at least {SS_MIN_STREAK} steps
+              (teaching heuristic). The red dashed line is the steady-state productivity level.
             </p>
+            {ss && (
+              <div className="rounded-[var(--radius-sm)] border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs">
+                <span className="font-medium text-foreground">Steady-state productivity: </span>
+                <span className="font-display text-base font-semibold tabular-nums text-destructive">
+                  {formatNum(ss.level)}
+                </span>{" "}
+                <span className="text-muted-foreground">{model.productionUnit}/h</span>
+                <span className="text-muted-foreground">
+                  {" · from cycle "}{ss.startCycle}
+                  {ss.stable
+                    ? " (5% rule)"
+                    : " (approx. — curve did not fully stabilize; last ~30% of cycles)"}
+                </span>
+              </div>
+            )}
             {series.length > 1 && (
               <div className="h-52 w-full min-w-0">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={series} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
+                  <LineChart data={series} margin={{ top: 12, right: 48, left: 0, bottom: 4 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis
                       dataKey="cycle"
@@ -273,6 +364,35 @@ export function ResultsPanel() {
                       formatter={(v) => [`${v}`, "Units / hour"]}
                       labelFormatter={(c) => `Cycle ${c}`}
                     />
+                    {ss && (
+                      <ReferenceLine
+                        y={ss.level}
+                        stroke="#c41e3a"
+                        strokeDasharray="6 4"
+                        strokeWidth={1.75}
+                        label={{
+                          value: `${formatNum(ss.level)} /h`,
+                          position: "right",
+                          fill: "#c41e3a",
+                          fontSize: 11,
+                          fontWeight: 600,
+                        }}
+                      />
+                    )}
+                    {ss && (
+                      <ReferenceLine
+                        x={ss.startCycle}
+                        stroke="#c41e3a"
+                        strokeDasharray="3 3"
+                        strokeOpacity={0.45}
+                        label={{
+                          value: "SS start",
+                          position: "insideTopLeft",
+                          fill: "#c41e3a",
+                          fontSize: 10,
+                        }}
+                      />
+                    )}
                     <Line
                       type="monotone"
                       dataKey="unitsPerHour"
@@ -302,15 +422,25 @@ export function ResultsPanel() {
                       </td>
                     </tr>
                   ) : (
-                    cycleTable.map((row) => (
-                      <tr key={row.cycle} className="border-b border-border/60">
-                        <td className="px-2 py-1 tabular-nums">{row.cycle}</td>
-                        <td className="px-2 py-1 tabular-nums">{formatNum(row.t)}</td>
-                        <td className="px-2 py-1 tabular-nums font-medium text-foreground">
-                          {formatNum(row.unitsPerHour)}
-                        </td>
-                      </tr>
-                    ))
+                    cycleTable.map((row) => {
+                      const inSs = ss != null && row.cycle >= ss.startCycle;
+                      return (
+                        <tr
+                          key={row.cycle}
+                          className={
+                            inSs
+                              ? "border-b border-border/60 bg-destructive/[0.04]"
+                              : "border-b border-border/60"
+                          }
+                        >
+                          <td className="px-2 py-1 tabular-nums">{row.cycle}</td>
+                          <td className="px-2 py-1 tabular-nums">{formatNum(row.t)}</td>
+                          <td className="px-2 py-1 tabular-nums font-medium text-foreground">
+                            {formatNum(row.unitsPerHour)}
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
