@@ -19,6 +19,32 @@ import { parseCostAndSensitivity, applyCostsToModel } from "@/lib/cyclone/sensit
 import { parsePriorityBlock, applyPrioritiesToModel } from "@/lib/cyclone/priority";
 import { t } from "@/lib/cyclone/agent/i18n";
 
+function looksStructuredPrompt(prompt: string): boolean {
+  return /[A-Za-z][A-Za-z0-9 _/-]{0,40}\s*:\s*.+(→|->|=>|\|)/m.test(prompt);
+}
+
+function applyPromptMeta(prompt: string) {
+  const { costs, sensitivity } = parseCostAndSensitivity(prompt);
+  const pri = parsePriorityBlock(prompt);
+  const st = useCycloneStore.getState();
+  let m = st.model;
+  let changed = false;
+  if (Object.keys(costs).length) {
+    m = applyCostsToModel(m, costs);
+    changed = true;
+  }
+  if (Object.keys(pri).length) {
+    m = applyPrioritiesToModel(m, pri);
+    changed = true;
+  }
+  if (sensitivity.length) {
+    m = { ...m, sensitivity };
+    changed = true;
+  }
+  if (changed) st.setModel(m);
+  st.markModelReady(true);
+}
+
 export function AIAssist() {
   const agent = useCycloneStore((s) => s.agent);
   const setBrief = useCycloneStore((s) => s.setBrief);
@@ -26,60 +52,76 @@ export function AIAssist() {
   const markModelReady = useCycloneStore((s) => s.markModelReady);
   const clearResult = useCycloneStore((s) => s.clearResult);
 
-  const [input, setInput] = useState(DEFAULT_EXAMPLE_PROMPT);
+  const [exampleId, setExampleId] = useState(EXAMPLE_PROMPTS[0]?.id ?? "earthmoving");
+  const [input, setInput] = useState(
+    EXAMPLE_PROMPTS.find((e) => e.id === exampleId)?.prompt ?? DEFAULT_EXAMPLE_PROMPT,
+  );
   const [loading, setLoading] = useState(false);
 
   const c = t();
 
+  /**
+   * Structured Format Prompt → local builder first (deterministic presets).
+   * Free text → AI, then local fallback.
+   */
   async function buildModel(prompt: string): Promise<boolean> {
+    if (looksStructuredPrompt(prompt)) {
+      const local = parseOperationDescription(prompt);
+      if (local && applyAgentDraft(local, "local structured")) {
+        applyPromptMeta(prompt);
+        return true;
+      }
+    }
+
     const ai = await generateCycloneDsl({ data: { prompt } });
     if (ai.ok && ai.dsl) {
       const checked = parseDsl(ai.dsl);
       if (checked.ok && applyAgentDraft(ai.dsl, "draft")) {
-        const { costs, sensitivity } = parseCostAndSensitivity(prompt);
-        const pri = parsePriorityBlock(prompt);
-        if (Object.keys(costs).length || sensitivity.length) {
-          const st = useCycloneStore.getState();
-          let m = st.model;
-          if (Object.keys(costs).length) m = applyCostsToModel(m, costs);
-          if (Object.keys(pri).length) m = applyPrioritiesToModel(m, pri);
-          if (sensitivity.length) m = { ...m, sensitivity };
-          st.setModel(m);
-          st.markModelReady(true);
-        }
+        applyPromptMeta(prompt);
         return true;
       }
     }
+
     const local = parseOperationDescription(prompt);
     if (local && applyAgentDraft(local, "local draft")) {
+      applyPromptMeta(prompt);
       return true;
     }
     return false;
   }
 
-  async function onBuildModel() {
-    const prompt = input.trim() || agent.brief;
-    if (!prompt) {
+  async function runBuild(prompt: string, opts?: { quiet?: boolean }) {
+    if (!prompt.trim()) {
       toast.message(c.needPrompt);
-      return;
+      return false;
     }
-
     setLoading(true);
     setBrief(prompt);
     clearResult();
-
     try {
       const built = await buildModel(prompt);
       if (!built) {
         toast.error(c.simFail);
         markModelReady(false);
-        return;
+        return false;
       }
       markModelReady(true);
-      toast.success(c.modelDrawn);
+      if (!opts?.quiet) toast.success(c.modelDrawn);
+      return true;
     } finally {
       setLoading(false);
     }
+  }
+
+  /** Switching Example replaces the prompt and redraws the model immediately. */
+  function loadExample(id: string) {
+    const ex = EXAMPLE_PROMPTS.find((x) => x.id === id);
+    if (!ex) return;
+    setExampleId(id);
+    setInput(ex.prompt);
+    void runBuild(ex.prompt, { quiet: true }).then((ok) => {
+      if (ok) toast.success(`Loaded: ${ex.title}`);
+    });
   }
 
   return (
@@ -118,12 +160,10 @@ export function AIAssist() {
             <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
               <span className="whitespace-nowrap">Example</span>
               <select
-                className="max-w-[220px] rounded-[var(--radius-sm)] border border-border bg-background px-1.5 py-1 text-[10px] text-foreground"
-                defaultValue="earthmoving"
-                onChange={(e) => {
-                  const ex = EXAMPLE_PROMPTS.find((x) => x.id === e.target.value);
-                  if (ex) setInput(ex.prompt);
-                }}
+                className="max-w-[240px] rounded-[var(--radius-sm)] border border-border bg-background px-1.5 py-1 text-[10px] text-foreground"
+                value={exampleId}
+                disabled={loading}
+                onChange={(e) => loadExample(e.target.value)}
               >
                 {EXAMPLE_PROMPTS.map((ex) => (
                   <option key={ex.id} value={ex.id}>
@@ -143,7 +183,7 @@ export function AIAssist() {
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                 e.preventDefault();
-                void onBuildModel();
+                void runBuild(input.trim() || agent.brief);
               }
             }}
           />
@@ -153,7 +193,7 @@ export function AIAssist() {
           className="w-full gap-2"
           size="lg"
           disabled={loading}
-          onClick={() => void onBuildModel()}
+          onClick={() => void runBuild(input.trim() || agent.brief)}
         >
           {loading ? <Loader2 className="size-4 animate-spin" /> : <Layers className="size-4" />}
           {loading ? c.drawing : c.drawModel}

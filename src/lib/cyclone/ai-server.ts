@@ -36,9 +36,10 @@ Honor per-resource cycles when listed:
 
 CORE RULES:
 - Every resource has a home QUEUE; returns to the same QUEUE.
-- First activity after QUEUE is COMBI; later steps NORMAL.
-- QUEUE may only link to COMBI.
-- Any construction domain. Do not force earthmoving unless described.
+- COMBI only when ≥2 resources meet at a task; single-resource work is NORMAL.
+- Home QUEUE may feed COMBI or NORMAL. Do not invent earthmoving unless the user describes it.
+- Honor the user's resource cycles, Counter after:, Durations, Cost, Sensitivity exactly.
+- Prefer building the described operation — never substitute a different example.
 
 NOTATION / DSL (canonical Neo-CYCLONE):
 - QUEUE: initial, optional generate (GEN k, k≥2) multiplies each *arrival* only (not initial).
