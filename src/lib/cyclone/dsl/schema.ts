@@ -62,6 +62,8 @@ const nodeSchema = z
     duration: durationSchema.optional(),
     production: z.number().nonnegative().optional(),
     consolidate: z.number().int().min(2).optional(),
+    /** Halpin GENERATE: arrivals multiplied to this many units (QUEUE only). */
+    generate: z.number().int().min(2).optional(),
   })
   .superRefine((node, ctx) => {
     if (node.type === "QUEUE") {
@@ -94,6 +96,13 @@ const nodeSchema = z
         code: "custom",
         message: "consolidate is only valid on CONSOLIDATE",
         path: ["consolidate"],
+      });
+    }
+    if (node.type !== "QUEUE" && node.generate !== undefined) {
+      ctx.addIssue({
+        code: "custom",
+        message: "generate is only valid on QUEUE",
+        path: ["generate"],
       });
     }
     if (node.duration?.kind === "uniform" && node.duration.min > node.duration.max) {
