@@ -268,46 +268,59 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     }
   }
 
+  /**
+   * COMBI (classic CYCLONE): start as many concurrent instances as preceding
+   * QUEUE resources allow. A second loader + idle trucks → second parallel Load.
+   * (Previously busyUntil forced single-server behaviour — wrong for Halpin.)
+   */
   function tryStartCombi(activityId: string) {
     const a = activities.get(activityId);
     const node = nodeById.get(activityId);
     if (!a || !node || a.type !== "COMBI") return;
-    if (a.busyUntil > time) return;
 
     const predQueues = (inLinks.get(activityId) ?? []).filter((id) =>
       queues.has(id),
     );
     if (!predQueues.length) return;
-    for (const qid of predQueues) {
-      const q = queues.get(qid)!;
-      if (q.units.length < 1) return;
-    }
 
-    const entities: Entity[] = [];
-    for (const qid of predQueues) {
-      const q = queues.get(qid)!;
-      touchQueue(q);
-      const e = q.units.shift()!;
-      q.totalWait += time - e.arrivedAt;
-      q.departures += 1;
-      entities.push(e);
-    }
+    // Launch every feasible concurrent instance at this clock time.
+    let guard = 0;
+    while (guard++ < 10_000) {
+      let canStart = true;
+      for (const qid of predQueues) {
+        if (queues.get(qid)!.units.length < 1) {
+          canStart = false;
+          break;
+        }
+      }
+      if (!canStart) break;
 
-    touchActivity(a);
-    const dur = sampleDuration(node.duration, rng);
-    a.busyUntil = time + dur;
-    a.concurrent = 1;
-    a.starts += 1;
-    a.totalDuration += dur;
-    noteActivityStart(a);
-    record(`COMBI "${a.label}" start (${dur.toFixed(2)})`);
-    pushEvent({
-      time: time + dur,
-      kind: "END_ACTIVITY",
-      activityId,
-      entities,
-      fromQueues: predQueues,
-    });
+      const entities: Entity[] = [];
+      for (const qid of predQueues) {
+        const q = queues.get(qid)!;
+        touchQueue(q);
+        const e = q.units.shift()!;
+        q.totalWait += time - e.arrivedAt;
+        q.departures += 1;
+        entities.push(e);
+      }
+
+      touchActivity(a);
+      const dur = sampleDuration(node.duration, rng);
+      a.concurrent += 1;
+      a.starts += 1;
+      a.totalDuration += dur;
+      a.busyUntil = Math.max(a.busyUntil, time + dur);
+      noteActivityStart(a);
+      record(`COMBI "${a.label}" start ×${a.concurrent} (${dur.toFixed(2)})`);
+      pushEvent({
+        time: time + dur,
+        kind: "END_ACTIVITY",
+        activityId,
+        entities,
+        fromQueues: predQueues,
+      });
+    }
   }
 
   function endActivity(ev: SimEvent) {
@@ -315,8 +328,8 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     if (!a) return;
     touchActivity(a);
     if (a.type === "COMBI") {
-      a.busyUntil = 0;
-      a.concurrent = 0;
+      a.concurrent = Math.max(0, a.concurrent - 1);
+      if (a.concurrent === 0) a.busyUntil = 0;
       const outs = outLinks.get(ev.activityId) ?? [];
       for (let i = 0; i < ev.entities.length; i++) {
         const target = outs[i] ?? outs[outs.length - 1];
