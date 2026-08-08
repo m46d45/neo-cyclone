@@ -20,7 +20,7 @@ function ManualPage() {
             <BookOpen className="size-4 text-primary" />
             <h1 className="font-display text-base font-semibold">Neo-CYCLONE Manual</h1>
             <Badge variant="secondary" className="border-primary/25 bg-primary/10 text-primary">
-              v0.6
+              v0.7
             </Badge>
           </div>
           <Button asChild variant="outline" size="sm">
@@ -48,9 +48,10 @@ function ManualPage() {
               <strong className="text-foreground">tribute to Professor Daniel W. Halpin</strong>.
             </p>
             <p>
-              I was his student, and I also had the privilege of working for him. Through him I
-              first met <strong className="text-foreground">construction operations</strong> as a
-              serious subject: the idea that production on site is a{" "}
+              I am a construction management educator and researcher who studied under Professor
+              Halpin and also had the privilege of working for him. Through him I first met{" "}
+              <strong className="text-foreground">construction operations</strong> as a serious
+              subject: the idea that production on site is a{" "}
               <strong className="text-foreground">flow</strong>, and that{" "}
               <strong className="text-foreground">idleness</strong> (waiting, waste) is not an
               accident but something we can see, model, and improve. That way of seeing construction
@@ -58,22 +59,23 @@ function ManualPage() {
             </p>
             <p>
               Professor Halpin did not stop at a single program. His long effort to make cyclic
-              simulation practical—and the work he continued with his students—grew into a family of
-              tools and ideas, including <strong className="text-foreground">CYCLONE</strong>, and
-              later lines of development such as{" "}
+              simulation practical—and the work continued with students and colleagues—grew into a
+              family of tools and teaching systems. At the core stands{" "}
+              <strong className="text-foreground">CYCLONE</strong>, with later and related lines of
+              development such as <strong className="text-foreground">MicroCYCLONE</strong>,{" "}
               <strong className="text-foreground">DISCO</strong>,{" "}
               <strong className="text-foreground">Symphony.Net</strong>,{" "}
               <strong className="text-foreground">PROSIDYC</strong>,{" "}
               <strong className="text-foreground">COST</strong>, and{" "}
               <strong className="text-foreground">WebCYCLONE</strong>. Those systems were hard-won:
-              built in an era when explaining operations, queues, and simulation to the industry was
-              already an uphill fight.
+              built in an era when explaining operations, queues, and simulation to students and
+              industry was already an uphill fight.
             </p>
             <p>
               <strong className="text-foreground">
-                Neo-CYCLONE is not meant as a special-purpose production simulator
+                Neo-CYCLONE is not a special-purpose industrial simulator
               </strong>{" "}
-              that replaces full industrial tools. Its purpose is{" "}
+              meant to replace research-grade or commercial engines. Its purpose is{" "}
               <strong className="text-foreground">education</strong> and{" "}
               <strong className="text-foreground">first contact</strong>: to introduce construction
               operations; to show why simulation belongs in the design of construction processes;
@@ -81,6 +83,11 @@ function ManualPage() {
               <strong className="text-foreground">Lean Construction</strong> and{" "}
               <strong className="text-foreground">Project Production Management</strong>, where
               flow, cycle time, utilization, and waste are central.
+            </p>
+            <p className="rounded-[var(--radius-md)] border border-primary/25 bg-primary/5 px-3 py-2.5 text-[14px] text-foreground">
+              <strong>What you should leave with:</strong> after a short session, you can state one
+              resource cycle (home queue → work → return), read idleness and utilization from the
+              results, and see why process design matters before “optimizing” with more technology.
             </p>
             <p>
               I know how scarce this literacy still is. Even today, the importance of operations and
@@ -151,7 +158,7 @@ function ManualPage() {
             </li>
             <li>
               <strong className="text-foreground">Is not:</strong> a full special-purpose industrial
-              simulator replacing research-grade engines
+              simulator replacing MicroCYCLONE / DISCO / WebCYCLONE / research-grade engines
             </li>
           </ul>
         </Section>
