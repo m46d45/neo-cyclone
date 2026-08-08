@@ -130,53 +130,51 @@ function SensitivityLineChart({
               label={{
                 value: xName,
                 position: "insideBottom",
-                offset: -16,
-                style: { fontSize: 11, fill: "var(--muted-foreground)" },
+                offset: -18,
+                fontSize: 11,
               }}
             />
             <YAxis
-              domain={[0, "auto"]}
               tick={{ fontSize: 10 }}
               width={48}
               label={{
                 value: yLabel,
                 angle: -90,
                 position: "insideLeft",
-                style: { fontSize: 10, fill: "var(--muted-foreground)" },
+                offset: 8,
+                fontSize: 10,
               }}
             />
             <Tooltip
-              formatter={(v, name) => [v == null ? "—" : formatNum(Number(v)), String(name)]}
-              labelFormatter={(x) => `${xName} = ${x}`}
+              contentStyle={{
+                fontSize: 11,
+                borderRadius: 6,
+                border: "1px solid var(--border)",
+                background: "var(--card)",
+              }}
             />
-            <Legend verticalAlign="top" height={28} wrapperStyle={{ fontSize: 11 }} />
-            {best && Number.isFinite(best.x) && Number.isFinite(best.y) && (
+            <Legend wrapperStyle={{ fontSize: 11 }} />
+            {seriesKeys.map((key, i) => (
+              <Line
+                key={key}
+                type="monotone"
+                dataKey={key}
+                stroke={SERIES_COLORS[i % SERIES_COLORS.length]}
+                strokeWidth={2}
+                strokeDasharray={i === 0 ? undefined : "6 4"}
+                dot={{ r: i === 0 ? 3 : 4 }}
+                connectNulls
+                isAnimationActive={false}
+              />
+            ))}
+            {best && (
               <>
-                <ReferenceLine
-                  x={best.x}
-                  stroke="#c41e3a"
-                  strokeDasharray="5 4"
-                  strokeWidth={1.5}
-                  label={{
-                    value: `${xName}=${best.x}`,
-                    position: "insideTopLeft",
-                    fill: "#c41e3a",
-                    fontSize: 10,
-                    fontWeight: 600,
-                  }}
-                />
+                <ReferenceLine x={best.x} stroke="#c41e3a" strokeDasharray="4 4" />
                 <ReferenceLine
                   y={best.y}
                   stroke="#c41e3a"
-                  strokeDasharray="5 4"
-                  strokeWidth={1.5}
-                  label={{
-                    value: formatNum(best.y),
-                    position: "right",
-                    fill: "#c41e3a",
-                    fontSize: 11,
-                    fontWeight: 600,
-                  }}
+                  strokeDasharray="4 4"
+                  label={{ value: formatNum(best.y), position: "right", fontSize: 10 }}
                 />
                 <ReferenceDot
                   x={best.x}
@@ -185,30 +183,9 @@ function SensitivityLineChart({
                   fill="#c41e3a"
                   stroke="#fff"
                   strokeWidth={2}
-                  isFront
                 />
               </>
             )}
-            {seriesKeys.map((key, i) => (
-              <Line
-                key={key}
-                type="monotone"
-                dataKey={key}
-                name={key}
-                stroke={SERIES_COLORS[i % SERIES_COLORS.length]}
-                strokeWidth={i === 0 ? 2.75 : 2.25}
-                strokeDasharray={i === 0 ? undefined : "7 4"}
-                dot={{
-                  r: i === 0 ? 4 : 3.5,
-                  fill: SERIES_COLORS[i % SERIES_COLORS.length],
-                  stroke: i === 0 ? "#fff" : SERIES_COLORS[i % SERIES_COLORS.length],
-                  strokeWidth: i === 0 ? 1.5 : 1,
-                }}
-                activeDot={{ r: 6 }}
-                connectNulls
-                isAnimationActive={false}
-              />
-            ))}
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -246,79 +223,134 @@ export function SensitivitySection({
   sensitivity: SensitivityResult;
   productionUnit: string;
 }) {
+  const pairs = sensitivity.pairs?.length
+    ? sensitivity.pairs
+    : [
+        {
+          pairLabel: "Sensitivity",
+          resourceA: "",
+          resourceB: "",
+          baseline: {},
+          rows: sensitivity.rows,
+          bestProductivityLabel: sensitivity.bestProductivityLabel,
+          bestUnitCostLabel: sensitivity.bestUnitCostLabel,
+        },
+      ];
+  const [pairIdx, setPairIdx] = useState(0);
   const [tableOpen, setTableOpen] = useState(false);
-  const plan = useMemo(() => planAxes(sensitivity.rows), [sensitivity.rows]);
+
+  const safeIdx = Math.min(pairIdx, pairs.length - 1);
+  const active = pairs[safeIdx]!;
+  const rows = active.rows;
+
+  const plan = useMemo(() => planAxes(rows), [rows]);
   const prodChart = useMemo(
-    () => (plan ? buildSeriesData(sensitivity.rows, plan, "unitsPerHour") : null),
-    [sensitivity.rows, plan],
+    () => (plan ? buildSeriesData(rows, plan, "unitsPerHour") : null),
+    [rows, plan],
   );
   const costChart = useMemo(
-    () => (plan ? buildSeriesData(sensitivity.rows, plan, "unitCostUsd") : null),
-    [sensitivity.rows, plan],
+    () => (plan ? buildSeriesData(rows, plan, "unitCostUsd") : null),
+    [rows, plan],
   );
-  if (!sensitivity.rows.length || !plan || !prodChart || !costChart) return null;
+  if (!rows.length || !plan || !prodChart || !costChart) return null;
+
   const seriesHint =
     plan.seriesName != null
       ? `X = ${plan.xName}; one line per ${plan.seriesName} count.`
       : `X = ${plan.xName}.`;
+
+  const baselineEntries = Object.entries(active.baseline);
+  const isPairwise = sensitivity.mode === "pairwise" && pairs.length > 1;
+
   return (
     <div className="space-y-4">
+      {sensitivity.note && (
+        <p className="rounded-[var(--radius-sm)] border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-[11px] text-foreground">
+          {sensitivity.note}
+        </p>
+      )}
+
+      {isPairwise && (
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="text-[11px] font-medium text-muted-foreground" htmlFor="sens-pair">
+            Pair
+          </label>
+          <select
+            id="sens-pair"
+            className="rounded-[var(--radius-sm)] border border-border bg-background px-2 py-1.5 text-xs text-foreground"
+            value={safeIdx}
+            onChange={(e) => setPairIdx(Number(e.target.value))}
+          >
+            {pairs.map((pr, i) => (
+              <option key={pr.pairLabel} value={i}>
+                {pr.pairLabel}
+              </option>
+            ))}
+          </select>
+          <span className="text-[11px] text-muted-foreground">
+            {pairs.length} pairs (C(n,2)) — others fixed at baseline
+          </span>
+        </div>
+      )}
+
+      {baselineEntries.length > 0 && (
+        <p className="text-[11px] text-muted-foreground">
+          Baseline (fixed):{" "}
+          {baselineEntries.map(([k, v]) => `${k}=${v}`).join(", ")}
+        </p>
+      )}
+
       <p className="text-[11px] text-muted-foreground">
-        Halpin-style sensitivity (line charts). {seriesHint} Compare productivity and unit cost side
-        by side. When two series coincide, the first is solid and the second is dashed.
+        {isPairwise ? "Pairwise sensitivity. " : "Halpin-style sensitivity (line charts). "}
+        {seriesHint} Compare productivity and unit cost side by side. When two series coincide, the
+        first is solid and the second is dashed.
       </p>
-      {(sensitivity.bestProductivityLabel || sensitivity.bestUnitCostLabel) && (
+
+      {(active.bestProductivityLabel || active.bestUnitCostLabel) && (
         <div className="flex flex-wrap gap-3 text-xs">
-          {sensitivity.bestProductivityLabel && (
+          {active.bestProductivityLabel && (
             <div className="rounded-[var(--radius-sm)] border border-primary/30 bg-primary/5 px-3 py-2">
               <span className="text-muted-foreground">Best productivity: </span>
-              <span className="font-medium text-foreground">{sensitivity.bestProductivityLabel}</span>
+              <span className="font-medium text-foreground">{active.bestProductivityLabel}</span>
             </div>
           )}
-          {sensitivity.bestUnitCostLabel && (
+          {active.bestUnitCostLabel && (
             <div className="rounded-[var(--radius-sm)] border border-primary/30 bg-primary/5 px-3 py-2">
               <span className="text-muted-foreground">Best unit cost: </span>
-              <span className="font-medium text-foreground">{sensitivity.bestUnitCostLabel}</span>
+              <span className="font-medium text-foreground">{active.bestUnitCostLabel}</span>
             </div>
           )}
         </div>
       )}
+
       <div className="grid gap-3 lg:grid-cols-2">
         <SensitivityLineChart
           title={`Productivity (${productionUnit}/h)`}
-          yLabel={`${productionUnit}/h`}
           data={prodChart.data}
           seriesKeys={prodChart.seriesKeys}
           xName={plan.xName}
-          best={bestMarkerFromLabel(
-            sensitivity.rows,
-            plan,
-            sensitivity.bestProductivityLabel,
-            "unitsPerHour",
-          )}
+          yLabel={`${productionUnit}/h`}
+          best={bestMarkerFromLabel(rows, plan, active.bestProductivityLabel, "unitsPerHour")}
         />
         <SensitivityLineChart
           title="Unit cost (USD)"
-          yLabel={`USD / ${productionUnit}`}
           data={costChart.data}
           seriesKeys={costChart.seriesKeys}
           xName={plan.xName}
-          best={bestMarkerFromLabel(
-            sensitivity.rows,
-            plan,
-            sensitivity.bestUnitCostLabel,
-            "unitCostUsd",
-          )}
+          yLabel="USD / unit"
+          best={bestMarkerFromLabel(rows, plan, active.bestUnitCostLabel, "unitCostUsd")}
         />
       </div>
-      <div className="rounded-[var(--radius-sm)] border border-border">
+
+      <div className="overflow-hidden rounded-[var(--radius)] border border-border bg-card">
         <button
           type="button"
           onClick={() => setTableOpen((v) => !v)}
           className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-xs font-medium text-foreground hover:bg-muted/40"
         >
           <span>
-            Detail table ({sensitivity.rows.length} combinations)
+            Detail table ({rows.length} combinations
+            {isPairwise ? ` · ${active.pairLabel}` : ""})
             {!tableOpen && (
               <span className="ml-2 font-normal text-muted-foreground">— click to expand</span>
             )}
@@ -338,12 +370,12 @@ export function SensitivitySection({
                 </tr>
               </thead>
               <tbody>
-                {sensitivity.rows.map((row) => (
+                {rows.map((row) => (
                   <tr
                     key={row.label}
                     className={
-                      row.label === sensitivity.bestProductivityLabel ||
-                      row.label === sensitivity.bestUnitCostLabel
+                      row.label === active.bestProductivityLabel ||
+                      row.label === active.bestUnitCostLabel
                         ? "border-b border-border/60 bg-primary/5"
                         : "border-b border-border/60"
                     }
