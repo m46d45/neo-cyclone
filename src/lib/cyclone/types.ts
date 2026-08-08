@@ -58,38 +58,65 @@ export interface SimConfig {
   warmupTime?: number;
 }
 
+/** MicroCYCLONE-style QUEUE node statistics (Report by Element). */
 export interface QueueStat {
   nodeId: string;
   label: string;
+  /** Average number of units at the queue over simulation time */
   avgLength: number;
   maxLength: number;
+  /** Average waiting time per departing unit */
+  avgWaitTime: number;
   totalWaitTime: number;
   departures: number;
+  /** Units still in queue at end of run */
+  unitsAtEnd: number;
+  /** Fraction of time the queue was non-empty (0–1) */
+  percentOccupied: number;
+  initialUnits: number;
 }
 
+/** MicroCYCLONE-style COMBI/NORMAL statistics (Report by Element). */
 export interface ActivityStat {
   nodeId: string;
   label: string;
   type: "COMBI" | "NORMAL";
   busyTime: number;
+  /** Number of times the work task was activated */
   starts: number;
+  /** Percentage of time the work task was in operation (0–1) */
   utilization: number;
+  /** Mean duration of the work task */
   avgDuration: number;
+  /** Average time between arrivals / activations */
+  avgInterArrival: number;
+  /** Average number of units positioned at the work task */
+  avgUnitsAtTask: number;
 }
 
+/** COUNTER / production statistics. */
 export interface CounterStat {
   nodeId: string;
   label: string;
   count: number;
   production: number;
+  /** Production per simulation time unit (e.g. units/min) */
   productivity: number;
+  /** Production per hour (Halpin Process Report style when time is minutes) */
+  unitsPerHour: number;
   avgCycleTime: number;
+  /** Simulation time of first unit through the counter */
+  firstPassageTime: number;
+  /** Average time between successive units through the counter */
+  avgTimeBetweenUnits: number;
+  unitsPerCycle: number;
 }
 
 export interface SimResult {
   modelId: string;
   modelName: string;
   seed: number;
+  /** Run length (simulation clock at stop) */
   simTime: number;
   cyclesCompleted: number;
   maxCyclesRequested: number;
@@ -97,12 +124,18 @@ export interface SimResult {
   activityStats: ActivityStat[];
   counterStats: CounterStat[];
   timeline: { t: number; event: string }[];
-  /** One point per completed production cycle */
+  /**
+   * Production by Cycle (MicroCYCLONE):
+   * cycle number, sim time at completion, cumulative production & productivity.
+   */
   productivitySeries: {
     t: number;
     cycle: number;
     production: number;
+    /** Cumulative productivity in units per simulation time unit */
     rate: number;
+    /** Cumulative productivity in units per hour (if time unit is minutes) */
+    unitsPerHour: number;
   }[];
 }
 
