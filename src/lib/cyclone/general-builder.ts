@@ -143,6 +143,8 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
     productionAmount: spec.productionPerCycle ?? 1,
   });
 
+  const stagingByResource = new Map<string, string[]>();
+
   for (const r of spec.resources) {
     const home = homeQueue.get(r.id)!;
     const steps = r.itinerary.map((lab) => ({
@@ -153,6 +155,7 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
     }));
 
     addLink(home, steps[0]!.id);
+    const stags: string[] = [];
 
     for (let i = 0; i < steps.length - 1; i++) {
       const a = steps[i]!;
@@ -167,12 +170,14 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
           y: 0,
           initialUnits: 0,
         });
+        stags.push(stagId);
         addLink(a.id, stagId);
         addLink(stagId, b.id);
       } else {
         addLink(a.id, b.id);
       }
     }
+    stagingByResource.set(r.id, stags);
 
     const last = steps[steps.length - 1]!;
     if (r.id === prodRes.id) {
@@ -183,7 +188,7 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
     }
   }
 
-  layoutNodes(nodes, spec.resources, homeQueue, activityId, counterId);
+  layoutNodes(nodes, spec.resources, homeQueue, activityId, counterId, stagingByResource);
 
   return {
     id: uniqueId(slug(spec.name) || "operation", new Set()),
@@ -201,46 +206,131 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
   };
 }
 
+
+/**
+ * Multi-resource layout (fixes stacked labels e.g. masonry SupplyBrick/MoveScaffold):
+ * - one horizontal row per resource (home QUEUE + exclusive tasks)
+ * - shared COMBI: common x, y averaged across resources that meet
+ * - collision pass separates any remaining overlaps
+ */
 function layoutNodes(
   nodes: CycloneNode[],
   resources: ResourceCycle[],
   homeQueue: Map<string, string>,
   activityId: Map<string, string>,
   counterId: string,
+  stagingByResource: Map<string, string[]> = new Map(),
 ): void {
   const byId = new Map(nodes.map((n) => [n.id, n]));
+  const ROW = 150;
+  const COL = 180;
+  const LEFT = 70;
+  const ACT0 = 280;
+  const TOP = 70;
+
+  const useCount = new Map<string, number>();
+  const useRows = new Map<string, number[]>();
+  resources.forEach((r, ri) => {
+    for (const lab of r.itinerary) {
+      const key = normLabel(lab);
+      useCount.set(key, (useCount.get(key) ?? 0) + 1);
+      const rows = useRows.get(key) ?? [];
+      rows.push(ri);
+      useRows.set(key, rows);
+    }
+  });
 
   resources.forEach((r, i) => {
     const q = byId.get(homeQueue.get(r.id)!)!;
-    q.x = 60;
-    q.y = 90 + i * 140;
+    q.x = LEFT;
+    q.y = TOP + i * ROW;
   });
 
-  let col = 0;
+  const placed = new Set<string>();
+  resources.forEach((r, ri) => {
+    const rowY = TOP + ri * ROW;
+    r.itinerary.forEach((lab, j) => {
+      const key = normLabel(lab);
+      const n = byId.get(activityId.get(key)!)!;
+      const shared = (useCount.get(key) ?? 1) > 1;
+      const x = ACT0 + j * COL;
+      if (!placed.has(n.id)) {
+        n.x = x;
+        n.y = rowY;
+        placed.add(n.id);
+      } else if (shared) {
+        const rows = useRows.get(key) ?? [ri];
+        n.y = rows.reduce((s, idx) => s + (TOP + idx * ROW), 0) / rows.length;
+        n.x = Math.min(n.x, x);
+      }
+    });
+
+    const stags = stagingByResource.get(r.id) ?? [];
+    stags.forEach((sid, si) => {
+      const sn = byId.get(sid);
+      if (!sn) return;
+      sn.x = ACT0 + (si + 0.5) * COL;
+      sn.y = rowY + 72;
+    });
+  });
+
   const primary = resources[0]!;
-  primary.itinerary.forEach((lab) => {
-    const n = byId.get(activityId.get(normLabel(lab))!)!;
-    n.x = 260 + col * 150;
-    n.y = 90;
-    col++;
-  });
+  const lastLab = primary.itinerary[primary.itinerary.length - 1]!;
+  const last = byId.get(activityId.get(normLabel(lastLab))!)!;
+  const ctr = byId.get(counterId)!;
+  ctr.x = last.x + COL;
+  ctr.y = Math.max(TOP - 10, last.y - 40);
 
+  let orphan = 0;
   for (const n of nodes) {
-    if (n.type === "QUEUE" && n.x === 0 && n.y === 0) {
-      n.x = 200;
-      n.y = 220;
-    }
-    if ((n.type === "COMBI" || n.type === "NORMAL") && n.x === 0) {
-      n.x = 300;
-      n.y = 250;
+    if (n.x === 0 && n.y === 0) {
+      n.x = ACT0 + (orphan % 3) * COL;
+      n.y = TOP + resources.length * ROW + Math.floor(orphan / 3) * ROW;
+      orphan++;
     }
   }
 
-  const ctr = byId.get(counterId)!;
-  const lastLab = primary.itinerary[primary.itinerary.length - 1]!;
-  const last = byId.get(activityId.get(normLabel(lastLab))!)!;
-  ctr.x = last.x + 160;
-  ctr.y = Math.max(40, last.y - 30);
+  resolveCollisions(nodes, 155, 115);
+}
+
+function resolveCollisions(nodes: CycloneNode[], minDx: number, minDy: number): void {
+  for (let pass = 0; pass < 12; pass++) {
+    let moved = false;
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const a = nodes[i]!;
+        const b = nodes[j]!;
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        if (Math.abs(dx) >= minDx || Math.abs(dy) >= minDy) continue;
+        if (Math.abs(dy) <= Math.abs(dx)) {
+          const push = (minDy - Math.abs(dy)) / 2 + 6;
+          if (dy >= 0) {
+            b.y += push;
+            a.y -= push * 0.2;
+          } else {
+            b.y -= push;
+            a.y += push * 0.2;
+          }
+        } else {
+          const push = (minDx - Math.abs(dx)) / 2 + 6;
+          if (dx >= 0) {
+            b.x += push;
+            a.x -= push * 0.15;
+          } else {
+            b.x -= push;
+            a.x += push * 0.15;
+          }
+        }
+        moved = true;
+      }
+    }
+    if (!moved) break;
+  }
+  for (const n of nodes) {
+    n.x = Math.max(20, Math.round(n.x));
+    n.y = Math.max(20, Math.round(n.y));
+  }
 }
 
 export function parseExplicitResourceCycles(text: string): {

@@ -10,6 +10,32 @@ import { cn } from "@/lib/utils";
 /**
  * Halpin shapes + Neo-CYCLONE arrows: solid black = forward; dashed gold = return.
  */
+/** Split long labels so multi-resource diagrams do not look like garbage text. */
+function wrapLabel(label: string, maxChars = 13): string[] {
+  const s = label.trim();
+  if (s.length <= maxChars) return [s];
+  // Prefer break at space / camelCase boundary
+  const parts = s.split(/\s+/);
+  if (parts.length > 1) {
+    const lines: string[] = [];
+    let cur = "";
+    for (const w of parts) {
+      if (!cur) cur = w;
+      else if ((cur + " " + w).length <= maxChars) cur = cur + " " + w;
+      else {
+        lines.push(cur);
+        cur = w;
+      }
+    }
+    if (cur) lines.push(cur);
+    return lines.slice(0, 3);
+  }
+  // camelCase: SupplyBrick → Supply / Brick
+  const camel = s.replace(/([a-z])([A-Z])/g, "$1 $2").split(" ");
+  if (camel.length > 1) return wrapLabel(camel.join(" "), maxChars);
+  return [s.slice(0, maxChars), s.slice(maxChars, maxChars * 2)].filter(Boolean);
+}
+
 function NodeShape({
   node,
   selected,
@@ -175,62 +201,51 @@ function NodeShape({
       }}
     >
       {shape}
-      <text
-        x={half}
-        y={labelY}
-        textAnchor="middle"
-        fill={ink}
-        style={{ fontSize: 12, fontWeight: 600, fontFamily: "Georgia, serif" }}
-      >
-        {node.label}
-      </text>
-      {node.type === "QUEUE" && (node.initialUnits != null || (node.generateCount != null && node.generateCount >= 2)) && (
-        <text
-          x={half}
-          y={labelY + 14}
-          textAnchor="middle"
-          fill="var(--diagram-muted)"
-          style={{ fontSize: 10, fontFamily: "ui-monospace, monospace" }}
-        >
-          {node.initialUnits != null ? `n = ${node.initialUnits}` : ""}
-          {node.generateCount != null && node.generateCount >= 2
-            ? `${node.initialUnits != null ? " · " : ""}GEN ${node.generateCount}`
-            : ""}
-        </text>
-      )}
-      {(node.type === "COMBI" || node.type === "NORMAL") && node.duration && (
-        <text
-          x={half}
-          y={labelY + 14}
-          textAnchor="middle"
-          fill="var(--diagram-muted)"
-          style={{ fontSize: 9, fontFamily: "ui-monospace, monospace" }}
-        >
-          {formatDuration(node.duration)}
-        </text>
-      )}
-      {node.type === "COUNTER" && node.productionAmount != null && (
-        <text
-          x={half}
-          y={labelY + 14}
-          textAnchor="middle"
-          fill="var(--diagram-muted)"
-          style={{ fontSize: 10, fontFamily: "ui-monospace, monospace" }}
-        >
-          +{node.productionAmount}
-        </text>
-      )}
-      {node.type === "CONSOLIDATE" && (
-        <text
-          x={half}
-          y={labelY + 14}
-          textAnchor="middle"
-          fill="var(--diagram-muted)"
-          style={{ fontSize: 10, fontFamily: "ui-monospace, monospace" }}
-        >
-          CON {node.consolidateCount ?? 2}
-        </text>
-      )}
+      {(() => {
+        const lines = wrapLabel(node.label, 12);
+        const subY = labelY + lines.length * 13;
+        let sub = "";
+        if (node.type === "QUEUE") {
+          const bits: string[] = [];
+          if (node.initialUnits != null) bits.push(`n = ${node.initialUnits}`);
+          if (node.generateCount != null && node.generateCount >= 2) bits.push(`GEN ${node.generateCount}`);
+          sub = bits.join(" · ");
+        } else if ((node.type === "COMBI" || node.type === "NORMAL") && node.duration) {
+          sub = formatDuration(node.duration);
+        } else if (node.type === "COUNTER" && node.productionAmount != null) {
+          sub = `+${node.productionAmount}`;
+        } else if (node.type === "CONSOLIDATE") {
+          sub = `CON ${node.consolidateCount ?? 2}`;
+        }
+        return (
+          <>
+            <text
+              x={half}
+              y={labelY}
+              textAnchor="middle"
+              fill={ink}
+              style={{ fontSize: 11, fontWeight: 600, fontFamily: "Georgia, serif" }}
+            >
+              {lines.map((ln, i) => (
+                <tspan key={i} x={half} dy={i === 0 ? 0 : 13}>
+                  {ln}
+                </tspan>
+              ))}
+            </text>
+            {sub ? (
+              <text
+                x={half}
+                y={subY + 12}
+                textAnchor="middle"
+                fill="var(--diagram-muted)"
+                style={{ fontSize: 9, fontFamily: "ui-monospace, monospace" }}
+              >
+                {sub}
+              </text>
+            ) : null}
+          </>
+        );
+      })()}
     </g>
   );
 }

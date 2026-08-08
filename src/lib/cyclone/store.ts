@@ -2,7 +2,8 @@ import { create } from "zustand";
 import { runCyclone } from "./engine";
 import { runSensitivity, parseCostAndSensitivity, applyCostsToModel } from "./sensitivity";
 import { parseDsl, serializeDsl } from "./dsl";
-import { cloneModel, earthmovingModel, PRESET_MODELS } from "./models/presets";
+import { cloneModel, earthmovingModel, PRESET_MODELS } from "./models/presets"
+import { ensureReadableLayout } from "./auto-layout";
 import type { CycloneModel, CycloneNode, SimResult, SensitivityResult } from "./types";
 import {
   createAgentSession,
@@ -82,7 +83,7 @@ export const useCycloneStore = create<CycloneStore>((set, get) => ({
 
   setModel: (model) =>
     set({
-      model: cloneModel(model),
+      model: ensureReadableLayout(cloneModel(model)),
       result: null,
       sensitivityResult: null,
       selectedNodeId: null,
@@ -174,7 +175,7 @@ export const useCycloneStore = create<CycloneStore>((set, get) => ({
       const parsed = parseDsl(dslOrModel);
       if (!parsed.ok) return false;
       set({
-        model: cloneModel(parsed.model),
+        model: ensureReadableLayout(cloneModel(parsed.model)),
         dslText: dslOrModel,
         dslSource: "agent",
         maxTime: parsed.run?.maxTime ?? parsed.model.defaultMaxTime,
@@ -191,7 +192,7 @@ export const useCycloneStore = create<CycloneStore>((set, get) => ({
         maxCycles: dslOrModel.defaultMaxCycles,
       });
       set({
-        model: cloneModel(dslOrModel),
+        model: ensureReadableLayout(cloneModel(dslOrModel)),
         dslText: dsl,
         dslSource: "agent",
         maxTime: dslOrModel.defaultMaxTime,
@@ -252,7 +253,7 @@ export const useCycloneStore = create<CycloneStore>((set, get) => ({
     const parsed = parseDsl(dslText);
     if (parsed.ok) {
       set({
-        model: cloneModel(parsed.model),
+        model: ensureReadableLayout(cloneModel(parsed.model)),
         modelReady: true,
       });
     } else if (!model.nodes.length) {
