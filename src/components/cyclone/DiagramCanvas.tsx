@@ -129,7 +129,6 @@ function NodeShape({
       </>
     );
   } else if (node.type === "CONSOLIDATE") {
-    // Halpin function node: upright triangle (CON).
     const m = 6;
     const path = [
       `M ${half} ${m}`,
@@ -182,7 +181,7 @@ function NodeShape({
       >
         {node.label}
       </text>
-      {node.type === "QUEUE" && node.initialUnits != null && (
+      {node.type === "QUEUE" && (node.initialUnits != null || (node.generateCount != null && node.generateCount >= 2)) && (
         <text
           x={half}
           y={labelY + 14}
@@ -190,7 +189,10 @@ function NodeShape({
           fill="var(--diagram-muted)"
           style={{ fontSize: 10, fontFamily: "ui-monospace, monospace" }}
         >
-          n = {node.initialUnits}
+          {node.initialUnits != null ? `n = ${node.initialUnits}` : ""}
+          {node.generateCount != null && node.generateCount >= 2
+            ? `${node.initialUnits != null ? " · " : ""}GEN ${node.generateCount}`
+            : ""}
         </text>
       )}
       {(node.type === "COMBI" || node.type === "NORMAL") && node.duration && (
@@ -255,7 +257,6 @@ function linkPath(
 }
 
 function isCycleLink(from: CycloneNode, to: CycloneNode): boolean {
-  // Resource return arcs: QUEUE ← activity, or activity → its home QUEUE.
   if (to.type === "QUEUE" && (from.type === "COMBI" || from.type === "NORMAL")) return true;
   if (from.type === "QUEUE" && to.type === "QUEUE") return true;
   return false;
