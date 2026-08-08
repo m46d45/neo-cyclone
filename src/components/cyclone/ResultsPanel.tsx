@@ -98,7 +98,7 @@ export function ResultsPanel() {
       </CardHeader>
       <CardContent className="space-y-4">
         <Tabs defaultValue="simulation">
-          <TabsList className="flex h-auto w-full flex-wrap gap-1">
+          <TabsList className="flex h-auto w-full flex-wrap gap-1 p-1.5">
             <TabsTrigger value="simulation" className="flex-1 text-sm">
               Simulation
             </TabsTrigger>

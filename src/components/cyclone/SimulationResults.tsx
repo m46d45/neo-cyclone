@@ -157,7 +157,7 @@ export function SimulationResults({
       {result.cost && <CostReportSection cost={result.cost} />}
 
       <Tabs defaultValue="element">
-        <TabsList className="flex h-auto w-full flex-wrap">
+        <TabsList className="flex h-auto w-full flex-wrap gap-1 p-1.5">
           <TabsTrigger value="element" className="flex-1 text-xs">
             Report by Element
           </TabsTrigger>
