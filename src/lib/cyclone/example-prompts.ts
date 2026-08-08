@@ -25,24 +25,23 @@ export const EXAMPLE_PROMPTS: ExamplePrompt[] = [
   {
     id: "earthmoving",
     title: "1. Earthmoving fleet (loader + trucks)",
-    goal: "Classic fleet + optional truck breakdown delay on return (branch p).",
-    source: "Halpin earthmoving; stochastic return/breakdown teaching pattern.",
+    goal: "Classic fleet (default). Optional: uncomment Branch for truck breakdown on return.",
+    source: "Halpin earthmoving; optional stochastic return/breakdown for branch-p lesson.",
     features: [
       "COMBI Load",
       "cost",
       "sensitivity",
       "steady-state",
-      "branch p (breakdown)",
+      "branch p optional (commented)",
     ],
     prompt: `# Example 1 — Earthmoving fleet
-# Classic loader + trucks. After Dump, most trucks return normally;
-# a few break down and return late (probability branch).
+# Default = classic cycle (no breakdown). Good first lesson: cost, sensitivity, steady-state.
+# Optional branch p: see commented block near the end (uncomment to study delayed return).
 
-Trucks: Load → Haul → Dump
+Trucks: Load → Haul → Dump → Return
 Loader: Load
 5 trucks, 1 loader
 
-# Where one production unit is counted (required for clear teaching)
 Counter after: Dump
 production = 12 m3
 
@@ -59,11 +58,16 @@ Load: tri 1.5, 2, 3
 Haul: normal 8, 1.5
 Dump: const 1.2
 Return: lognormal 7, 1.5
-Breakdown: tri 25, 40, 60
 
-# p = chance of delayed return (broke down / repair on the way back)
-Branch:
-After Dump: Return p=0.85, Breakdown p=0.15
+# ------------------------------------------------------------
+# OPTIONAL — truck breakdown on return (branch p)
+# Uncomment the next lines to compare normal Return vs delayed Breakdown.
+# Keep Counter after: Dump so production is counted before the branch.
+# Also uncomment Breakdown duration below.
+# Branch:
+# After Dump: Return p=0.85, Breakdown p=0.15
+# Breakdown: tri 25, 40, 60
+# ------------------------------------------------------------
 `,
   },
   {

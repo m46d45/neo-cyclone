@@ -179,7 +179,7 @@ Results → **Branches**: declared vs empirical.
 
 ## 7. Teaching examples (6 presets)
 
-1. **Earthmoving** — cost, sensitivity, steady-state, **branch p** (truck breakdown on return)  
+1. **Earthmoving** — cost, sensitivity, steady-state (default classic; **branch p** breakdown is commented in the prompt)  
 2. **Asphalt paving** — paver + trucks  
 3. **Concrete placing** — crane + trucks + **GEN/CON** bucket scale  
 4. **Precast forms** — form cycle  
