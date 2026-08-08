@@ -44,15 +44,25 @@ Use this document when drawing diagrams, writing prompts, writing DSL, or updati
 
 | Style | Appearance | Meaning | Rule |
 |-------|------------|---------|------|
-| **Forward** | **Solid black** stroke + **black arrowhead** | Work progresses toward production | Default for arcs that are **not** returning home |
-| **Return** | **Dashed gold** stroke + **gold arrowhead** (often curved) | Resource closing its cycle | **Any arc whose target is a QUEUE** |
+| **Forward** | **Solid black** stroke + **black arrowhead** | Work progresses toward production / next task | Default — including arcs into **staging** QUEUEs |
+| **Return** | **Dashed gold** stroke + **gold arrowhead** (curved) | Resource closes its cycle | Target is a **home QUEUE** only |
 | **Branch** | Forward style, or brown stroke + label **`p=…`** | Probabilistic choice among multi-outs | Only when link has `probability` |
+
+### What is a home QUEUE?
+
+| Home QUEUE (return = gold dashed) | Not home — still **forward** (solid black) |
+|-----------------------------------|--------------------------------------------|
+| Resource idle pool (`Trucks Idle`, `n ≥ 1`) | Staging before COMBI (`Trucks @ DumpToPaver`, `n = 0`) |
+| Label contains Idle / Home with initial units | GEN pool / work buffer (`BucketPool`, `GEN k`) |
+| After COUNTER / last work → idle pool | Any non-QUEUE target (COMBI, NORMAL, CON, COUNTER) |
 
 ### Flow intuition
 
-- Resource leaves **QUEUE** → works along **solid black** path → typically reaches **COUNTER** (production).  
-- After work (and often after COUNTER), the path that **re-enters a QUEUE** is **dashed gold** = cyclic return.  
-- Shared resources (e.g. loader after Load) also return on **dashed gold** into their idle QUEUE.
+- Leave **home QUEUE** → **solid black** along the work path (staging queues stay black).  
+- Reach **COUNTER** on solid black when production is counted.  
+- Only the arc that **returns into the home idle QUEUE** is **dashed gold**.  
+- Shared resources (loader after Load, crane after lift) return gold into their own idle QUEUE.  
+- Rule is **global in code** (`isHomeQueue` / `isReturnLink`) — not special-cased per model.
 
 ### Geometry
 

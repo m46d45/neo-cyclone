@@ -311,15 +311,30 @@ function linkPath(
 }
 
 /**
- * Neo-CYCLONE arrow standard (teaching clarity; may differ from Halpin print style):
- * - Forward = solid black: work flow toward production (typically toward COUNTER).
- * - Return  = dashed gold: resource going home / closing its cycle (into a QUEUE).
- * After COUNTER, any arc that re-enters a QUEUE is return (cyclic resource).
+ * Neo-CYCLONE arrow standard (all models, not per-case):
+ * - Forward = solid black + tip: work progresses (toward COUNTER / next task).
+ * - Return  = dashed gold + tip: resource closes its cycle into a **home** QUEUE.
+ *
+ * Important: not every QUEUE is "home". Staging queues (e.g. "Trucks @ Dump",
+ * GEN pools with n=0) are still **forward** when entered — only the idle home
+ * pool (resource return) is dashed gold.
  */
-function isReturnLink(from: CycloneNode, to: CycloneNode): boolean {
-  // Home QUEUE is the idle pool — every arc into a QUEUE closes a resource cycle.
-  if (to.type === "QUEUE") return true;
+function isHomeQueue(node: CycloneNode): boolean {
+  if (node.type !== "QUEUE") return false;
+  // Explicit staging labels from the builder: "Resource @ Task"
+  if (/\s@\s/.test(node.label)) return false;
+  // Home pools almost always start with resources (n ≥ 1)
+  if ((node.initialUnits ?? 0) > 0) return true;
+  // Named idle / home pools even if n happens to be 0 after edits
+  if (/(idle|home)/i.test(node.label)) return true;
+  // GEN function queues (BucketPool, PartsPool, …) are work buffers, not home
+  if ((node.generateCount ?? 0) >= 2) return false;
+  // Unknown empty queue: treat as staging (forward), not return
   return false;
+}
+
+function isReturnLink(_from: CycloneNode, to: CycloneNode): boolean {
+  return isHomeQueue(to);
 }
 
 export function DiagramCanvas() {
@@ -557,7 +572,7 @@ export function DiagramCanvas() {
             markerEnd="url(#arrow-halpin-cycle)"
           />
           <text x={244} y={13} fill="var(--diagram-ink)" style={{ fontSize: 10, fontFamily: "Georgia, serif" }}>
-            Return (dashed gold + tip)
+            Return to home QUEUE (dashed gold + tip)
           </text>
         </g>
       </svg>
