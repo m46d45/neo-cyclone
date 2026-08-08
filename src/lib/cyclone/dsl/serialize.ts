@@ -1,15 +1,44 @@
-import { stringify } from "yaml";
-import type { CycloneModel, DurationDist } from "../types";
-import { DSL_VERSION, type NeoCycloneDocument } from "./schema";
+import type { CycloneModel, DurationSpec } from "../types";
+import { DSL_VERSION, type NeoCycloneDocument, type DslDuration } from "./schema";
 
-export type SerializeOptions = {
-  seed?: number;
-  maxTime?: number;
-  maxCycles?: number;
-  format?: "yaml" | "json";
-};
+function sanitizeId(id: string): string {
+  const s = id.replace(/[^a-zA-Z0-9_-]/g, "_");
+  return /^[a-zA-Z]/.test(s) ? s : `n_${s}`;
+}
 
-export function serializeDsl(model: CycloneModel, options: SerializeOptions = {}): string {
+function fromDuration(d: DurationSpec): DslDuration {
+  const p = d.params;
+  switch (d.type) {
+    case "CONSTANT":
+      return { kind: "constant", value: p[0] ?? 1 };
+    case "UNIFORM":
+      return { kind: "uniform", min: p[0] ?? 0, max: p[1] ?? 1 };
+    case "TRIANGULAR":
+      return { kind: "triangular", min: p[0] ?? 0, mode: p[1] ?? 1, max: p[2] ?? 2 };
+    case "NORMAL":
+      return { kind: "normal", mean: p[0] ?? 1, sd: p[1] ?? 0.1 };
+    case "LOGNORMAL":
+      return { kind: "lognormal", mean: p[0] ?? 1, sd: p[1] ?? 0.1 };
+    case "BETA":
+      return {
+        kind: "beta",
+        min: p[0] ?? 0,
+        max: p[1] ?? 1,
+        alpha: p[2] ?? 2,
+        beta: p[3] ?? 2,
+      };
+    case "GAMMA":
+      return { kind: "gamma", shape: p[0] ?? 1, scale: p[1] ?? 1 };
+    default:
+      return { kind: "constant", value: 1 };
+  }
+}
+
+/** Serialize CycloneModel to Neo-CYCLONE DSL JSON string. */
+export function serializeDsl(
+  model: CycloneModel,
+  options: { seed?: number; maxTime?: number; maxCycles?: number } = {},
+): string {
   const doc: NeoCycloneDocument = {
     dsl: DSL_VERSION,
     model: {
@@ -28,6 +57,9 @@ export function serializeDsl(model: CycloneModel, options: SerializeOptions = {}
         };
         if (n.type === "QUEUE") {
           base.initial = n.initialUnits ?? 0;
+          if (n.generateCount != null && n.generateCount >= 2) {
+            base.generate = n.generateCount;
+          }
           if (n.costPerHourUsd != null && n.costPerHourUsd > 0) {
             base.cost_usd_h = n.costPerHourUsd;
           }
@@ -51,40 +83,5 @@ export function serializeDsl(model: CycloneModel, options: SerializeOptions = {}
       max_cycles: options.maxCycles ?? model.defaultMaxCycles,
     },
   };
-
-  if (options.format === "json") {
-    return JSON.stringify(doc, null, 2);
-  }
-
-  return stringify(doc, {
-    lineWidth: 100,
-    defaultStringType: "PLAIN",
-  });
-}
-
-function fromDuration(
-  d: DurationDist,
-): NonNullable<NeoCycloneDocument["model"]["nodes"][0]["duration"]> {
-  switch (d.kind) {
-    case "constant":
-      return { kind: "constant", value: d.value };
-    case "uniform":
-      return { kind: "uniform", min: d.min, max: d.max };
-    case "triangular":
-      return { kind: "triangular", min: d.min, mode: d.mode, max: d.max };
-    case "normal":
-      return { kind: "normal", mean: d.mean, sd: d.sd };
-    case "lognormal":
-      return { kind: "lognormal", mean: d.mean, sd: d.sd };
-    case "beta":
-      return { kind: "beta", min: d.min, max: d.max, alpha: d.alpha, beta: d.beta };
-    case "gamma":
-      return { kind: "gamma", shape: d.shape, scale: d.scale };
-  }
-}
-
-function sanitizeId(id: string): string {
-  const s = id.replace(/[^a-zA-Z0-9_-]/g, "_");
-  if (/^[a-zA-Z]/.test(s)) return s;
-  return `n_${s}`;
+  return JSON.stringify(doc, null, 2);
 }
