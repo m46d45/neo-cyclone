@@ -34,11 +34,14 @@ export function AIAssist() {
     if (ai.ok && ai.dsl) {
       const checked = parseDsl(ai.dsl);
       if (checked.ok && applyAgentDraft(ai.dsl, "draft")) {
-        // Attach Cost USD/h from the prompt (DSL may omit them).
-        const { costs } = parseCostAndSensitivity(prompt);
-        if (Object.keys(costs).length) {
+        // Attach Cost USD/h + Sensitivity plan from the prompt (DSL omits them).
+        const { costs, sensitivity } = parseCostAndSensitivity(prompt);
+        if (Object.keys(costs).length || sensitivity.length) {
           const st = useCycloneStore.getState();
-          st.setModel(applyCostsToModel(st.model, costs));
+          let m = st.model;
+          if (Object.keys(costs).length) m = applyCostsToModel(m, costs);
+          if (sensitivity.length) m = { ...m, sensitivity };
+          st.setModel(m);
           st.markModelReady(true);
         }
         return true;
