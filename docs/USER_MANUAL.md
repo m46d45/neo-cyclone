@@ -52,7 +52,7 @@ Where our **diagram notation** differs slightly from some Halpin print figures, 
 
 Order in **Format Prompt** (top → bottom):
 
-1. **Network** — resource cycles, counts, production (required)  
+1. **Network** — resource cycles, counts, **`Counter after:`** + `production =` (required for clear counting)  
 2. **Durations** — minutes (required)  
 3. **Priority** — optional; lower number = higher priority  
 4. **Functions & Branch** — optional GEN / CON / p (by **name**, not hand-drawn Q/arcs)  
@@ -89,6 +89,18 @@ const · unif · tri · normal · lognormal · beta · gamma
 - Sensitivity tab: productivity & unit cost vs fleet mix (pairwise when 3–5 resources)
 
 ---
+
+## 4b. Production COUNTER (important)
+
+| | |
+|--|--|
+| **What** | Golf-flag node — counts **one production unit / completed cycle** |
+| **Prompt** | `Counter after: Dump` then `production = 12 m3` |
+| **Default** | If omitted: after the **last task of the first resource** cycle |
+| **Earthmoving** | Always prefer `Counter after: Dump` (not after Return) |
+| **With branch p** | Count first, then branch return (e.g. Dump → Counter → Return / Breakdown) |
+
+Never leave this implicit in teaching materials — name `Counter after:` in the prompt.
 
 ## 5. Modeling rule (Halpin core)
 

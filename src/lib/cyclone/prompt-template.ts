@@ -55,6 +55,11 @@ Resource2: Task1
 Resource3: TaskA → TaskB
 
 n Resource1 = <count>, n Resource2 = <count>
+
+# Production COUNTER — where ONE completed unit / cycle is counted
+# (golf-flag node). Always name it so it cannot "disappear".
+# Default if omitted: after the LAST task of the FIRST resource cycle.
+Counter after: <TaskName>
 production = <amount> <unit>
 
 # ------------------------------------------------------------
@@ -123,7 +128,9 @@ export type { ExamplePrompt } from "./example-prompts";
 
 export const DIST_TABLE = `# Quick reference (same order as Format Prompt)
 
-# 1 Network — resource cycles only (QUEUE + arrows drawn by the app)
+# 1 Network — resource cycles (QUEUE + arrows drawn by the app)
+#    Counter after: <Task>   ← where production is counted (default: last task of 1st resource)
+#    production = <amount> <unit>
 # 2 Durations (minutes)
   const · unif · tri · normal · lognormal · beta · gamma
 

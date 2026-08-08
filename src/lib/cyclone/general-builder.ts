@@ -16,6 +16,11 @@ import {
   matchCon,
   type FunctionsPrompt,
 } from "./functions-prompt";
+import {
+  parseCounterPlacement,
+  resolveCounterAfter,
+  type CounterPlacement,
+} from "./counter-prompt";
 
 export type ResourceCycle = {
   id: string;
@@ -44,6 +49,11 @@ export type OperationSpec = {
   productionResourceId?: string;
   /** GEN / CON / Branch from Format Prompt §4 (no hand-drawn QUEUE/arcs). */
   functions?: FunctionsPrompt;
+  /**
+   * Where COUNTER sits (one production unit / completed cycle).
+   * Default: after last task of first resource if not specified.
+   */
+  counter?: CounterPlacement;
 };
 
 const DEFAULT_DUR: DurationDist = { kind: "triangular", min: 2, mode: 4, max: 6 };
@@ -217,13 +227,14 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
   const prodRes =
     spec.resources.find((r) => r.id === spec.productionResourceId) ?? spec.resources[0]!;
   const counterId = uniqueId("ctr", used);
+  const counterAmt = spec.counter?.amount ?? spec.productionPerCycle ?? 1;
   nodes.push({
     id: counterId,
     type: "COUNTER",
     label: "Production",
     x: 0,
     y: 0,
-    productionAmount: spec.productionPerCycle ?? 1,
+    productionAmount: counterAmt,
   });
 
   const stagingByResource = new Map<string, string[]>();
@@ -236,6 +247,15 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
       type: activityType.get(normLabel(lab))!,
       label: lab,
     }));
+
+    const countAtForThis =
+      r.id === prodRes.id
+        ? resolveCounterAfter(
+            spec.counter ?? { afterLabel: null, amount: 1, unit: "unit" },
+            r.itinerary,
+          )
+        : null;
+    const countAtKey = countAtForThis ? normLabel(countAtForThis) : null;
 
     // Home always feeds first COMBI; if first step is GEN/CON, still link home → first
     // (GEN as first is rare). Prefer first COMBI in path for classic cycles.
@@ -257,6 +277,8 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
       // Skip sequential link if `a` is a Branch fork (handled later)
       const isBranchFork = fn.branches.some((br) => normLabel(br.afterLabel) === a.key);
       if (isBranchFork) continue;
+      // COUNTER sits between count-at task and its successor
+      if (countAtKey && a.key === countAtKey) continue;
 
       if (b.type === "COMBI" && a.type !== "GEN") {
         // Need QUEUE predecessor for COMBI (Halpin) unless previous is already QUEUE
@@ -280,17 +302,47 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
     stagingByResource.set(r.id, stags);
 
     const last = steps[steps.length - 1]!;
+    const countAfterLab =
+      r.id === prodRes.id
+        ? resolveCounterAfter(
+            spec.counter ?? { afterLabel: null, amount: 1, unit: "unit" },
+            r.itinerary,
+          )
+        : null;
+    const countAfterKey = countAfterLab ? normLabel(countAfterLab) : null;
+    const countAfterStep = countAfterKey
+      ? steps.find((s) => s.key === countAfterKey)
+      : null;
+
+    // Branch that forks the production return (e.g. after Dump → Return/Breakdown)
+    const branchAfterCount = countAfterKey
+      ? fn.branches.some((br) => normLabel(br.afterLabel) === countAfterKey)
+      : false;
     const branchAfterLast = fn.branches.some(
       (br) => normLabel(br.afterLabel) === last.key,
     );
-    if (r.id === prodRes.id) {
-      // Always count production at last network step (e.g. Dump)
-      addLink(last.id, counterId);
-      if (!branchAfterLast) {
-        // Normal return home after counter
+
+    if (r.id === prodRes.id && countAfterStep) {
+      // Insert COUNTER immediately after the count-at task
+      addLink(countAfterStep.id, counterId);
+      // Continue path: if count-at is not last, counter → next step
+      const idx = steps.findIndex((s) => s.key === countAfterKey);
+      if (idx >= 0 && idx < steps.length - 1 && !branchAfterCount) {
+        const next = steps[idx + 1]!;
+        // Avoid double sequential if already linked count→next before (branch skip may have removed it)
+        addLink(counterId, next.id);
+      } else if (!branchAfterCount) {
+        // Count-at is last task: return home after counter
         addLink(counterId, home);
       }
-      // If branchAfterLast: counter → Return/Breakdown with p (wired below)
+      // branchAfterCount: counter → Return/Breakdown with p (wired below)
+      // If count-at is mid-path, still need last → home unless last goes through counter chain
+      if (idx < steps.length - 1 && last.id !== countAfterStep.id) {
+        // last task still needs return home for this resource
+        if (!branchAfterLast) addLink(last.id, home);
+      }
+    } else if (r.id !== prodRes.id) {
+      if (!branchAfterLast) addLink(last.id, home);
     } else if (!branchAfterLast) {
       addLink(last.id, home);
     }
@@ -367,7 +419,7 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
       spec.description ??
       "Per-resource CYCLONE cycles with task durations.",
     timeUnit: spec.timeUnit ?? "min",
-    productionUnit: spec.productionUnit ?? "unit",
+    productionUnit: spec.counter?.unit ?? spec.productionUnit ?? "unit",
     defaultRuns: 1,
     defaultMaxTime: spec.maxTime ?? 480,
     defaultMaxCycles: spec.maxCycles ?? 100,
@@ -542,6 +594,8 @@ export function parseExplicitResourceCycles(text: string): {
     // New resource cycle line re-enables parsing when it looks like a cycle
     const m = line.match(/^(?:(\d+)\s+)?([A-Za-z][A-Za-z0-9 \-]{1,28}?)\s*:\s*(.+)$/);
     if (!m) continue;
+    if (/^(counter\s+after|count\s+at|production(\s+after)?|production\s+unit)\s*$/i.test(m[2]!.trim())) continue;
+    if (/^production\s*$/i.test(m[2]!.trim())) continue;
 
     const rhs = m[3]!.trim();
     const label = titleCase(m[2]!.trim());
@@ -558,7 +612,8 @@ export function parseExplicitResourceCycles(text: string): {
     ) {
       continue;
     }
-    if (/^(http|https|min|note|phase|cost|priority|sensitivity|duration)/i.test(label)) continue;
+    if (/^(http|https|min|note|phase|cost|priority|sensitivity|duration|counter|count|production)/i.test(label)) continue;
+    if (/^counter\s+after$|^count\s+at$|^production$/i.test(label)) continue;
 
     // Must look like a task sequence or multi-demand
     const looksLikeCycle =
@@ -786,15 +841,24 @@ export function buildOperationFromText(text: string): CycloneModel | null {
 
   try {
     const functions = parseFunctionsAndBranch(raw);
+    const counter = parseCounterPlacement(raw);
+    if (!counter.amount || counter.amount === 1) {
+      // keep prodAmt from legacy "12 m3" guess if counter parse had no amount
+      if (prodAmt > 1) counter.amount = prodAmt;
+    }
+    if (counter.unit === "unit" && productionUnit !== "cycle" && productionUnit !== "unit") {
+      counter.unit = productionUnit;
+    }
     let model = buildFromSpec({
       name,
       description: raw.slice(0, 400),
-      productionUnit,
-      productionPerCycle: prodAmt,
+      productionUnit: counter.unit || productionUnit,
+      productionPerCycle: counter.amount,
       resources,
       durations,
       productionResourceId: resources[0]!.id,
       functions,
+      counter,
     });
     const { costs, sensitivity } = parseCostAndSensitivity(raw);
     model = applyCostsToModel(model, costs);

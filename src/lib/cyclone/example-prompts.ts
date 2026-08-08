@@ -40,7 +40,11 @@ export const EXAMPLE_PROMPTS: ExamplePrompt[] = [
 
 Trucks: Load → Haul → Dump
 Loader: Load
-5 trucks, 1 loader, 12 m3
+5 trucks, 1 loader
+
+# Where one production unit is counted (required for clear teaching)
+Counter after: Dump
+production = 12 m3
 
 Cost:
 Trucks: 85
@@ -73,7 +77,10 @@ After Dump: Return p=0.85, Breakdown p=0.15
 
 Trucks: DumpToPaver → HaulEmpty → LoadAtPlant → ReturnToPaver
 Paver: DumpToPaver → Pave
-4 trucks, 1 paver, 1 load
+4 trucks, 1 paver
+
+Counter after: DumpToPaver
+production = 1 load
 
 Cost:
 Trucks: 95
@@ -104,7 +111,10 @@ ReturnToPaver: normal 11, 2
 
 Trucks: SpotLoad → BucketPool → ProcessBucket → AssemblePour → Leave
 Crane: ProcessBucket
-3 trucks, 1 crane, 1 pour
+3 trucks, 1 crane
+
+Counter after: AssemblePour
+production = 1 pour
 
 Functions:
 GEN BucketPool = 4
@@ -135,7 +145,10 @@ Leave: normal 14, 2
 
 Forms: Strip → Clean → Set → Pour → Cure
 Crew: Strip → Clean → Set → Pour
-6 forms, 1 crew, 1 panel
+6 forms, 1 crew
+
+Counter after: Pour
+production = 1 panel
 
 Cost:
 Forms: 15
@@ -165,7 +178,10 @@ Cure: const 120
 Masons: Lay → MortarPrep
 Helpers: Lay → SupplyBrick
 Scaffold: Lay → MoveScaffold
-4 masons, 2 helpers, 1 scaffold, 1 course
+4 masons, 2 helpers, 1 scaffold
+
+Counter after: Lay
+production = 1 course
 
 Cost:
 Masons: 75
@@ -199,6 +215,8 @@ Concrete crew: Lift Bucket → Pour
 Crane: Lift Steel | Lift Forms | Lift Bucket
 
 1 steel crew, 2 form crew, 2 concrete crew, 1 crane
+
+Counter after: Lift Steel
 production = 1 lift
 
 Priority:
