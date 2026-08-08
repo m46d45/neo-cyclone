@@ -266,3 +266,239 @@ function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
     );
   });
 }
+
+/* -------------------------------------------------------------------------- */
+/* Excel report (SpreadsheetML — opens in Excel / LibreOffice as .xls)        */
+/* -------------------------------------------------------------------------- */
+
+function xmlEscape(s: string | number | null | undefined): string {
+  // Build entities without embedding raw &...; sequences that tools may mangle
+  const amp = String.fromCharCode(38) + "amp;";
+  const lt = String.fromCharCode(38) + "lt;";
+  const gt = String.fromCharCode(38) + "gt;";
+  const quot = String.fromCharCode(38) + "quot;";
+  return String(s ?? "")
+    .replace(/&/g, amp)
+    .replace(/</g, lt)
+    .replace(/>/g, gt)
+    .replace(/"/g, quot);
+}
+
+type ExcelCell = string | number | null | undefined;
+
+function sheetXml(name: string, rows: ExcelCell[][]): string {
+  const safeName = name.replace(/[\\/*?:\[\]]/g, " ").slice(0, 31) || "Sheet";
+  const rowXml = rows
+    .map((row) => {
+      const cells = row
+        .map((v) => {
+          if (v == null || v === "") {
+            return `<Cell><Data ss:Type="String"></Data></Cell>`;
+          }
+          if (typeof v === "number" && Number.isFinite(v)) {
+            return `<Cell><Data ss:Type="Number">${v}</Data></Cell>`;
+          }
+          return `<Cell><Data ss:Type="String">${xmlEscape(v)}</Data></Cell>`;
+        })
+        .join("");
+      return `<Row>${cells}</Row>`;
+    })
+    .join("\n");
+  return `
+ <Worksheet ss:Name="${xmlEscape(safeName)}">
+  <Table>
+${rowXml}
+  </Table>
+ </Worksheet>`;
+}
+
+/**
+ * Multi-sheet Excel workbook (SpreadsheetML / .xls) from a simulation run.
+ * Opens in Microsoft Excel and imports cleanly into Google Sheets.
+ */
+export function buildSimulationReportExcel(
+  model: CycloneModel,
+  result: SimResult,
+): string {
+  const unit = model.timeUnit || "min";
+  const pu = model.productionUnit || "unit";
+  const primary = result.counterStats[0];
+  const cycles = summarizeResourceCycles(model);
+
+  const summary: ExcelCell[][] = [
+    ["Neo-CYCLONE Simulation Report"],
+    ["AI-agent of Daniel W. Halpin's CYCLONE"],
+    [],
+    ["Model", model.name],
+    ["Model id", model.id],
+    ["Description", model.description || ""],
+    ["Time unit", unit],
+    ["Production unit", pu],
+    [],
+    ["Seed", result.seed],
+    ["Max cycles requested", result.maxCyclesRequested],
+    ["Cycles completed", result.cyclesCompleted],
+    ["Simulation time", result.simTime],
+    ["Simulation time unit", unit],
+    [],
+  ];
+  if (primary) {
+    summary.push(
+      ["Process report (COUNTER)"],
+      ["Counter", primary.label],
+      ["Cycles (counter hits)", primary.count],
+      ["Units per cycle", primary.unitsPerCycle],
+      ["Total production", primary.production],
+      ["Units per hour", primary.unitsPerHour],
+      ["Avg cycle time", primary.avgCycleTime],
+      ["First passage time", primary.firstPassageTime],
+      [],
+    );
+  }
+  if (cycles.length) {
+    summary.push(["Network logic (resource cycles)"]);
+    for (const c of cycles) summary.push([c]);
+    summary.push([]);
+  }
+
+  const costSheet: ExcelCell[][] = [
+    ["Resource", "Count", "USD/h", "Total cost (USD)"],
+  ];
+  if (result.cost) {
+    for (const r of result.cost.resources) {
+      costSheet.push([r.label, r.count, r.costPerHourUsd, r.totalCostUsd]);
+    }
+    costSheet.push([]);
+    costSheet.push(["Run hours", result.cost.runHours]);
+    costSheet.push(["Total cost (USD)", result.cost.totalCostUsd]);
+    costSheet.push([
+      "Unit cost (USD / " + result.cost.productionUnit + ")",
+      result.cost.unitCostUsd,
+    ]);
+    costSheet.push(["Production", result.cost.production]);
+  } else {
+    costSheet.push(["(no cost data — add Cost: block in prompt)"]);
+  }
+
+  const actSheet: ExcelCell[][] = [
+    [
+      "Activity",
+      "Type",
+      "% time in operation",
+      "Starts",
+      `Avg duration (${unit})`,
+      "Avg units at task",
+    ],
+  ];
+  for (const a of result.activityStats) {
+    actSheet.push([
+      a.label,
+      a.type,
+      a.utilization * 100,
+      a.starts,
+      a.avgDuration,
+      a.avgUnitsAtTask,
+    ]);
+  }
+
+  const qSheet: ExcelCell[][] = [
+    [
+      "Queue",
+      "Initial n",
+      "Avg length",
+      "Max length",
+      "% occupied",
+      "Departures",
+      `Avg wait (${unit})`,
+      "Units at end",
+    ],
+  ];
+  for (const q of result.queueStats) {
+    qSheet.push([
+      q.label,
+      q.initialUnits,
+      q.avgLength,
+      q.maxLength,
+      q.percentOccupied * 100,
+      q.departures,
+      q.avgWaitTime,
+      q.unitsAtEnd,
+    ]);
+  }
+
+  const seriesSheet: ExcelCell[][] = [
+    ["Cycle", `t (${unit})`, "Production", `Units/h (${pu}/h)`],
+  ];
+  for (const pt of result.productivitySeries) {
+    seriesSheet.push([pt.cycle, pt.t, pt.production, pt.unitsPerHour]);
+  }
+
+  const branchSheet: ExcelCell[][] = [
+    ["From", "To", "Declared p", "Times taken", "Empirical share %"],
+  ];
+  if (result.branchStats?.length) {
+    for (const b of result.branchStats) {
+      branchSheet.push([
+        b.fromLabel,
+        b.toLabel,
+        b.probability ?? "",
+        b.timesTaken,
+        b.empiricalShare * 100,
+      ]);
+    }
+  } else {
+    branchSheet.push(["(no probabilistic branches)"]);
+  }
+
+  const logSheet: ExcelCell[][] = [["t", "Event"]];
+  const logN = Math.min(500, result.timeline.length);
+  for (let i = 0; i < logN; i++) {
+    const ev = result.timeline[i]!;
+    logSheet.push([ev.t, ev.event]);
+  }
+  if (result.timeline.length > logN) {
+    logSheet.push([
+      "",
+      `… ${result.timeline.length - logN} more events not exported`,
+    ]);
+  }
+
+  const sheets = [
+    sheetXml("Summary", summary),
+    sheetXml("Cost", costSheet),
+    sheetXml("Activities", actSheet),
+    sheetXml("Queues", qSheet),
+    sheetXml("Productivity", seriesSheet),
+    sheetXml("Branches", branchSheet),
+    sheetXml("Event log", logSheet),
+  ].join("\n");
+
+  return (
+    `<?xml version="1.0"?>\n` +
+    `<?mso-application progid="Excel.Sheet"?>\n` +
+    `<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"\n` +
+    ` xmlns:o="urn:schemas-microsoft-com:office:office"\n` +
+    ` xmlns:x="urn:schemas-microsoft-com:office:excel"\n` +
+    ` xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"\n` +
+    ` xmlns:html="http://www.w3.org/TR/REC-html40">\n` +
+    ` <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">\n` +
+    `  <Title>Neo-CYCLONE Report — ${xmlEscape(model.name)}</Title>\n` +
+    `  <Author>Neo-CYCLONE</Author>\n` +
+    ` </DocumentProperties>\n` +
+    sheets +
+    `\n</Workbook>\n`
+  );
+}
+
+/** Download simulation report as Excel (.xls SpreadsheetML). */
+export function downloadSimulationReportExcel(
+  model: CycloneModel,
+  result: SimResult,
+) {
+  const xml = buildSimulationReportExcel(model, result);
+  downloadBlob(
+    safeFilename(`report_${model.id}`, "xls"),
+    xml,
+    "application/vnd.ms-excel;charset=utf-8",
+  );
+}

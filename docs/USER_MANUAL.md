@@ -44,7 +44,7 @@ Where our **diagram notation** differs slightly from some Halpin print figures, 
 3. Refine until the network is right.  
 4. **Max cycles** (default **100**, product limit **500**) · Seed (**12345**) · Max time (auto-raised with cycles so charts can fill).  
 5. **Simulate**.  
-6. Optional: **Report .md / .txt**, diagram/chart **PNG**, sensitivity tab.
+6. Optional: **Report Excel**, diagram/chart **PNG**, sensitivity tab.
 
 ---
 
@@ -80,12 +80,12 @@ const · unif · tri · normal · lognormal · beta · gamma
 
 ---
 
-## 4. Results (MicroCYCLONE-style)
+## 4. Results
 
 - Process report: run length, cycles, units/cycle, production, units/hour, avg cycle  
 - Cost report (USD) when `cost_usd_h` / Cost block present  
 - Report by Element · Production by Cycle · Charts · **Branches** (if p-arcs)  
-- **Download Report .md / .txt**  
+- **Download Report Excel** (.xls, multi-sheet)  
 - Sensitivity tab: productivity & unit cost vs fleet mix (pairwise when 3–5 resources)
 
 ---
@@ -191,7 +191,7 @@ Features are spread across cases (not every feature in every preset).
 ## 8. Zoom & export
 
 Diagram and charts: + / − / reset · **PNG**.  
-Report: full MicroCYCLONE-style markdown/text download.
+Report: multi-sheet Excel download (Summary, Cost, Activities, Queues, Productivity, Branches, Event log).
 
 ---
 

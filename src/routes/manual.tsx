@@ -161,14 +161,14 @@ function ManualPage() {
         <Section title="Results, cost, sensitivity, export">
           <ul className="list-disc space-y-1.5 pl-5 text-xs">
             <li>
-              MicroCYCLONE-style process report, element tables, production-by-cycle, charts.
+              Process report, element tables, production-by-cycle, charts.
             </li>
             <li>
               Optional <strong className="text-foreground">cost (USD/h)</strong> and{" "}
               <strong className="text-foreground">Sensitivity:</strong> block in the prompt.
             </li>
             <li>
-              <strong className="text-foreground">Report .md / .txt</strong> download after Simulate.
+              <strong className="text-foreground">Report Excel</strong> download after Simulate.
             </li>
             <li>
               Diagram and charts: zoom +/− and <strong className="text-foreground">PNG</strong> export.
