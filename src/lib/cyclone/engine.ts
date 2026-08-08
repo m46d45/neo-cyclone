@@ -211,8 +211,16 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     if (node.type === "QUEUE") {
       const q = queues.get(nodeId)!;
       touchQueue(q);
+      // Halpin GENERATE: each arrival becomes k units (GEN k). initialUnits are not multiplied.
+      const gen = Math.max(1, Math.floor(node.generateCount ?? 1));
       entity.arrivedAt = time;
       q.units.push(entity);
+      for (let i = 1; i < gen; i++) {
+        q.units.push({ id: entitySeq++, arrivedAt: time });
+      }
+      if (gen > 1) {
+        record(`QUEUE "${q.label}" GEN ${gen} (arrival → ${gen} units)`);
+      }
       tryStartCombisFedBy(nodeId);
     } else if (node.type === "NORMAL") {
       startNormal(nodeId, entity);
@@ -271,7 +279,6 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
   /**
    * COMBI (classic CYCLONE): start as many concurrent instances as preceding
    * QUEUE resources allow. A second loader + idle trucks → second parallel Load.
-   * (Previously busyUntil forced single-server behaviour — wrong for Halpin.)
    */
   function tryStartCombi(activityId: string) {
     const a = activities.get(activityId);
@@ -283,7 +290,6 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     );
     if (!predQueues.length) return;
 
-    // Launch every feasible concurrent instance at this clock time.
     let guard = 0;
     while (guard++ < 10_000) {
       let canStart = true;
