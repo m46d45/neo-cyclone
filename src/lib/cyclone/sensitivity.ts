@@ -23,10 +23,55 @@ function findHomeQueue(model: CycloneModel, label: string) {
   );
 }
 
-/** Cartesian product of integer ranges (capped for teaching UI). */
+/** Soft cap so browser stays responsive; ranges are down-sampled, not truncated mid-axis. */
+const MAX_SENSITIVITY_COMBOS = 150;
+
+function valuesForRange(low: number, high: number, step: number): number[] {
+  const values: number[] = [];
+  for (let v = low; v <= high; v += step) values.push(v);
+  // Always include the stated high endpoint (e.g. Trucks: 2..40 → 40 on the chart).
+  if (values.length && values[values.length - 1]! !== high) values.push(high);
+  if (!values.length) values.push(low);
+  return values;
+}
+
+/**
+ * If Cartesian product would exceed MAX, coarsen the *widest* range's step
+ * until product ≤ MAX. Endpoints (low/high) are always kept so X-axis
+ * still reaches the user-requested max (e.g. 40 trucks).
+ */
+function fitRangesToBudget(
+  ranges: { queueId: string; label: string; low: number; high: number; step: number }[],
+): { queueId: string; label: string; values: number[] }[] {
+  const specs = ranges.map((r) => ({ ...r, step: Math.max(1, r.step) }));
+
+  const product = () =>
+    specs.reduce(
+      (p, s) => p * valuesForRange(s.low, s.high, s.step).length,
+      1,
+    );
+
+  let guard = 0;
+  while (product() > MAX_SENSITIVITY_COMBOS && guard++ < 200) {
+    let widest = 0;
+    for (let i = 1; i < specs.length; i++) {
+      const a = valuesForRange(specs[i]!.low, specs[i]!.high, specs[i]!.step).length;
+      const b = valuesForRange(specs[widest]!.low, specs[widest]!.high, specs[widest]!.step).length;
+      if (a > b) widest = i;
+    }
+    specs[widest]!.step += 1;
+  }
+
+  return specs.map((s) => ({
+    queueId: s.queueId,
+    label: s.label,
+    values: valuesForRange(s.low, s.high, s.step),
+  }));
+}
+
+/** Full Cartesian product (budget already enforced by fitRangesToBudget). */
 function expandCombos(
   ranges: { queueId: string; label: string; values: number[] }[],
-  maxCombos = 48,
 ): { counts: Record<string, number>; label: string }[] {
   let combos: { counts: Record<string, number>; label: string }[] = [
     { counts: {}, label: "" },
@@ -41,7 +86,6 @@ function expandCombos(
             ? `${c.label}, ${r.label}=${v}`
             : `${r.label}=${v}`,
         });
-        if (next.length >= maxCombos) return next;
       }
     }
     combos = next;
@@ -61,25 +105,27 @@ export function runSensitivity(
   const plan = ranges ?? model.sensitivity ?? [];
   if (!plan.length) return { rows: [], bestProductivityLabel: null, bestUnitCostLabel: null };
 
-  const resolved: { queueId: string; label: string; values: number[] }[] = [];
+  const raw: { queueId: string; label: string; low: number; high: number; step: number }[] = [];
   for (const p of plan) {
     const q = findHomeQueue(model, p.resourceLabel);
     if (!q) continue;
     const step = Math.max(1, Math.floor(p.step ?? 1));
     const low = Math.max(1, Math.floor(p.low));
     const high = Math.max(low, Math.floor(p.high));
-    const values: number[] = [];
-    for (let v = low; v <= high; v += step) values.push(v);
-    resolved.push({
+    raw.push({
       queueId: q.id,
       label: q.label.replace(/\s*Idle$/i, "").trim() || q.label,
-      values,
+      low,
+      high,
+      step,
     });
   }
-  if (!resolved.length) {
+  if (!raw.length) {
     return { rows: [], bestProductivityLabel: null, bestUnitCostLabel: null };
   }
 
+  // Cover full low..high (e.g. Trucks to 40); coarsen step only if needed for budget.
+  const resolved = fitRangesToBudget(raw);
   const combos = expandCombos(resolved);
   const rows: SensitivityRow[] = [];
 
@@ -155,7 +201,6 @@ export function parseCostAndSensitivity(text: string): {
     if (mode === "cost") parseCostLine(line, costs);
     else if (mode === "sens") parseSensLine(line, sensitivity);
     else {
-      // inline: Trucks: 85 USD/h  or  cost trucks 85
       const m = line.match(/^([A-Za-z][\w\s-]{1,24}?)\s*:\s*(\d+(?:\.\d+)?)\s*(usd\/h|\/h|\$\/h)?\s*$/i);
       if (m && /usd|\/h|cost/i.test(line + (m[3] ?? ""))) {
         costs[m[1]!.trim()] = Number(m[2]);
@@ -166,7 +211,6 @@ export function parseCostAndSensitivity(text: string): {
 }
 
 function parseCostLine(line: string, costs: Record<string, number>) {
-  // "Trucks: 85" or "Trucks 85" or "Trucks=85"
   const parts = line.split(/[,;]/).map((p) => p.trim()).filter(Boolean);
   for (const p of parts) {
     const m = p.match(/^([A-Za-z][\w\s-]{0,24}?)\s*[:=]?\s*(\d+(?:\.\d+)?)/);
