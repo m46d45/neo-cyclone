@@ -369,11 +369,15 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
   function tryStartCombisFedBy(queueId: string) {
     const outs = outArcs.get(queueId) ?? [];
     const combis: string[] = [];
+    const normals: string[] = [];
     for (const arc of outs) {
       const node = nodeById.get(arc.to);
       if (node?.type === "COMBI") combis.push(arc.to);
+      else if (node?.type === "NORMAL") normals.push(arc.to);
     }
     for (const id of sortCombisByPriority(combis)) tryStartCombi(id);
+    // Single-resource work leaving a QUEUE is NORMAL (not COMBI)
+    for (const id of normals) tryStartWorkFromQueues(id);
   }
 
   /** Global COMBI scan in priority order (after any state change). */
@@ -386,18 +390,34 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
 
   /**
    * COMBI (classic CYCLONE): start as many concurrent instances as preceding
-   * QUEUE resources allow.
+   * QUEUE resources allow (typically ≥2 queues meeting).
    */
   function tryStartCombi(activityId: string) {
+    tryStartWorkFromQueues(activityId, "COMBI");
+  }
+
+  /**
+   * Start work whose predecessors are QUEUEs.
+   * - COMBI: usually multiple home/staging queues (resources meet)
+   * - NORMAL: usually a single home QUEUE (one resource only — e.g. LoadAtPlant)
+   */
+  function tryStartWorkFromQueues(
+    activityId: string,
+    expectType?: "COMBI" | "NORMAL",
+  ) {
     const a = activities.get(activityId);
     const node = nodeById.get(activityId);
-    if (!a || !node || a.type !== "COMBI") return;
+    if (!a || !node) return;
+    if (node.type !== "COMBI" && node.type !== "NORMAL") return;
+    if (expectType && node.type !== expectType) return;
 
     const predQueues = (inLinks.get(activityId) ?? []).filter((id) =>
       queues.has(id),
     );
     if (!predQueues.length) return;
 
+    // NORMAL should not wait on multiple foreign resources — if multiple queue
+    // preds exist it is modeled as COMBI; still allow 1+ for robustness.
     let guard = 0;
     while (guard++ < 10_000) {
       let canStart = true;
@@ -426,7 +446,8 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
       a.totalDuration += dur;
       a.busyUntil = Math.max(a.busyUntil, time + dur);
       noteActivityStart(a);
-      record(`COMBI "${a.label}" start ×${a.concurrent} (${dur.toFixed(2)})`);
+      const kind = node.type === "COMBI" ? "COMBI" : "NORMAL";
+      record(`${kind} "${a.label}" start ×${a.concurrent} (${dur.toFixed(2)})`);
       pushEvent({
         time: time + dur,
         kind: "END_ACTIVITY",
@@ -463,10 +484,34 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
       }
       // Global priority scan: shared resources (e.g. crane) serve highest priority first
       tryStartAllCombisByPriority();
+      tryStartAllNormalsFromQueues();
     } else {
       a.concurrent = Math.max(0, a.concurrent - 1);
-      const entity = ev.entities[0];
-      if (entity) routeDownstream(ev.activityId, entity);
+      // NORMAL multi-entity rare; route each (usually 1)
+      if (ev.entities.length > 1) {
+        const outs = outArcs.get(ev.activityId) ?? [];
+        const anyP = outs.some((o) => o.probability != null);
+        if (!anyP && outs.length >= ev.entities.length) {
+          for (let i = 0; i < ev.entities.length; i++) {
+            const arc = outs[i] ?? outs[outs.length - 1]!;
+            noteBranch(arc);
+            enterNode(arc.to, ev.entities[i]!);
+          }
+        } else {
+          for (const ent of ev.entities) routeDownstream(ev.activityId, ent);
+        }
+      } else {
+        const entity = ev.entities[0];
+        if (entity) routeDownstream(ev.activityId, entity);
+      }
+      tryStartAllCombisByPriority();
+      tryStartAllNormalsFromQueues();
+    }
+  }
+
+  function tryStartAllNormalsFromQueues() {
+    for (const n of model.nodes) {
+      if (n.type === "NORMAL") tryStartWorkFromQueues(n.id, "NORMAL");
     }
   }
 
@@ -513,6 +558,7 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
   }
 
   tryStartAllCombisByPriority();
+  tryStartAllNormalsFromQueues();
 
   const maxTime = config.maxTime;
   const maxCycles = clampMaxCycles(config.maxCycles);

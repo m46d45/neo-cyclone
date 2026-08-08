@@ -133,11 +133,25 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
   });
 
   const fn = spec.functions ?? { gens: [], cons: [], branches: [] };
-  const firstLabels = new Set<string>();
+
+  /**
+   * COMBI = two or more resources must meet (task appears in ≥2 resource cycles
+   * or in itinerary + alsoServes of another). Single-resource work = NORMAL
+   * (e.g. LoadAtPlant with only trucks; plant assumed unlimited / no second QUEUE).
+   */
+  const resourceTouch = new Map<string, Set<string>>();
+  const touch = (lab: string, rid: string) => {
+    const k = normLabel(lab);
+    const set = resourceTouch.get(k) ?? new Set<string>();
+    set.add(rid);
+    resourceTouch.set(k, set);
+  };
   for (const r of spec.resources) {
-    if (r.itinerary[0]) firstLabels.add(normLabel(r.itinerary[0]));
-    for (const a of r.alsoServes ?? []) firstLabels.add(normLabel(a));
+    for (const lab of r.itinerary) touch(lab, r.id);
+    for (const lab of r.alsoServes ?? []) touch(lab, r.id);
   }
+  const isMeetingTask = (key: string) => (resourceTouch.get(key)?.size ?? 0) >= 2;
+
   /** Step id by norm label; may be COMBI, NORMAL, QUEUE(GEN), or CONSOLIDATE. */
   const activityId = new Map<string, string>();
   type StepKind = "COMBI" | "NORMAL" | "GEN" | "CON";
@@ -180,7 +194,7 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
       return;
     }
 
-    const isCombi = firstLabels.has(key);
+    const isCombi = isMeetingTask(key);
     const id = uniqueId(isCombi ? `c_${key}` : `n_${key}`, used);
     activityId.set(key, id);
     activityType.set(key, isCombi ? "COMBI" : "NORMAL");
@@ -278,17 +292,15 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
     }
     const countAtKey = countAtForThis ? normLabel(countAtForThis) : null;
 
-    // Home always feeds first COMBI; if first step is GEN/CON, still link home → first
-    // (GEN as first is rare). Prefer first COMBI in path for classic cycles.
-    const firstCombi = steps.find((s) => s.type === "COMBI") ?? steps[0]!;
-    if (steps[0]!.type === "COMBI") {
-      addLink(home, steps[0]!.id);
+    // Home QUEUE feeds the first work step (COMBI if meeting, else NORMAL).
+    // GEN/CON first is rare — still link home → first step.
+    const first = steps[0]!;
+    if (first.type === "COMBI" || first.type === "NORMAL") {
+      addLink(home, first.id);
     } else {
-      // e.g. unlikely GEN first — link home to first step, or to first COMBI
-      addLink(home, firstCombi.id);
-      if (steps[0]!.id !== firstCombi.id) {
-        // resource also enters path at step 0 if different
-      }
+      const firstWork =
+        steps.find((s) => s.type === "COMBI" || s.type === "NORMAL") ?? first;
+      addLink(home, firstWork.id);
     }
     const stags: string[] = [];
 

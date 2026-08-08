@@ -22,8 +22,8 @@ Use this document when drawing diagrams, writing prompts, writing DSL, or updati
 | Element | Shape (diagram) | Role |
 |---------|-----------------|------|
 | **QUEUE** | Circle with lower-right slash (like a **Q**) | Idle resource / waiting pool (home of a resource) |
-| **COMBI** | Square with **top-left corner cut** | Constrained work: needs one unit from each predecessor QUEUE; may run concurrent instances |
-| **NORMAL** | Rectangle | Unconstrained work: starts when a unit arrives |
+| **COMBI** | Square with **top-left corner cut** | **Meeting work**: ≥2 resources required (one unit from each predecessor QUEUE). Single-resource work is NORMAL |
+| **NORMAL** | Rectangle | **One-resource work**: starts from a single unit (home QUEUE or previous task). No second resource needed |
 | **COUNTER** | **Golf flag** (pole + triangular flag) | Production counter — records cycles / output |
 | **CONSOLIDATE (CON)** | **Upright triangle** | Function node: gather N units, release 1 (duration 0) |
 
@@ -77,9 +77,9 @@ Use this document when drawing diagrams, writing prompts, writing DSL, or updati
 ## 4. Structural modeling rules
 
 1. Every resource has a **home QUEUE**.  
-2. First task after leaving a QUEUE is usually **COMBI** (meeting / constrained).  
-3. Later unconstrained steps are **NORMAL**.  
-4. **QUEUE may only link to COMBI** (engine / validation rule).  
+2. A task used by **≥2 resources** is **COMBI** (they meet).  
+3. A task used by **only one resource** is **NORMAL** (e.g. LoadAtPlant with trucks only).  
+4. Home QUEUE may feed **COMBI or NORMAL**; staging QUEUE feeds the COMBI it precedes.  
 5. COMBI multi-out without probabilities: **entity i → arc i** (resource fan-out) — deterministic.  
 6. COMBI may run **multiple concurrent** instances when resources allow.
 
