@@ -8,7 +8,7 @@ import { ZoomToolbar, useZoomState } from "@/components/cyclone/ZoomToolbar";
 import { cn } from "@/lib/utils";
 
 /**
- * Classic Halpin / MicroCYCLONE notation + cyclic return arcs.
+ * Halpin shapes + Neo-CYCLONE arrows: solid black = forward; dashed gold = return.
  */
 function NodeShape({
   node,
@@ -265,9 +265,15 @@ function linkPath(
   };
 }
 
-function isCycleLink(from: CycloneNode, to: CycloneNode): boolean {
-  if (to.type === "QUEUE" && (from.type === "COMBI" || from.type === "NORMAL")) return true;
-  if (from.type === "QUEUE" && to.type === "QUEUE") return true;
+/**
+ * Neo-CYCLONE arrow standard (teaching clarity; may differ from Halpin print style):
+ * - Forward = solid black: work flow toward production (typically toward COUNTER).
+ * - Return  = dashed gold: resource going home / closing its cycle (into a QUEUE).
+ * After COUNTER, any arc that re-enters a QUEUE is return (cyclic resource).
+ */
+function isReturnLink(from: CycloneNode, to: CycloneNode): boolean {
+  // Home QUEUE is the idle pool — every arc into a QUEUE closes a resource cycle.
+  if (to.type === "QUEUE") return true;
   return false;
 }
 
@@ -285,9 +291,10 @@ export function DiagramCanvas() {
   }, [model]);
 
   const height = useMemo(() => {
-    if (!model?.nodes.length) return 360;
+    if (!model?.nodes.length) return 400;
     const maxY = Math.max(...model.nodes.map((n) => n.y + 100));
-    return Math.max(360, maxY + 40);
+    // Extra space for arrow legend at bottom
+    return Math.max(400, maxY + 56);
   }, [model]);
 
   const nodeMap = useMemo(() => {
@@ -303,11 +310,12 @@ export function DiagramCanvas() {
         const from = nodeMap.get(link.from);
         const to = nodeMap.get(link.to);
         if (!from || !to) return null;
-        const cycle = isCycleLink(from, to);
+        const cycle = isReturnLink(from, to);
         return { link, cycle, path: linkPath(from, to, cycle) };
       })
       .filter(Boolean) as {
       link: (typeof model.links)[0];
+      /** true = return (dashed gold); false = forward (solid black) */
       cycle: boolean;
       path: { d: string; mx: number; my: number };
     }[];
@@ -423,15 +431,19 @@ export function DiagramCanvas() {
                 d={path.d}
                 fill="none"
                 stroke={
-                  isBranch ? "#8b5a2b" : cycle ? "var(--primary)" : "var(--diagram-ink)"
+                  cycle
+                    ? "var(--primary)"
+                    : isBranch
+                      ? "#8b5a2b"
+                      : "var(--diagram-ink)"
                 }
-                strokeWidth={isBranch ? 2.1 : cycle ? 2.25 : 1.75}
-                strokeDasharray={cycle && !isBranch ? "7 4" : undefined}
+                strokeWidth={cycle ? 2.25 : isBranch ? 2.1 : 1.85}
+                strokeDasharray={cycle ? "7 4" : undefined}
                 markerEnd={
-                  isBranch
-                    ? "url(#arrow-halpin-branch)"
-                    : cycle
-                      ? "url(#arrow-halpin-cycle)"
+                  cycle
+                    ? "url(#arrow-halpin-cycle)"
+                    : isBranch
+                      ? "url(#arrow-halpin-branch)"
                       : "url(#arrow-halpin)"
                 }
               />
@@ -471,6 +483,18 @@ export function DiagramCanvas() {
             onSelect={() => selectNode(node.id)}
           />
         ))}
+
+        {/* Arrow legend */}
+        <g transform={`translate(16, ${height - 36})`}>
+          <line x1={0} y1={8} x2={28} y2={8} stroke="var(--diagram-ink)" strokeWidth={1.75} markerEnd="url(#arrow-halpin)" />
+          <text x={34} y={11} fill="var(--diagram-ink)" style={{ fontSize: 10, fontFamily: "Georgia, serif" }}>
+            Forward flow
+          </text>
+          <line x1={120} y1={8} x2={148} y2={8} stroke="var(--primary)" strokeWidth={2.1} strokeDasharray="7 4" markerEnd="url(#arrow-halpin-cycle)" />
+          <text x={154} y={11} fill="var(--diagram-ink)" style={{ fontSize: 10, fontFamily: "Georgia, serif" }}>
+            Return (resource cycle)
+          </text>
+        </g>
       </svg>
         </div>
       </div>

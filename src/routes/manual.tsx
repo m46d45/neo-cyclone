@@ -187,6 +187,43 @@ function ManualPage() {
             Preview work in Grok Build is only live on the public site after a successful push/deploy.
           </p>
         </Section>
+
+        <Section title="Arrow standard (diagram)">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[280px] text-left text-xs">
+              <thead>
+                <tr className="border-b border-border text-[10px] uppercase tracking-wide">
+                  <th className="py-1.5 pr-3 font-medium text-foreground">Style</th>
+                  <th className="py-1.5 font-medium text-foreground">Meaning</th>
+                </tr>
+              </thead>
+              <tbody className="text-muted-foreground">
+                <tr className="border-b border-border/60">
+                  <td className="py-1.5 pr-3 text-foreground">Solid black</td>
+                  <td className="py-1.5">
+                    <strong className="text-foreground">Forward</strong> flow — work toward production
+                    (typically toward the COUNTER)
+                  </td>
+                </tr>
+                <tr className="border-b border-border/60">
+                  <td className="py-1.5 pr-3 text-foreground">Dashed gold</td>
+                  <td className="py-1.5">
+                    <strong className="text-foreground">Return</strong> — resource home / cycle close
+                    (any arc into a QUEUE)
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-1.5 pr-3 text-foreground">Brown + p=…</td>
+                  <td className="py-1.5">Probabilistic branch on a forward multi-out</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-2 text-xs">
+            Slightly more explicit than some Halpin print figures: flow is easy to read as
+            progress to the COUNTER, then dashed gold shows the cyclic return of resources.
+          </p>
+        </Section>
       </main>
     </div>
   );

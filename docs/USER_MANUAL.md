@@ -75,7 +75,17 @@ Home QUEUE → work → return. COMBI for shared first tasks; NORMAL later. QUEU
 
 ## 6. Notation
 
-QUEUE (Q-circle, optional GEN k) · COMBI (cut corner) · NORMAL · COUNTER (golf flag) · CONSOLIDATE (triangle CON n) · return arcs gold dashed · branch arcs brown **p=…**
+QUEUE (Q-circle, optional GEN k) · COMBI (cut corner) · NORMAL · COUNTER (golf flag) · CONSOLIDATE (triangle CON n)
+
+### Arrow standard (Neo-CYCLONE)
+
+| Style | Meaning |
+|-------|---------|
+| **Solid black** arrow | **Forward** flow — work progresses toward production (typically toward the COUNTER) |
+| **Dashed gold** arrow | **Return** — resource going home / closing its cycle (any arc **into a QUEUE**) |
+| Brown + **p=…** | Probabilistic branch on a forward multi-out (declared probability) |
+
+This is slightly more explicit than some Halpin print figures: everything usefully points toward the COUNTER; after the COUNTER, the path that re-enters a resource QUEUE is drawn dashed gold so the cyclic nature is obvious.
 
 ---
 
