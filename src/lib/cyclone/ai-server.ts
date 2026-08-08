@@ -24,19 +24,30 @@ async function draftDslFromPrompt(prompt: string): Promise<{
     return { ok: false, error: "AI unavailable", dsl: null, source: "none" };
   }
 
-  const system = `You are Neo-CYCLONE, expert in Halpin CYCLONE simulation.
+  const system = `You are Neo-CYCLONE, expert in Halpin CYCLONE simulation using the Neo-CYCLONE notation standard (docs/NOTATION_STANDARD.md).
 
-User prompts may contain notes on lines starting with # or // — those are already removed when present; ignore any leftover commentary.
+User prompts may contain notes on lines starting with # or // — those are already removed when present; ignore leftover commentary.
 
 Honor per-resource cycles when listed:
   Resource: Task1 → Task2 → …
   counts and production unit
   Durations: Task: dist params
+  Optional: Cost USD/h, Sensitivity: Resource: low..high
 
 CORE RULES:
 - Every resource has a home QUEUE; returns to the same QUEUE.
 - First activity after QUEUE is COMBI; later steps NORMAL.
+- QUEUE may only link to COMBI.
 - Any construction domain. Do not force earthmoving unless described.
+
+NOTATION / DSL (canonical Neo-CYCLONE):
+- QUEUE: initial, optional generate (GEN k, k≥2) multiplies each *arrival* only (not initial).
+- COMBI / NORMAL: duration required.
+- COUNTER: production amount.
+- CONSOLIDATE: consolidate n (CON n, n≥2) — buffer n arrivals, release 1 (time 0).
+- GEN and CON are independent; use only when unit logic needs them.
+- Links: optional probability (0–1) for stochastic multi-out. Sum ~1. Do NOT put probability on COMBI multi-out used only for resource return fan-out.
+- Layout hint: forward flow toward COUNTER; arcs into QUEUE are resource returns (diagram shows dashed gold).
 
 Return ONLY YAML Neo-CYCLONE DSL ${DSL_VERSION}. No markdown.
 
@@ -44,6 +55,9 @@ dsl: "${DSL_VERSION}"
 model: { id, name, description, time_unit, production_unit, nodes, links }
 run: { seed, max_time, max_cycles }
 
+QUEUE fields: initial, generate, cost_usd_h
+CONSOLIDATE: consolidate
+links: from, to, probability
 Duration kinds: constant, uniform, triangular, normal, lognormal, beta, gamma.`;
 
   try {
@@ -75,9 +89,9 @@ Duration kinds: constant, uniform, triangular, normal, lognormal, beta, gamma.`;
       return {
         ok: true,
         dsl: serializeDsl(asDsl.model, {
-          seed: asDsl.run.seed,
-          maxTime: asDsl.run.maxTime,
-          maxCycles: asDsl.run.maxCycles,
+          seed: asDsl.run?.seed,
+          maxTime: asDsl.run?.maxTime,
+          maxCycles: asDsl.run?.maxCycles,
         }),
         error: null,
         source: "ai",

@@ -3,7 +3,8 @@
 **Version:** 1.1  
 **Language:** English  
 **Tagline:** AI-agent of Daniel W. Halpin's CYCLONE  
-**Live app:** https://neo-cyclone.vercel.app/ (deploys from GitHub `main`)
+**Live app:** https://neo-cyclone.vercel.app/ (deploys from GitHub `main`)  
+**Canonical notation:** [NOTATION_STANDARD.md](./NOTATION_STANDARD.md) — use this as the ongoing reference for shapes, arrows, GEN, CON, and branches.
 
 ---
 
@@ -21,6 +22,8 @@ I studied under Professor Halpin and worked for him. Through him I first met **c
 Later: DISCO, PROSIDYC, COST, WebCYCLONE, Symphony.Net, and related systems.
 
 **Neo-CYCLONE** is for **education** and **first contact**—not a special-purpose industrial simulator. It connects process design to Lean Construction and Project Production Management. Halpin’s foundation makes AI-assisted operations modeling possible.
+
+Where our **diagram notation** differs slightly from some Halpin print figures, we keep **one consistent Neo-CYCLONE standard** (see §6 and [NOTATION_STANDARD.md](./NOTATION_STANDARD.md)).
 
 ---
 
@@ -67,41 +70,70 @@ const · unif · tri · normal · lognormal · beta · gamma
 
 ---
 
-## 5. Modeling rule (Halpin)
+## 5. Modeling rule (Halpin core)
 
 Home QUEUE → work → return. COMBI for shared first tasks; NORMAL later. QUEUE only feeds COMBI. Concurrent COMBI allowed.
 
 ---
 
-## 6. Notation
+## 6. Neo-CYCLONE notation standard (summary)
 
-QUEUE (Q-circle, optional GEN k) · COMBI (cut corner) · NORMAL · COUNTER (golf flag) · CONSOLIDATE (triangle CON n)
+Full detail: **[NOTATION_STANDARD.md](./NOTATION_STANDARD.md)**.
 
-### Arrow standard (Neo-CYCLONE)
+### 6.1 Node shapes
 
-| Style | Meaning |
-|-------|---------|
-| **Solid black** arrow | **Forward** flow — work progresses toward production (typically toward the COUNTER) |
-| **Dashed gold** arrow | **Return** — resource going home / closing its cycle (any arc **into a QUEUE**) |
-| Brown + **p=…** | Probabilistic branch on a forward multi-out (declared probability) |
+| Element | Drawing | Subtitle |
+|---------|---------|----------|
+| **QUEUE** | Q-circle (slash) | `n = …` · optional **`GEN k`** |
+| **COMBI** | Cut-corner square | duration |
+| **NORMAL** | Rectangle | duration |
+| **COUNTER** | Golf flag | `+production` |
+| **CONSOLIDATE** | Upright triangle | **`CON n`** |
 
-This is slightly more explicit than some Halpin print figures: everything usefully points toward the COUNTER; after the COUNTER, the path that re-enters a resource QUEUE is drawn dashed gold so the cyclic nature is obvious.
+### 6.2 Arrows — always with direction tip
+
+| Style | Look | Meaning |
+|-------|------|---------|
+| **Forward** | **Solid black + black arrowhead** | Work flow toward production (toward COUNTER) |
+| **Return** | **Dashed gold + gold arrowhead** (curved) | Resource home / cycle close — **target is a QUEUE** |
+| **Branch** | Forward path + brown **`p=…`** label | Stochastic multi-out |
+
+Never draw undirected segments: every arc is a **panah** (arrow).
+
+### 6.3 GEN and CON (how we write them)
+
+| Function | Diagram | DSL | Engine rule |
+|----------|---------|-----|-------------|
+| **GEN k** | On QUEUE: label **`GEN k`** | `generate: k` (k ≥ 2) | Each *arrival* → k units; **not** applied to initial |
+| **CON n** | Triangle **`CON n`** | `type: CONSOLIDATE`, `consolidate: n` (n ≥ 2) | Collect n units → release 1 (time 0) |
+
+- GEN and CON are **independent** — a model may use one, both, or neither.  
+- Classic pair: GEN multiplies work units; CON reunites them for one production unit (see Example *GEN and CON Scale*).  
+- Do **not** put `probability` on COMBI multi-out used only for resource return fan-out.
+
+### 6.4 Probabilistic branch
+
+```yaml
+- from: c_inspect
+  to: ctr
+  probability: 0.9
+- from: c_inspect
+  to: n_rework
+  probability: 0.1
+```
+
+Results → **Branches**: declared vs empirical.
+
+### 6.5 Consistency checklist
+
+- [ ] Visible **arrowhead** on every arc  
+- [ ] Solid black = forward; dashed gold into QUEUE = return  
+- [ ] GEN only on QUEUE; CON only CONSOLIDATE  
+- [ ] Resource cycles readable end-to-end  
 
 ---
 
-## 7. Function nodes (independent)
-
-| Function | Where | Behavior |
-|----------|--------|----------|
-| **GEN k** | QUEUE `generate: k` | Each *arrival* → k units (not initial) |
-| **CON n** | CONSOLIDATE `consolidate: n` | Buffer n → release 1 (time 0) |
-| **Branch p** | link `probability` | Sample one multi-out arc; normalize if needed |
-
-Do not put probability on COMBI multi-out **resource return** arcs.
-
----
-
-## 8. Teaching examples
+## 7. Teaching examples
 
 1. Earthmoving fleet (cost + sensitivity)  
 2. Asphalt paving  
@@ -113,16 +145,16 @@ Do not put probability on COMBI multi-out **resource return** arcs.
 
 ---
 
-## 9. Zoom & export
+## 8. Zoom & export
 
 Diagram and charts: + / − / reset · **PNG**.  
 Report: full MicroCYCLONE-style markdown/text download.
 
 ---
 
-## 10. Deploy note
+## 9. Deploy note
 
-GitHub `main` → Vercel production. The in-browser Grok Build preview may temporarily differ until changes are **pushed** to GitHub.
+GitHub `main` → Vercel production. Grok Build preview may differ until changes are **pushed**.
 
 ---
 

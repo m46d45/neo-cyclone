@@ -235,29 +235,56 @@ function NodeShape({
   );
 }
 
+/**
+ * Path between node centers, trimmed to shape edges so **arrowheads stay visible**.
+ * Return arcs use a curved bow; forward arcs are straight.
+ */
 function linkPath(
   from: CycloneNode,
   to: CycloneNode,
-  cycle: boolean,
+  isReturn: boolean,
 ): { d: string; mx: number; my: number } {
-  const size = 60;
-  const half = size / 2;
-  const x1 = from.x + half;
-  const y1 = from.y + half;
-  const x2 = to.x + half;
-  const y2 = to.y + half;
-  if (!cycle) {
-    return { d: `M ${x1} ${y1} L ${x2} ${y2}`, mx: (x1 + x2) / 2, my: (y1 + y2) / 2 - 8 };
+  const half = 30;
+  const ax = from.x + half;
+  const ay = from.y + half;
+  const bx = to.x + half;
+  const by = to.y + half;
+  const dx = bx - ax;
+  const dy = by - ay;
+  const len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len;
+  const uy = dy / len;
+  // Keep stroke outside the symbol so the arrow tip is not buried under the shape
+  const startPad = 32;
+  const endPad = 36;
+  const x1 = ax + ux * startPad;
+  const y1 = ay + uy * startPad;
+  const x2 = bx - ux * endPad;
+  const y2 = by - uy * endPad;
+
+  if (!isReturn) {
+    return {
+      d: `M ${x1} ${y1} L ${x2} ${y2}`,
+      mx: (x1 + x2) / 2,
+      my: (y1 + y2) / 2 - 8,
+    };
   }
+
   const mx = (x1 + x2) / 2;
   const my = (y1 + y2) / 2;
-  const dx = x2 - x1;
-  const dy = y2 - y1;
-  const len = Math.hypot(dx, dy) || 1;
-  const ox = (-dy / len) * 28;
-  const oy = (dx / len) * 28;
-  const cx = mx + ox;
-  const cy = my + oy;
+  const px = -uy;
+  const py = ux;
+  const span = Math.hypot(x2 - x1, y2 - y1);
+  const bow = Math.min(90, Math.max(44, span * 0.32));
+  // Prefer bow "outside" (down/right-ish) for return arcs
+  let sx = px;
+  let sy = py;
+  if (sy < 0) {
+    sx = -sx;
+    sy = -sy;
+  }
+  const cx = mx + sx * bow;
+  const cy = my + sy * bow;
   return {
     d: `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`,
     mx: (x1 + 2 * cx + x2) / 4,
@@ -380,36 +407,39 @@ export function DiagramCanvas() {
         <defs>
           <marker
             id="arrow-halpin"
-            viewBox="0 0 10 10"
-            refX="9"
-            refY="5"
-            markerWidth="7"
-            markerHeight="7"
-            orient="auto"
+            viewBox="0 0 12 12"
+            refX="10"
+            refY="6"
+            markerWidth="10"
+            markerHeight="10"
+            markerUnits="userSpaceOnUse"
+            orient="auto-start-reverse"
           >
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--diagram-ink)" />
+            <path d="M 0 1 L 11 6 L 0 11 z" fill="var(--diagram-ink)" />
           </marker>
           <marker
             id="arrow-halpin-cycle"
-            viewBox="0 0 10 10"
-            refX="9"
-            refY="5"
-            markerWidth="8"
-            markerHeight="8"
-            orient="auto"
+            viewBox="0 0 12 12"
+            refX="10"
+            refY="6"
+            markerWidth="11"
+            markerHeight="11"
+            markerUnits="userSpaceOnUse"
+            orient="auto-start-reverse"
           >
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--primary)" />
+            <path d="M 0 1 L 11 6 L 0 11 z" fill="var(--primary)" />
           </marker>
           <marker
             id="arrow-halpin-branch"
-            viewBox="0 0 10 10"
-            refX="9"
-            refY="5"
-            markerWidth="7"
-            markerHeight="7"
-            orient="auto"
+            viewBox="0 0 12 12"
+            refX="10"
+            refY="6"
+            markerWidth="10"
+            markerHeight="10"
+            markerUnits="userSpaceOnUse"
+            orient="auto-start-reverse"
           >
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#8b5a2b" />
+            <path d="M 0 1 L 11 6 L 0 11 z" fill="#8b5a2b" />
           </marker>
           <pattern id="acd-grid" width="20" height="20" patternUnits="userSpaceOnUse">
             <path
@@ -484,15 +514,32 @@ export function DiagramCanvas() {
           />
         ))}
 
-        {/* Arrow legend */}
-        <g transform={`translate(16, ${height - 36})`}>
-          <line x1={0} y1={8} x2={28} y2={8} stroke="var(--diagram-ink)" strokeWidth={1.75} markerEnd="url(#arrow-halpin)" />
-          <text x={34} y={11} fill="var(--diagram-ink)" style={{ fontSize: 10, fontFamily: "Georgia, serif" }}>
-            Forward flow
+        {/* Arrow legend — always with visible arrowheads */}
+        <g transform={`translate(16, ${height - 40})`}>
+          <line
+            x1={0}
+            y1={10}
+            x2={36}
+            y2={10}
+            stroke="var(--diagram-ink)"
+            strokeWidth={1.85}
+            markerEnd="url(#arrow-halpin)"
+          />
+          <text x={44} y={13} fill="var(--diagram-ink)" style={{ fontSize: 10, fontFamily: "Georgia, serif" }}>
+            Forward (solid black + tip)
           </text>
-          <line x1={120} y1={8} x2={148} y2={8} stroke="var(--primary)" strokeWidth={2.1} strokeDasharray="7 4" markerEnd="url(#arrow-halpin-cycle)" />
-          <text x={154} y={11} fill="var(--diagram-ink)" style={{ fontSize: 10, fontFamily: "Georgia, serif" }}>
-            Return (resource cycle)
+          <line
+            x1={200}
+            y1={10}
+            x2={236}
+            y2={10}
+            stroke="var(--primary)"
+            strokeWidth={2.15}
+            strokeDasharray="7 4"
+            markerEnd="url(#arrow-halpin-cycle)"
+          />
+          <text x={244} y={13} fill="var(--diagram-ink)" style={{ fontSize: 10, fontFamily: "Georgia, serif" }}>
+            Return (dashed gold + tip)
           </text>
         </g>
       </svg>

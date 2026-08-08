@@ -188,8 +188,50 @@ function ManualPage() {
           </p>
         </Section>
 
-        <Section title="Arrow standard (diagram)">
-          <div className="overflow-x-auto">
+        <Section title="Notation standard (canonical)">
+          <p className="mb-2 text-xs">
+            Neo-CYCLONE keeps one consistent teaching notation. Where it differs from some
+            Halpin print figures, <strong className="text-foreground">this standard wins</strong>{" "}
+            for the app. Full reference in the repo:{" "}
+            <code className="text-foreground">docs/NOTATION_STANDARD.md</code>.
+          </p>
+
+          <h4 className="mb-1 text-xs font-semibold text-foreground">Node shapes</h4>
+          <div className="mb-3 overflow-x-auto">
+            <table className="w-full min-w-[280px] text-left text-xs">
+              <thead>
+                <tr className="border-b border-border text-[10px] uppercase tracking-wide">
+                  <th className="py-1.5 pr-3 font-medium text-foreground">Element</th>
+                  <th className="py-1.5 font-medium text-foreground">Drawing / label</th>
+                </tr>
+              </thead>
+              <tbody className="text-muted-foreground">
+                <tr className="border-b border-border/60">
+                  <td className="py-1.5 pr-3 text-foreground">QUEUE</td>
+                  <td className="py-1.5">Q-circle · n=… · optional <strong className="text-foreground">GEN k</strong></td>
+                </tr>
+                <tr className="border-b border-border/60">
+                  <td className="py-1.5 pr-3 text-foreground">COMBI</td>
+                  <td className="py-1.5">Cut-corner square · duration</td>
+                </tr>
+                <tr className="border-b border-border/60">
+                  <td className="py-1.5 pr-3 text-foreground">NORMAL</td>
+                  <td className="py-1.5">Rectangle · duration</td>
+                </tr>
+                <tr className="border-b border-border/60">
+                  <td className="py-1.5 pr-3 text-foreground">COUNTER</td>
+                  <td className="py-1.5">Golf flag · +production</td>
+                </tr>
+                <tr>
+                  <td className="py-1.5 pr-3 text-foreground">CONSOLIDATE</td>
+                  <td className="py-1.5">Upright triangle · <strong className="text-foreground">CON n</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h4 className="mb-1 text-xs font-semibold text-foreground">Arrows (always with tip)</h4>
+          <div className="mb-3 overflow-x-auto">
             <table className="w-full min-w-[280px] text-left text-xs">
               <thead>
                 <tr className="border-b border-border text-[10px] uppercase tracking-wide">
@@ -199,30 +241,53 @@ function ManualPage() {
               </thead>
               <tbody className="text-muted-foreground">
                 <tr className="border-b border-border/60">
-                  <td className="py-1.5 pr-3 text-foreground">Solid black</td>
+                  <td className="py-1.5 pr-3 text-foreground">Solid black + tip</td>
                   <td className="py-1.5">
-                    <strong className="text-foreground">Forward</strong> flow — work toward production
-                    (typically toward the COUNTER)
+                    <strong className="text-foreground">Forward</strong> — work toward production
+                    (COUNTER)
                   </td>
                 </tr>
                 <tr className="border-b border-border/60">
-                  <td className="py-1.5 pr-3 text-foreground">Dashed gold</td>
+                  <td className="py-1.5 pr-3 text-foreground">Dashed gold + tip</td>
                   <td className="py-1.5">
-                    <strong className="text-foreground">Return</strong> — resource home / cycle close
-                    (any arc into a QUEUE)
+                    <strong className="text-foreground">Return</strong> — into a QUEUE (resource
+                    cycle)
                   </td>
                 </tr>
                 <tr>
-                  <td className="py-1.5 pr-3 text-foreground">Brown + p=…</td>
-                  <td className="py-1.5">Probabilistic branch on a forward multi-out</td>
+                  <td className="py-1.5 pr-3 text-foreground">p=… label</td>
+                  <td className="py-1.5">Probabilistic branch on multi-out</td>
                 </tr>
               </tbody>
             </table>
           </div>
-          <p className="mt-2 text-xs">
-            Slightly more explicit than some Halpin print figures: flow is easy to read as
-            progress to the COUNTER, then dashed gold shows the cyclic return of resources.
+          <p className="mb-3 text-xs">
+            Every arc is a directed <strong className="text-foreground">arrow</strong>, never a
+            plain line. Legend appears on the diagram canvas.
           </p>
+
+          <h4 className="mb-1 text-xs font-semibold text-foreground">GEN and CON (writing standard)</h4>
+          <ul className="list-disc space-y-1.5 pl-5 text-xs">
+            <li>
+              <strong className="text-foreground">GEN k</strong> — only on QUEUE. Diagram:{" "}
+              <code className="text-foreground">GEN k</code>. DSL:{" "}
+              <code className="text-foreground">generate: k</code> (k≥2). Each{" "}
+              <em>arrival</em> becomes k units; does not multiply initial.
+            </li>
+            <li>
+              <strong className="text-foreground">CON n</strong> — CONSOLIDATE triangle. Diagram:{" "}
+              <code className="text-foreground">CON n</code>. DSL:{" "}
+              <code className="text-foreground">consolidate: n</code> (n≥2). Buffer n → release 1
+              (time 0).
+            </li>
+            <li>
+              GEN and CON are <strong className="text-foreground">independent</strong> — use one,
+              both, or neither. Classic pair multiplies then reunites production units.
+            </li>
+            <li>
+              Do not put probability on COMBI multi-out used only for resource return.
+            </li>
+          </ul>
         </Section>
       </main>
     </div>
