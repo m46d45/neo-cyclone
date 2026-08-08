@@ -10,6 +10,12 @@ import {
   applyCostsToModel,
 } from "./sensitivity";
 import { parsePriorityBlock, applyPrioritiesToModel } from "./priority";
+import {
+  parseFunctionsAndBranch,
+  matchGen,
+  matchCon,
+  type FunctionsPrompt,
+} from "./functions-prompt";
 
 export type ResourceCycle = {
   id: string;
@@ -36,6 +42,8 @@ export type OperationSpec = {
   resources: ResourceCycle[];
   durations?: Record<string, DurationDist>;
   productionResourceId?: string;
+  /** GEN / CON / Branch from Format Prompt §4 (no hand-drawn QUEUE/arcs). */
+  functions?: FunctionsPrompt;
 };
 
 const DEFAULT_DUR: DurationDist = { kind: "triangular", min: 2, mode: 4, max: 6 };
@@ -114,17 +122,54 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
     });
   });
 
+  const fn = spec.functions ?? { gens: [], cons: [], branches: [] };
   const firstLabels = new Set<string>();
   for (const r of spec.resources) {
     if (r.itinerary[0]) firstLabels.add(normLabel(r.itinerary[0]));
     for (const a of r.alsoServes ?? []) firstLabels.add(normLabel(a));
   }
+  /** Step id by norm label; may be COMBI, NORMAL, QUEUE(GEN), or CONSOLIDATE. */
   const activityId = new Map<string, string>();
-  const activityType = new Map<string, "COMBI" | "NORMAL">();
+  type StepKind = "COMBI" | "NORMAL" | "GEN" | "CON";
+  const activityType = new Map<string, StepKind>();
 
   const ensureActivity = (lab: string) => {
     const key = normLabel(lab);
     if (activityId.has(key)) return;
+
+    const gen = matchGen(lab, fn.gens);
+    const con = matchCon(lab, fn.cons);
+
+    if (gen) {
+      const id = uniqueId(`q_gen_${key}`, used);
+      activityId.set(key, id);
+      activityType.set(key, "GEN");
+      nodes.push({
+        id,
+        type: "QUEUE",
+        label: lab.trim(),
+        x: 0,
+        y: 0,
+        initialUnits: 0,
+        generateCount: gen.k,
+      });
+      return;
+    }
+    if (con) {
+      const id = uniqueId(`con_${key}`, used);
+      activityId.set(key, id);
+      activityType.set(key, "CON");
+      nodes.push({
+        id,
+        type: "CONSOLIDATE",
+        label: lab.trim(),
+        x: 0,
+        y: 0,
+        consolidateCount: con.n,
+      });
+      return;
+    }
+
     const isCombi = firstLabels.has(key);
     const id = uniqueId(isCombi ? `c_${key}` : `n_${key}`, used);
     activityId.set(key, id);
@@ -141,9 +186,32 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
     });
   };
 
+  // Branch arm targets may not appear in a resource itinerary — still create them
+  for (const b of fn.branches) {
+    ensureActivity(b.afterLabel);
+    for (const arm of b.arms) ensureActivity(arm.toLabel);
+  }
+
   for (const r of spec.resources) {
     for (const lab of r.itinerary) ensureActivity(lab);
     for (const lab of r.alsoServes ?? []) ensureActivity(lab);
+  }
+
+  // QUEUE (GEN) may only feed COMBI — promote following NORMAL → COMBI
+  for (const r of spec.resources) {
+    for (let i = 0; i < r.itinerary.length - 1; i++) {
+      const aKey = normLabel(r.itinerary[i]!);
+      const bKey = normLabel(r.itinerary[i + 1]!);
+      if (activityType.get(aKey) !== "GEN") continue;
+      if (activityType.get(bKey) === "NORMAL") {
+        const id = activityId.get(bKey)!;
+        const node = nodes.find((n) => n.id === id);
+        if (node && node.type === "NORMAL") {
+          node.type = "COMBI";
+          activityType.set(bKey, "COMBI");
+        }
+      }
+    }
   }
 
   const prodRes =
@@ -169,13 +237,29 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
       label: lab,
     }));
 
-    addLink(home, steps[0]!.id);
+    // Home always feeds first COMBI; if first step is GEN/CON, still link home → first
+    // (GEN as first is rare). Prefer first COMBI in path for classic cycles.
+    const firstCombi = steps.find((s) => s.type === "COMBI") ?? steps[0]!;
+    if (steps[0]!.type === "COMBI") {
+      addLink(home, steps[0]!.id);
+    } else {
+      // e.g. unlikely GEN first — link home to first step, or to first COMBI
+      addLink(home, firstCombi.id);
+      if (steps[0]!.id !== firstCombi.id) {
+        // resource also enters path at step 0 if different
+      }
+    }
     const stags: string[] = [];
 
     for (let i = 0; i < steps.length - 1; i++) {
       const a = steps[i]!;
       const b = steps[i + 1]!;
-      if (b.type === "COMBI") {
+      // Skip sequential link if `a` is a Branch fork (handled later)
+      const isBranchFork = fn.branches.some((br) => normLabel(br.afterLabel) === a.key);
+      if (isBranchFork) continue;
+
+      if (b.type === "COMBI" && a.type !== "GEN") {
+        // Need QUEUE predecessor for COMBI (Halpin) unless previous is already QUEUE
         const stagId = uniqueId(`q_${r.id}_${b.key}`, used);
         nodes.push({
           id: stagId,
@@ -189,6 +273,7 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
         addLink(a.id, stagId);
         addLink(stagId, b.id);
       } else {
+        // GEN→COMBI, *→CON, *→NORMAL, *→GEN
         addLink(a.id, b.id);
       }
     }
@@ -209,6 +294,51 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
       addLink(home, aid);
       // Shared resource returns home after serving this demand COMBI
       addLink(aid, home);
+    }
+  }
+
+
+  // Probabilistic branches: After Task → arms with p (diagram shows p=…)
+  const addLinkP = (from: string, to: string, probability?: number) => {
+    const key = `${from}->${to}`;
+    if (linkSet.has(key)) {
+      // upgrade existing with probability
+      const existing = links.find((l) => l.from === from && l.to === to);
+      if (existing && probability != null) existing.probability = probability;
+      return;
+    }
+    linkSet.add(key);
+    links.push({
+      id: `l${++linkN}`,
+      from,
+      to,
+      probability,
+    });
+  };
+
+  for (const br of fn.branches) {
+    const fromId = activityId.get(normLabel(br.afterLabel));
+    if (!fromId) continue;
+    for (const arm of br.arms) {
+      let toId = activityId.get(normLabel(arm.toLabel));
+      if (!toId) {
+        // create NORMAL arm target
+        ensureActivity(arm.toLabel);
+        toId = activityId.get(normLabel(arm.toLabel));
+      }
+      if (!toId) continue;
+      // Pass/Done often means production
+      if (/^(pass|ok|done|accept|good|finish)/i.test(arm.toLabel)) {
+        addLinkP(fromId, counterId, arm.p);
+        // still keep arm node if used elsewhere; link fork node → counter
+      } else {
+        addLinkP(fromId, toId, arm.p);
+        // rework-style: return to home of production resource if no further path
+        const hasOut = links.some((l) => l.from === toId);
+        if (!hasOut) {
+          addLink(toId, homeQueue.get(prodRes.id)!);
+        }
+      }
     }
   }
 
@@ -388,7 +518,7 @@ export function parseExplicitResourceCycles(text: string): {
   /** Skip Cost / Priority / Sensitivity / Durations section bodies. */
   let section: "none" | "skip" | "cycle" = "none";
   for (const line of lines) {
-    if (/^(durations?|durasi|cost\b|sensitivity|priority)\s*:/i.test(line)) {
+    if (/^(durations?|durasi|cost\b|sensitivity|priority|functions?|branch(es)?)\s*:/i.test(line)) {
       section = "skip";
       // Single-line headers only — body lines are pure "Name: number" or durations
       continue;
@@ -639,6 +769,7 @@ export function buildOperationFromText(text: string): CycloneModel | null {
   const name = nameLine.slice(0, 56) || "Custom operation";
 
   try {
+    const functions = parseFunctionsAndBranch(raw);
     let model = buildFromSpec({
       name,
       description: raw.slice(0, 400),
@@ -647,6 +778,7 @@ export function buildOperationFromText(text: string): CycloneModel | null {
       resources,
       durations,
       productionResourceId: resources[0]!.id,
+      functions,
     });
     const { costs, sensitivity } = parseCostAndSensitivity(raw);
     model = applyCostsToModel(model, costs);

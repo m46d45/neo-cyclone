@@ -55,11 +55,24 @@ Order in **Format Prompt** (top → bottom):
 1. **Network** — resource cycles, counts, production (required)  
 2. **Durations** — minutes (required)  
 3. **Priority** — optional; lower number = higher priority  
-4. **GEN / CON / branch** — optional notes  
+4. **Functions & Branch** — optional GEN / CON / p (by **name**, not hand-drawn Q/arcs)  
 5. **Cost** — optional; rates in **USD**/resource-hour (`Cost:`)  
 6. **Sensitivity** — optional; usually **last**  
 
 `#` / `//` = notes only (ignored).
+
+**Important:** the Format Prompt never lists QUEUE shapes or arrows. Resource cycles imply home queues and forward/return arcs. To place GEN, CON, or probability:
+
+```
+Functions:
+GEN PartsPool = 4
+CON AssembleKit = 4
+
+Branch:
+After Inspect: Pass p=0.9, Rework p=0.1
+```
+
+Put `PartsPool` / `AssembleKit` / `Inspect` in the network cycle; the app creates the correct node types and `p=` arcs.
 
 ### Distributions
 

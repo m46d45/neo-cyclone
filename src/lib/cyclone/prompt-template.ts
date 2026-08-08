@@ -4,10 +4,13 @@
  *
  * Format Prompt order (structured):
  *   1. Network (resource cycles)  2. Durations  3. Priority
- *   4. GEN / CON / branch notes   5. Cost       6. Sensitivity (last)
+ *   4. Functions (GEN/CON) + Branch (p)   5. Cost   6. Sensitivity (last)
  *
  * Comments (ignored): # and //
  * Default time unit: **minutes**. Costs in **USD** per resource-hour.
+ *
+ * QUEUE nodes and arrows are NOT written by hand — the agent builds them from
+ * resource cycles. GEN / CON / p annotate special nodes and arcs by name.
  */
 
 export function stripPromptComments(text: string): string {
@@ -30,22 +33,22 @@ export function stripPromptComments(text: string): string {
 
 /**
  * Canonical Format Prompt (Neo-CYCLONE) — structured top → bottom.
- * Required for a runnable model: §1 network + §2 durations.
- * Everything else is optional; Sensitivity is last (economics / experiments).
+ * Required: §1 network + §2 durations.
  */
 export const GENERAL_TEMPLATE = `# ============================================================
 # FORMAT PROMPT — Neo-CYCLONE
 # AI-agent of Daniel W. Halpin's CYCLONE
 # ------------------------------------------------------------
-# Lines starting with # or // are notes only (ignored by the agent).
-# Time unit for all durations: minutes.
-# Replace placeholders <…> with your operation. Keep section order.
+# # and // = notes only (ignored). Durations in minutes.
+# You do NOT draw QUEUE circles or arrows here.
+# Resource cycles imply home QUEUE + forward/return arcs.
+# GEN / CON / p only annotate special nodes/arcs by task name.
 # ============================================================
 
 # ------------------------------------------------------------
 # 1. NETWORK — resource cycles (required)
-#    Each resource: home QUEUE → tasks → return.
-#    Shared multi-demand (e.g. crane): Resource: TaskA | TaskB | TaskC
+#    Home QUEUE is created automatically for each resource.
+#    Shared multi-demand: Crane: TaskA | TaskB | TaskC
 # ------------------------------------------------------------
 Resource1: Task1 → Task2 → Task3 → …
 Resource2: Task1
@@ -55,7 +58,7 @@ n Resource1 = <count>, n Resource2 = <count>
 production = <amount> <unit>
 
 # ------------------------------------------------------------
-# 2. DURATIONS — every task used above (required)
+# 2. DURATIONS — every named task (required)
 #    dist: const | unif | tri | normal | lognormal | beta | gamma
 # ------------------------------------------------------------
 Durations:
@@ -64,26 +67,44 @@ Task2: <dist> <params…>
 TaskA: <dist> <params…>
 
 # ------------------------------------------------------------
-# 3. PRIORITY — only if a shared resource serves several COMBIs
-#    Lower number = higher priority (MicroCYCLONE node-number tradition).
-#    Omit entirely when there is no contention.
+# 3. PRIORITY — shared resource contention only (optional)
+#    Lower number = higher priority (MicroCYCLONE tradition).
 # ------------------------------------------------------------
 Priority:
 Task1: 1
 TaskA: 2
 
 # ------------------------------------------------------------
-# 4. FUNCTION NODES & BRANCHES — optional teaching extensions
-#    GEN k  : on a QUEUE, each *arrival* becomes k units (not initial)
-#    CON n  : CONSOLIDATE gathers n units then releases 1
-#    Branch : e.g. After Inspect: OK p=0.9, Rework p=0.1
-#    (Diagram: solid black = forward; dashed gold = return to QUEUE)
+# 4. FUNCTIONS & BRANCHES — optional (Halpin GEN / CON / p)
+#    Still no hand-drawn Q or arrows: name steps in the network
+#    above, then annotate them here.
+#
+#    GEN k  → that name becomes a QUEUE with GENERATE k
+#             (each *arrival* → k units; put it in the cycle)
+#    CON n  → that name becomes a CONSOLIDATE node (buffer n → 1)
+#    Branch → after a task, probabilistic successors (diagram p=…)
+#
+#    Example network using GEN+CON:
+#      Crew: Setup → Prepare → PartsPool → Process → Assemble → Return
+#    Functions:
+#      GEN PartsPool = 4
+#      CON Assemble = 4
+#
+#    Example branch:
+#      Crew: Inspect → Pass
+#    Branch:
+#      After Inspect: Pass p=0.9, Rework p=0.1
+#      (Rework gets a duration; app links rework back toward the cycle)
 # ------------------------------------------------------------
-# GEN / CON / p — describe here only if the operation needs them
+Functions:
+GEN PartsPool = 4
+CON Assemble = 4
+
+Branch:
+After Inspect: Pass p=0.9, Rework p=0.1
 
 # ------------------------------------------------------------
-# 5. COST — optional (currency: USD per resource-hour)
-#    Enables resource cost, total cost, unit cost in Results.
+# 5. COST — optional (USD per resource-hour)
 # ------------------------------------------------------------
 Cost:
 Resource1: <rate>
@@ -91,7 +112,6 @@ Resource2: <rate>
 
 # ------------------------------------------------------------
 # 6. SENSITIVITY — optional, usually last
-#    Batch runs: vary fleet size low..high (step 1) for comparison charts.
 # ------------------------------------------------------------
 Sensitivity:
 Resource1: <low>..<high>
@@ -101,18 +121,22 @@ Resource2: <low>..<high>
 export { DEFAULT_EXAMPLE_PROMPT, EXAMPLE_PROMPTS, getExampleById } from "./example-prompts";
 export type { ExamplePrompt } from "./example-prompts";
 
-/** Quick reference under Format Prompt (same logical order). */
 export const DIST_TABLE = `# Quick reference (same order as Format Prompt)
 
-# 1–2 Network + Durations (minutes)
-  const value · unif min,max · tri min,mode,max
-  normal mean,sd · lognormal mean,sd · beta min,max,α,β · gamma shape,scale
+# 1 Network — resource cycles only (QUEUE + arrows drawn by the app)
+# 2 Durations (minutes)
+  const · unif · tri · normal · lognormal · beta · gamma
 
 # 3 Priority (optional)
-  Priority:  Task: 1     → lower number = higher priority
+  Priority:
+  Task: 1
 
-# 4 GEN / CON / branch (optional)
-  GEN k on QUEUE · CON n · arc p=0..1
+# 4 GEN / CON / Branch (optional) — by name, not by drawing Q/arcs
+  Functions:
+  GEN <PoolName> = k     → QUEUE with GEN k on that step name
+  CON <NodeName> = n     → CONSOLIDATE n on that step name
+  Branch:
+  After <Task>: OutA p=0.9, OutB p=0.1
 
 # 5 Cost (optional, USD / resource-hour)
   Cost:
@@ -122,9 +146,7 @@ export const DIST_TABLE = `# Quick reference (same order as Format Prompt)
   Sensitivity:
   Resource: <low>..<high>
 
-# Run controls (under diagram, not in this box)
-  max cycles default 100, limit 500 · seed default 12345
-
+# Run: max cycles default 100, limit 500 · seed 12345
 # Notes: # …  or  // …`;
 
 export const PRODUCT_TAGLINE = "AI-agent of Daniel W. Halpin's CYCLONE";

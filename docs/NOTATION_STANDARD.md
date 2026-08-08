@@ -77,6 +77,19 @@ Use this document when drawing diagrams, writing prompts, writing DSL, or updati
 
 GEN, CON, and probabilistic branches are **optional** and **independent**. Use only when unit-measurement logic needs them.
 
+### Prompt form (no hand-drawn QUEUE)
+
+In Format Prompt §4, name the step in the resource cycle, then:
+
+```
+Functions:
+GEN PartsPool = 4
+CON AssembleKit = 4
+
+Branch:
+After Inspect: Pass p=0.9, Rework p=0.1
+```
+
 ### 5.1 GENERATE — **GEN k**
 
 | Item | Standard |

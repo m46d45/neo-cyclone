@@ -173,17 +173,18 @@ MoveScaffold: tri 8, 12, 18`,
     source: "Halpin stochastic branch / quality teaching examples (simplified).",
     features: ["probability branch", "rework loop", "empirical share"],
     prompt: `# Example 6 — Inspect and rework
-# After Inspect: p=0.9 pass → finished unit; p=0.1 rework then re-enter crew queue.
-# Branch probabilities are set in the model (diagram shows p=…).
+# Network names the steps; Branch block sets p on arcs (no hand-drawn arrows).
 
-Crew: Inspect → (pass / rework)
+Crew: Inspect → Pass
 1 crew, 1 unit
 
 Durations:
 Inspect: tri 4, 5, 7
 Rework: tri 6, 8, 12
+Pass: const 0
 
-# Notes: Draw Model then Simulate. Results → Branches compares declared vs empirical p.
+Branch:
+After Inspect: Pass p=0.9, Rework p=0.1
 `,
   },
   {
@@ -193,10 +194,10 @@ Rework: tri 6, 8, 12
     source: "Halpin GEN/CON function-node teaching (kit / bucket-scale simplified).",
     features: ["GEN 4", "CON 4", "independent function nodes"],
     prompt: `# Example 7 — GEN and CON scale
-# After Setup Batch → Prepare, Parts Pool multiplies each arrival into 4 (GEN 4).
-# Process Unit works each part; Assemble Kit (CON 4) releases one kit.
+# PartsPool and AssembleKit appear in the cycle; Functions turns them into GEN/CON.
+# You never draw the Q or triangle by hand — only name them in the network.
 
-Crew: SetupBatch → Prepare → ProcessUnit → AssembleKit → Return
+Crew: SetupBatch → Prepare → PartsPool → ProcessUnit → AssembleKit → Return
 1 crew, 1 kit
 
 Durations:
@@ -205,8 +206,9 @@ Prepare: const 1
 ProcessUnit: tri 1.5, 2, 3
 Return: const 0.5
 
-# Prefer loading network via Example dropdown "GEN and CON Scale" if listed,
-# or Draw Model — AI should place QUEUE generate:4 and CONSOLIDATE consolidate:4.
+Functions:
+GEN PartsPool = 4
+CON AssembleKit = 4
 `,
   },
 
