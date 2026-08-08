@@ -239,6 +239,21 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
 
   const stagingByResource = new Map<string, string[]>();
 
+  // Only ONE resource owns the COUNTER insertion point (avoid Lay matching
+  // every resource that shares a COMBI). Prefer production resource if it
+  // contains Counter after:; else first resource that has that task.
+  const counterSpecGlobal = spec.counter ?? { afterLabel: null, amount: 1, unit: "unit" };
+  const countOwnerId: string = (() => {
+    if (!counterSpecGlobal.afterLabel) return prodRes.id;
+    const want = normLabel(counterSpecGlobal.afterLabel);
+    if (prodRes.itinerary.some((lab) => normLabel(lab) === want)) return prodRes.id;
+    for (const r of spec.resources) {
+      if (r.itinerary.some((lab) => normLabel(lab) === want)) return r.id;
+    }
+    return prodRes.id;
+  })();
+
+
   for (const r of spec.resources) {
     const home = homeQueue.get(r.id)!;
     const steps = r.itinerary.map((lab) => ({
@@ -248,13 +263,19 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
       label: lab,
     }));
 
-    const countAtForThis =
-      r.id === prodRes.id
-        ? resolveCounterAfter(
-            spec.counter ?? { afterLabel: null, amount: 1, unit: "unit" },
-            r.itinerary,
-          )
-        : null;
+    // COUNTER after a named task — only on the single owner resource cycle
+    // (e.g. after Pave on paver; not on every resource that shares Dump/Lay).
+    let countAtForThis: string | null = null;
+    if (r.id === countOwnerId) {
+      if (counterSpecGlobal.afterLabel) {
+        const want = normLabel(counterSpecGlobal.afterLabel);
+        // Exact match only — "Pave" must not hit "DumpToPaver"
+        const hit = r.itinerary.find((lab) => normLabel(lab) === want);
+        if (hit) countAtForThis = hit;
+      } else {
+        countAtForThis = r.itinerary[r.itinerary.length - 1] ?? null;
+      }
+    }
     const countAtKey = countAtForThis ? normLabel(countAtForThis) : null;
 
     // Home always feeds first COMBI; if first step is GEN/CON, still link home → first
@@ -302,14 +323,8 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
     stagingByResource.set(r.id, stags);
 
     const last = steps[steps.length - 1]!;
-    const countAfterLab =
-      r.id === prodRes.id
-        ? resolveCounterAfter(
-            spec.counter ?? { afterLabel: null, amount: 1, unit: "unit" },
-            r.itinerary,
-          )
-        : null;
-    const countAfterKey = countAfterLab ? normLabel(countAfterLab) : null;
+    const countAfterLab = countAtForThis;
+    const countAfterKey = countAtKey;
     const countAfterStep = countAfterKey
       ? steps.find((s) => s.key === countAfterKey)
       : null;
@@ -322,8 +337,8 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
       (br) => normLabel(br.afterLabel) === last.key,
     );
 
-    if (r.id === prodRes.id && countAfterStep) {
-      // Insert COUNTER immediately after the count-at task
+    if (countAfterStep) {
+      // Insert COUNTER immediately after the count-at task (any resource cycle)
       addLink(countAfterStep.id, counterId);
       // Continue path: if count-at is not last, counter → next step
       const idx = steps.findIndex((s) => s.key === countAfterKey);

@@ -97,7 +97,9 @@ const · unif · tri · normal · lognormal · beta · gamma
 | **What** | Golf-flag node — counts **one production unit / completed cycle** |
 | **Prompt** | `Counter after: Dump` then `production = 12 m3` |
 | **Default** | If omitted: after the **last task of the first resource** cycle |
-| **Earthmoving** | Always prefer `Counter after: Dump` (not after Return) |
+| **Any cycle** | `Counter after:` may name a task on **any** resource (e.g. `Pave` on the paver cycle) |
+| **Earthmoving** | Prefer `Counter after: Dump` (not after Return) |
+| **Asphalt** | Prefer `Counter after: Pave` (production = mix placed, not merely dumped) |
 | **With branch p** | Count first, then branch return (e.g. Dump → Counter → Return / Breakdown) |
 
 Never leave this implicit in teaching materials — name `Counter after:` in the prompt.

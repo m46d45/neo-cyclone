@@ -73,17 +73,20 @@ Return: lognormal 7, 1.5
   {
     id: "asphalt-paving",
     title: "2. Asphalt paving (paver + trucks)",
-    goal: "Paver as constrained resource; truck haul cycle; multi-resource sensitivity.",
+    goal: "Two clear cycles: truck plant↔site; paver Dump→Pave. Production counted after Pave.",
     source: "Halpin / asphalt paving teaching models (simplified).",
-    features: ["COMBI Pave", "truck cycle", "cost", "sensitivity"],
+    features: ["two resource cycles", "COMBI DumpToPaver", "Counter after Pave", "cost", "sensitivity"],
     prompt: `# Example 2 — Asphalt paving
-# Trucks deliver mix; paver is the constrained meeting point.
+# Two resource cycles:
+#   Trucks: load at plant → haul full → dump to paver → return empty to plant
+#   Paver: meet truck at DumpToPaver → pave the mix → idle
+# Production = one truck load placed by the paver → count AFTER Pave (not at dump).
 
-Trucks: DumpToPaver → HaulEmpty → LoadAtPlant → ReturnToPaver
+Trucks: LoadAtPlant → HaulToSite → DumpToPaver → ReturnEmpty
 Paver: DumpToPaver → Pave
 4 trucks, 1 paver
 
-Counter after: DumpToPaver
+Counter after: Pave
 production = 1 load
 
 Cost:
@@ -95,11 +98,11 @@ Trucks: 2..10
 Paver: 1..2
 
 Durations:
-DumpToPaver: tri 0.8, 1.2, 1.8
-Pave: normal 3.5, 0.6
-HaulEmpty: normal 12, 2
 LoadAtPlant: tri 2, 3, 4
-ReturnToPaver: normal 11, 2
+HaulToSite: normal 12, 2
+DumpToPaver: tri 0.8, 1.2, 1.8
+ReturnEmpty: normal 11, 2
+Pave: normal 3.5, 0.6
 `,
   },
   {
