@@ -10,7 +10,7 @@ export const earthmovingModel: CycloneModel = {
   id: "earthmoving",
   name: "Earthmoving Fleet",
   description:
-    "Classic CYCLONE earthmoving: loader fills trucks, trucks haul, dump, and return. Tune fleet size and durations to study productivity and waiting.",
+    "Classic CYCLONE earthmoving with optional truck breakdown on return (p=0.15 delayed). Cost, sensitivity, steady-state.",
   timeUnit: "min",
   productionUnit: "m³",
   defaultRuns: 1,
@@ -65,7 +65,15 @@ export const earthmovingModel: CycloneModel = {
       label: "Return",
       x: 440,
       y: 320,
-      duration: { kind: "triangular", min: 5, mode: 7, max: 10 },
+      duration: { kind: "lognormal", mean: 7, sd: 1.5 },
+    },
+    {
+      id: "n-breakdown",
+      type: "NORMAL",
+      label: "Breakdown",
+      x: 620,
+      y: 320,
+      duration: { kind: "triangular", min: 25, mode: 40, max: 60 },
     },
     {
       id: "ctr",
@@ -83,8 +91,11 @@ export const earthmovingModel: CycloneModel = {
     { id: "l4", from: "c-load", to: "q-loader" },
     { id: "l5", from: "n-haul", to: "n-dump" },
     { id: "l6", from: "n-dump", to: "ctr" },
-    { id: "l7", from: "ctr", to: "n-return" },
-    { id: "l8", from: "n-return", to: "q-trucks" },
+    // After production: normal return vs delayed breakdown (branch p)
+    { id: "l7", from: "ctr", to: "n-return", probability: 0.85 },
+    { id: "l8", from: "ctr", to: "n-breakdown", probability: 0.15 },
+    { id: "l9", from: "n-return", to: "q-trucks" },
+    { id: "l10", from: "n-breakdown", to: "q-trucks" },
   ],
   sensitivity: [
     { resourceLabel: "Trucks", low: 2, high: 8, step: 1 },
@@ -328,8 +339,6 @@ export const PRESET_MODELS: CycloneModel[] = [
   earthmovingModel,
   concretePourModel,
   trenchExcavationModel,
-  inspectReworkModel,
-  genConScaleModel,
 ];
 
 export function getPreset(id: string): CycloneModel | undefined {

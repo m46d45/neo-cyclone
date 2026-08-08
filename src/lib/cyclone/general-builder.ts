@@ -280,10 +280,18 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
     stagingByResource.set(r.id, stags);
 
     const last = steps[steps.length - 1]!;
+    const branchAfterLast = fn.branches.some(
+      (br) => normLabel(br.afterLabel) === last.key,
+    );
     if (r.id === prodRes.id) {
+      // Always count production at last network step (e.g. Dump)
       addLink(last.id, counterId);
-      addLink(counterId, home);
-    } else {
+      if (!branchAfterLast) {
+        // Normal return home after counter
+        addLink(counterId, home);
+      }
+      // If branchAfterLast: counter → Return/Breakdown with p (wired below)
+    } else if (!branchAfterLast) {
       addLink(last.id, home);
     }
 
@@ -317,24 +325,32 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
   };
 
   for (const br of fn.branches) {
-    const fromId = activityId.get(normLabel(br.afterLabel));
+    const afterKey = normLabel(br.afterLabel);
+    const fromId = activityId.get(afterKey);
     if (!fromId) continue;
+
+    // If this branch is the production "return fork" (after Dump etc.),
+    // production already linked after → counter; put p-arcs on the COUNTER.
+    const afterIsProdLast = (() => {
+      const prodIt = prodRes.itinerary;
+      if (!prodIt.length) return false;
+      return normLabel(prodIt[prodIt.length - 1]!) === afterKey;
+    })();
+    const forkFrom = afterIsProdLast ? counterId : fromId;
+
     for (const arm of br.arms) {
       let toId = activityId.get(normLabel(arm.toLabel));
       if (!toId) {
-        // create NORMAL arm target
         ensureActivity(arm.toLabel);
         toId = activityId.get(normLabel(arm.toLabel));
       }
       if (!toId) continue;
-      // Pass/Done often means production
-      if (/^(pass|ok|done|accept|good|finish)/i.test(arm.toLabel)) {
+
+      if (/^(pass|ok|done|accept|good|finish)/i.test(arm.toLabel) && !afterIsProdLast) {
         addLinkP(fromId, counterId, arm.p);
-        // still keep arm node if used elsewhere; link fork node → counter
       } else {
-        addLinkP(fromId, toId, arm.p);
-        // rework-style: return to home of production resource if no further path
-        const hasOut = links.some((l) => l.from === toId);
+        addLinkP(forkFrom, toId, arm.p);
+        const hasOut = links.some((l) => l.from === toId && l.to !== toId);
         if (!hasOut) {
           addLink(toId, homeQueue.get(prodRes.id)!);
         }

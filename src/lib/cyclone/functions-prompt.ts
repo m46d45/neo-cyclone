@@ -121,10 +121,11 @@ function parseBranchArms(rhs: string): BranchArm[] {
 
 export function matchGen(label: string, gens: GenSpec[]): GenSpec | undefined {
   const k = norm(label);
-  return gens.find((g) => norm(g.label) === k || k.includes(norm(g.label)) || norm(g.label).includes(k));
+  // Exact normalized match only (avoid "Pour" matching "AssemblePour")
+  return gens.find((g) => norm(g.label) === k);
 }
 
 export function matchCon(label: string, cons: ConSpec[]): ConSpec | undefined {
   const k = norm(label);
-  return cons.find((c) => norm(c.label) === k || k.includes(norm(c.label)) || norm(c.label).includes(k));
+  return cons.find((c) => norm(c.label) === k);
 }

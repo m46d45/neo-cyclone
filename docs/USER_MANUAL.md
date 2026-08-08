@@ -165,18 +165,16 @@ Results → **Branches**: declared vs empirical.
 
 ---
 
-## 7. Teaching examples
+## 7. Teaching examples (6 presets)
 
-1. Earthmoving fleet (cost + sensitivity)  
-2. Asphalt paving  
-3. Concrete placing (crane + trucks)  
-4. Precast forms  
-5. Masonry (pairwise sensitivity)  
-6. Inspect and rework (**branch p**)  
-7. GEN and CON scale (**GEN 4 + CON 4**)
-8. Tower crane multi-demand (**Priority**)
+1. **Earthmoving** — cost, sensitivity, steady-state, **branch p** (truck breakdown on return)  
+2. **Asphalt paving** — paver + trucks  
+3. **Concrete placing** — crane + trucks + **GEN/CON** bucket scale  
+4. **Precast forms** — form cycle  
+5. **Masonry** — 3 resources, pairwise sensitivity  
+6. **Tower crane** — multi-demand `|` + **Priority**
 
----
+Features are spread across cases (not every feature in every preset).
 
 ## 8. Zoom & export
 

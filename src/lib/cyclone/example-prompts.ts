@@ -1,23 +1,23 @@
 /**
  * Teaching examples for Neo-CYCLONE (Halpin / MicroCYCLONE tradition).
- * Each entry is a ready-to-paste prompt. GEN / CON / probabilistic branch
- * are noted where classic models use them (GEN, CON, branch p supported).
+ * Six construction-operation presets — features distributed across cases:
+ *   1 Earthmoving (+ truck breakdown branch p)
+ *   2 Asphalt paving
+ *   3 Concrete placing (+ GEN/CON bucket scale)
+ *   4 Precast forms
+ *   5 Masonry (pairwise sensitivity)
+ *   6 Tower crane (priority / multi-demand)
  *
  * Source orientation: Halpin & Riggs, Planning and Analysis of Construction
- * Operations (Wiley, 1992) and related CYCLONE teaching examples — simplified
- * for first contact, not full textbook figures.
+ * Operations (Wiley, 1992) — simplified for first contact.
  */
 
 export type ExamplePrompt = {
   id: string;
   title: string;
-  /** Short classroom goal */
   goal: string;
-  /** Halpin-oriented source note */
   source: string;
-  /** Features exercised (for regression / manual) */
   features: string[];
-  /** Full prompt text */
   prompt: string;
 };
 
@@ -25,13 +25,20 @@ export const EXAMPLE_PROMPTS: ExamplePrompt[] = [
   {
     id: "earthmoving",
     title: "1. Earthmoving fleet (loader + trucks)",
-    goal: "Classic two-resource cycle: bottleneck, utilization, cost, sensitivity.",
-    source: "Halpin tradition — earthmoving / scraper–truck style fleet (simplified).",
-    features: ["COMBI Load", "cost USD/h", "sensitivity", "steady-state productivity"],
+    goal: "Classic fleet + optional truck breakdown delay on return (branch p).",
+    source: "Halpin earthmoving; stochastic return/breakdown teaching pattern.",
+    features: [
+      "COMBI Load",
+      "cost",
+      "sensitivity",
+      "steady-state",
+      "branch p (breakdown)",
+    ],
     prompt: `# Example 1 — Earthmoving fleet
-# Durations in minutes. Costs in USD per hour. Seed default = 12345.
+# Classic loader + trucks. After Dump, most trucks return normally;
+# a few break down and return late (probability branch).
 
-Trucks: Load → Haul → Dump → Return
+Trucks: Load → Haul → Dump
 Loader: Load
 5 trucks, 1 loader, 12 m3
 
@@ -47,14 +54,20 @@ Durations:
 Load: tri 1.5, 2, 3
 Haul: normal 8, 1.5
 Dump: const 1.2
-Return: lognormal 7, 1.5`,
+Return: lognormal 7, 1.5
+Breakdown: tri 25, 40, 60
+
+# p = chance of delayed return (broke down / repair on the way back)
+Branch:
+After Dump: Return p=0.85, Breakdown p=0.15
+`,
   },
   {
     id: "asphalt-paving",
     title: "2. Asphalt paving (paver + trucks)",
     goal: "Paver as constrained resource; truck haul cycle; multi-resource sensitivity.",
     source: "Halpin / asphalt paving teaching models (simplified).",
-    features: ["COMBI Pave", "three-step truck cycle", "cost", "sensitivity"],
+    features: ["COMBI Pave", "truck cycle", "cost", "sensitivity"],
     prompt: `# Example 2 — Asphalt paving
 # Trucks deliver mix; paver is the constrained meeting point.
 
@@ -75,22 +88,27 @@ DumpToPaver: tri 0.8, 1.2, 1.8
 Pave: normal 3.5, 0.6
 HaulEmpty: normal 12, 2
 LoadAtPlant: tri 2, 3, 4
-ReturnToPaver: normal 11, 2`,
+ReturnToPaver: normal 11, 2
+`,
   },
   {
     id: "concrete-crane",
-    title: "3. Concrete placing (crane + trucks)",
-    goal: "Shared Load/Spot; crane swing cycle. See also GEN and CON Scale preset for GEN/CON.",
-    source: "Halpin concrete / crane–bucket family (simplified 1:1 pour; GEN/CON in Example 6).",
-    features: ["COMBI SpotLoad", "crane cycle", "cost"],
-    prompt: `# Example 3 — Concrete placing (crane + trucks)
-# Simplified: one truck load = one crane pour cycle.
-# Classic MicroCYCLONE often uses GEN (truck → N bucket loads) + CON (N → truck leaves).
-# Use Example 6 (GEN and CON Scale) to exercise that pair.
+    title: "3. Concrete placing (crane + GEN/CON)",
+    goal: "Crane–truck pour with GEN (truck → buckets) and CON (buckets → truck free).",
+    source: "Halpin concrete placement; GEN/CON bucket-scale teaching.",
+    features: ["crane cycle", "GEN 4", "CON 4", "cost", "sensitivity"],
+    prompt: `# Example 3 — Concrete placing (crane + trucks + GEN/CON)
+# SpotLoad truck → BucketPool (GEN 4): one truck load becomes 4 bucket units.
+# Crane meets buckets at ProcessBucket (COMBI); after 4 pours, CON AssemblePour
+# releases the truck to Leave. (QUEUE only feeds COMBI — Halpin rule.)
 
-Trucks: SpotLoad → WaitPour → Leave
-Crane: SpotLoad → Swing → Pour → ReturnSwing
+Trucks: SpotLoad → BucketPool → ProcessBucket → AssemblePour → Leave
+Crane: ProcessBucket
 3 trucks, 1 crane, 1 pour
+
+Functions:
+GEN BucketPool = 4
+CON AssemblePour = 4
 
 Cost:
 Trucks: 90
@@ -102,11 +120,9 @@ Crane: 1..2
 
 Durations:
 SpotLoad: tri 1, 1.5, 2.5
-Swing: const 0.8
-Pour: tri 1.2, 2, 3
-ReturnSwing: const 0.7
-WaitPour: const 0.1
-Leave: normal 14, 2`,
+ProcessBucket: tri 1.2, 2, 3
+Leave: normal 14, 2
+`,
   },
   {
     id: "precast-forms",
@@ -134,7 +150,8 @@ Strip: tri 20, 30, 45
 Clean: normal 15, 3
 Set: tri 25, 35, 50
 Pour: tri 15, 20, 30
-Cure: const 120`,
+Cure: const 120
+`,
   },
   {
     id: "masonry",
@@ -164,76 +181,26 @@ Durations:
 Lay: tri 4, 6, 9
 MortarPrep: normal 3, 0.5
 SupplyBrick: normal 2.5, 0.4
-MoveScaffold: tri 8, 12, 18`,
-  },
-  {
-    id: "inspect-rework",
-    title: "6. Inspect and rework (branch p)",
-    goal: "Probabilistic arc after inspection: pass vs rework.",
-    source: "Halpin stochastic branch / quality teaching examples (simplified).",
-    features: ["probability branch", "rework loop", "empirical share"],
-    prompt: `# Example 6 — Inspect and rework
-# Network names the steps; Branch block sets p on arcs (no hand-drawn arrows).
-
-Crew: Inspect → Pass
-1 crew, 1 unit
-
-Durations:
-Inspect: tri 4, 5, 7
-Rework: tri 6, 8, 12
-Pass: const 0
-
-Branch:
-After Inspect: Pass p=0.9, Rework p=0.1
+MoveScaffold: tri 8, 12, 18
 `,
   },
-  {
-    id: "gen-con-scale",
-    title: "7. GEN and CON scale",
-    goal: "GENERATE multiplies arrivals; CONSOLIDATE reunites N units into one production unit.",
-    source: "Halpin GEN/CON function-node teaching (kit / bucket-scale simplified).",
-    features: ["GEN 4", "CON 4", "independent function nodes"],
-    prompt: `# Example 7 — GEN and CON scale
-# PartsPool and AssembleKit appear in the cycle; Functions turns them into GEN/CON.
-# You never draw the Q or triangle by hand — only name them in the network.
-
-Crew: SetupBatch → Prepare → PartsPool → ProcessUnit → AssembleKit → Return
-1 crew, 1 kit
-
-Durations:
-SetupBatch: tri 2, 3, 4
-Prepare: const 1
-ProcessUnit: tri 1.5, 2, 3
-Return: const 0.5
-
-Functions:
-GEN PartsPool = 4
-CON AssembleKit = 4
-`,
-  },
-
   {
     id: "tower-crane",
-    title: "8. Tower crane multi-demand (priority)",
-    goal: "Shared crane serves several lifts; Priority block decides who goes first.",
+    title: "6. Tower crane multi-demand (priority)",
+    goal: "Shared crane serves several lifts; Priority decides who goes first.",
     source: "Halpin multi-work / crane contention teaching pattern (simplified).",
-    features: ["shared QUEUE → several COMBIs", "Priority lower=first", "cost optional"],
-    prompt: `# Example 8 — Tower crane with competing demands
+    features: ["multi-demand |", "Priority P1–P3", "cost"],
+    prompt: `# Example 6 — Tower crane with competing demands
 # One crane idle pool feeds several lift COMBIs. Lower Priority number = first.
 
 Steel crew: Lift Steel → Place Steel
 Form crew: Lift Forms → Place Forms
 Concrete crew: Lift Bucket → Pour
-# Shared resource multi-demand: pipe = several COMBIs from same home QUEUE
 Crane: Lift Steel | Lift Forms | Lift Bucket
 
 1 steel crew, 2 form crew, 2 concrete crew, 1 crane
 production = 1 lift
 
-# MicroCYCLONE-style: smaller number = higher priority when crane is free.
-# With only 1 steel crew, after Lift Steel the crew is busy at Place Steel,
-# so the crane can serve Lift Forms / Lift Bucket (P2, P3). If steel count is
-# high and always waiting, P1 starves lower priorities — that is intentional.
 Priority:
 Lift Steel: 1
 Lift Forms: 2
@@ -251,9 +218,9 @@ Place Steel: normal 12, 2
 Lift Forms: tri 3, 5, 8
 Place Forms: normal 10, 1.5
 Lift Bucket: tri 2, 3, 5
-Pour: normal 8, 1.2`,
+Pour: normal 8, 1.2
+`,
   },
-
 ];
 
 export function getExampleById(id: string): ExamplePrompt | undefined {
