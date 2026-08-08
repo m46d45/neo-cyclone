@@ -15,10 +15,12 @@ interface RuntimeQueue {
   label: string;
   units: Entity[];
   lengthIntegral: number;
+  occupiedIntegral: number;
   maxLength: number;
   totalWait: number;
   departures: number;
   lastChange: number;
+  initialUnits: number;
 }
 
 interface RuntimeActivity {
@@ -31,6 +33,8 @@ interface RuntimeActivity {
   lastUtilChange: number;
   starts: number;
   totalDuration: number;
+  lastStartTime: number;
+  interArrivalSum: number;
 }
 
 interface RuntimeCounter {
@@ -40,6 +44,7 @@ interface RuntimeCounter {
   count: number;
   production: number;
   lastCountTime: number;
+  firstPassageTime: number;
   cycleTimes: number[];
 }
 
@@ -60,9 +65,22 @@ interface SimEvent {
   fromQueues: string[];
 }
 
+function isMinutes(unit: string): boolean {
+  const u = unit.toLowerCase();
+  return u === "min" || u === "mins" || u === "minute" || u === "minutes";
+}
+
+function toUnitsPerHour(production: number, simTime: number, timeUnit: string): number {
+  if (simTime <= 0) return 0;
+  if (isMinutes(timeUnit)) return production / (simTime / 60);
+  if (timeUnit.toLowerCase().startsWith("h")) return production / simTime;
+  // default: treat as minutes (Halpin teaching default)
+  return production / (simTime / 60);
+}
+
 /**
  * Discrete-event CYCLONE engine (Halpin-style).
- * Time unit is whatever the model declares (default minutes).
+ * Collects statistics aligned with classic MicroCYCLONE reports.
  */
 export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
   const rng = createRng(config.seed);
@@ -95,10 +113,12 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
         label: n.label,
         units,
         lengthIntegral: 0,
+        occupiedIntegral: 0,
         maxLength: init,
         totalWait: 0,
         departures: 0,
         lastChange: 0,
+        initialUnits: init,
       });
     } else if (n.type === "COMBI" || n.type === "NORMAL") {
       activities.set(n.id, {
@@ -111,6 +131,8 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
         lastUtilChange: 0,
         starts: 0,
         totalDuration: 0,
+        lastStartTime: -1,
+        interArrivalSum: 0,
       });
     } else if (n.type === "COUNTER") {
       counters.set(n.id, {
@@ -120,6 +142,7 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
         count: 0,
         production: 0,
         lastCountTime: 0,
+        firstPassageTime: -1,
         cycleTimes: [],
       });
     } else if (n.type === "CONSOLIDATE") {
@@ -142,7 +165,8 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     cycle: number;
     production: number;
     rate: number;
-  }[] = [{ t: 0, cycle: 0, production: 0, rate: 0 }];
+    unitsPerHour: number;
+  }[] = [{ t: 0, cycle: 0, production: 0, rate: 0, unitsPerHour: 0 }];
 
   const primaryCounterId = model.nodes.find((n) => n.type === "COUNTER")?.id;
 
@@ -154,6 +178,7 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     const dt = time - q.lastChange;
     if (dt > 0) {
       q.lengthIntegral += q.units.length * dt;
+      if (q.units.length > 0) q.occupiedIntegral += dt;
       q.lastChange = time;
     }
     if (q.units.length > q.maxLength) q.maxLength = q.units.length;
@@ -196,7 +221,6 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     } else if (node.type === "CONSOLIDATE") {
       hitConsolidate(nodeId, entity);
     } else if (node.type === "COMBI") {
-      // COMBI only via queues
       const qFallback = [...queues.values()].find((q) =>
         (outLinks.get(q.nodeId) ?? []).includes(nodeId),
       );
@@ -209,6 +233,13 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     }
   }
 
+  function noteActivityStart(a: RuntimeActivity) {
+    if (a.lastStartTime >= 0) {
+      a.interArrivalSum += time - a.lastStartTime;
+    }
+    a.lastStartTime = time;
+  }
+
   function startNormal(activityId: string, entity: Entity) {
     const a = activities.get(activityId);
     const node = nodeById.get(activityId);
@@ -218,6 +249,7 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     a.concurrent += 1;
     a.starts += 1;
     a.totalDuration += dur;
+    noteActivityStart(a);
     record(`NORMAL "${a.label}" start (${dur.toFixed(2)})`);
     pushEvent({
       time: time + dur,
@@ -267,6 +299,7 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     a.concurrent = 1;
     a.starts += 1;
     a.totalDuration += dur;
+    noteActivityStart(a);
     record(`COMBI "${a.label}" start (${dur.toFixed(2)})`);
     pushEvent({
       time: time + dur,
@@ -285,7 +318,6 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
       a.busyUntil = 0;
       a.concurrent = 0;
       const outs = outLinks.get(ev.activityId) ?? [];
-      // multi-out: entity i → outs[i]
       for (let i = 0; i < ev.entities.length; i++) {
         const target = outs[i] ?? outs[outs.length - 1];
         if (target) enterNode(target, ev.entities[i]!);
@@ -311,6 +343,7 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     c.count += 1;
     cycles = Math.max(cycles, c.count);
     c.production += c.amount;
+    if (c.firstPassageTime < 0) c.firstPassageTime = time;
     if (c.count > 1) {
       c.cycleTimes.push(time - c.lastCountTime);
     }
@@ -322,6 +355,7 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
       cycle: c.count,
       production: Math.round(c.production * 1000) / 1000,
       rate: Math.round(rate * 1000) / 1000,
+      unitsPerHour: Math.round(toUnitsPerHour(c.production, time, model.timeUnit) * 1000) / 1000,
     });
     routeDownstream(counterId, entity);
   }
@@ -341,7 +375,6 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     }
   }
 
-  // Kick-start COMBIs
   for (const n of model.nodes) {
     if (n.type === "COMBI") tryStartCombi(n.id);
   }
@@ -375,8 +408,12 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     label: q.label,
     avgLength: simTime > 0 ? q.lengthIntegral / simTime : q.units.length,
     maxLength: q.maxLength,
+    avgWaitTime: q.departures > 0 ? q.totalWait / q.departures : 0,
     totalWaitTime: q.totalWait,
     departures: q.departures,
+    unitsAtEnd: q.units.length,
+    percentOccupied: simTime > 0 ? q.occupiedIntegral / simTime : 0,
+    initialUnits: q.initialUnits,
   }));
 
   const activityStats: ActivityStat[] = [...activities.values()].map((a) => {
@@ -389,6 +426,9 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
       starts: a.starts,
       utilization: util,
       avgDuration: a.starts > 0 ? a.totalDuration / a.starts : 0,
+      avgInterArrival:
+        a.starts > 1 ? a.interArrivalSum / (a.starts - 1) : simTime > 0 && a.starts === 1 ? simTime : 0,
+      avgUnitsAtTask: simTime > 0 ? a.busyIntegral / simTime : 0,
     };
   });
 
@@ -405,7 +445,11 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
       count: c.count,
       production: c.production,
       productivity: simTime > 0 ? c.production / simTime : 0,
+      unitsPerHour: toUnitsPerHour(c.production, simTime, model.timeUnit),
       avgCycleTime: avgCycle,
+      firstPassageTime: c.firstPassageTime >= 0 ? c.firstPassageTime : 0,
+      avgTimeBetweenUnits: avgCycle,
+      unitsPerCycle: c.amount,
     };
   });
 
