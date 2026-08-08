@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { runCyclone } from "./engine";
 import { runSensitivity, parseCostAndSensitivity, applyCostsToModel } from "./sensitivity";
+import { parsePriorityBlock, applyPrioritiesToModel } from "./priority";
 import { parseDsl, serializeDsl } from "./dsl";
 import { cloneModel, earthmovingModel, PRESET_MODELS } from "./models/presets"
 import { ensureReadableLayout } from "./auto-layout";
@@ -156,6 +157,10 @@ export const useCycloneStore = create<CycloneStore>((set, get) => ({
       const { costs, sensitivity } = parseCostAndSensitivity(agent.brief);
       if (Object.keys(costs).length) {
         model = applyCostsToModel(model, costs);
+      }
+      const pri = parsePriorityBlock(agent.brief);
+      if (Object.keys(pri).length) {
+        model = applyPrioritiesToModel(model, pri);
       }
       if (sensitivity.length) {
         sensPlan = sensitivity;

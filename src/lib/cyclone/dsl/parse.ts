@@ -125,6 +125,10 @@ export function documentToModel(doc: NeoCycloneDocument): CycloneModel {
       duration: n.duration ? toDuration(n.duration) : undefined,
       productionAmount: n.type === "COUNTER" ? (n.production ?? 1) : undefined,
       consolidateCount: n.type === "CONSOLIDATE" ? (n.consolidate ?? 2) : undefined,
+      priority:
+        (n.type === "COMBI" || n.type === "NORMAL") && n.priority != null && n.priority > 0
+          ? n.priority
+          : undefined,
     })),
     links: model.links.map((l, i) => ({
       id: l.id ?? `l${i + 1}`,

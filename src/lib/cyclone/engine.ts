@@ -93,6 +93,8 @@ function toUnitsPerHour(production: number, simTime: number, timeUnit: string): 
 export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
   const rng = createRng(config.seed);
   const nodeById = new Map(model.nodes.map((n) => [n.id, n]));
+  /** Declaration order fallback when priority is omitted (Halpin node-number spirit). */
+  const nodeOrder = new Map(model.nodes.map((n, i) => [n.id, i]));
   const outArcs = new Map<string, OutArc[]>();
   const inLinks = new Map<string, string[]>();
   for (const n of model.nodes) {
@@ -345,12 +347,41 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     });
   }
 
+  function combiPriority(nodeId: string): number {
+    const n = nodeById.get(nodeId);
+    if (n?.priority != null && n.priority > 0) return n.priority;
+    // Fallback: model order (like MicroCYCLONE smaller node numbers first)
+    return 1000 + (nodeOrder.get(nodeId) ?? 0);
+  }
+
+  /** Sort COMBI ids: lower priority number = tried first. */
+  function sortCombisByPriority(ids: string[]): string[] {
+    return [...new Set(ids)].sort((a, b) => {
+      const d = combiPriority(a) - combiPriority(b);
+      return d !== 0 ? d : (nodeOrder.get(a) ?? 0) - (nodeOrder.get(b) ?? 0);
+    });
+  }
+
+  /**
+   * When a shared resource (tower crane, crew, …) can feed several COMBIs,
+   * scan candidates in priority order (Halpin / MicroCYCLONE tradition).
+   */
   function tryStartCombisFedBy(queueId: string) {
     const outs = outArcs.get(queueId) ?? [];
+    const combis: string[] = [];
     for (const arc of outs) {
       const node = nodeById.get(arc.to);
-      if (node?.type === "COMBI") tryStartCombi(arc.to);
+      if (node?.type === "COMBI") combis.push(arc.to);
     }
+    for (const id of sortCombisByPriority(combis)) tryStartCombi(id);
+  }
+
+  /** Global COMBI scan in priority order (after any state change). */
+  function tryStartAllCombisByPriority() {
+    const combis = model.nodes
+      .filter((n) => n.type === "COMBI")
+      .map((n) => n.id);
+    for (const id of sortCombisByPriority(combis)) tryStartCombi(id);
   }
 
   /**
@@ -430,8 +461,8 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
           routeDownstream(ev.activityId, ent);
         }
       }
-      for (const qid of ev.fromQueues) tryStartCombisFedBy(qid);
-      tryStartCombi(ev.activityId);
+      // Global priority scan: shared resources (e.g. crane) serve highest priority first
+      tryStartAllCombisByPriority();
     } else {
       a.concurrent = Math.max(0, a.concurrent - 1);
       const entity = ev.entities[0];
@@ -481,9 +512,7 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     }
   }
 
-  for (const n of model.nodes) {
-    if (n.type === "COMBI") tryStartCombi(n.id);
-  }
+  tryStartAllCombisByPriority();
 
   const maxTime = config.maxTime;
   const maxCycles = clampMaxCycles(config.maxCycles);

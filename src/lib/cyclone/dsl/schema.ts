@@ -64,6 +64,11 @@ const nodeSchema = z
     consolidate: z.number().int().min(2).optional(),
     /** Halpin GENERATE: arrivals multiplied to this many units (QUEUE only). */
     generate: z.number().int().min(2).optional(),
+    /**
+     * COMBI/NORMAL: lower number = higher priority when competing for shared resources
+     * (MicroCYCLONE-style; default = model order).
+     */
+    priority: z.number().int().positive().optional(),
   })
   .superRefine((node, ctx) => {
     if (node.type === "QUEUE") {
@@ -90,6 +95,13 @@ const nodeSchema = z
     }
     if (node.type !== "COUNTER" && node.production !== undefined) {
       ctx.addIssue({ code: "custom", message: "production is only valid on COUNTER", path: ["production"] });
+    }
+    if (node.priority !== undefined && node.type !== "COMBI" && node.type !== "NORMAL") {
+      ctx.addIssue({
+        code: "custom",
+        message: "priority is only valid on COMBI or NORMAL",
+        path: ["priority"],
+      });
     }
     if (node.type !== "CONSOLIDATE" && node.consolidate !== undefined) {
       ctx.addIssue({

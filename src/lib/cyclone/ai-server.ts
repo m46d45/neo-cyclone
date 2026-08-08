@@ -48,6 +48,8 @@ NOTATION / DSL (canonical Neo-CYCLONE):
 - GEN and CON are independent; use only when unit logic needs them.
 - Links: optional probability (0–1) for stochastic multi-out. Sum ~1. Do NOT put probability on COMBI multi-out used only for resource return fan-out.
 - Layout hint: forward flow toward COUNTER; arcs into QUEUE are resource returns (diagram shows dashed gold).
+- Priority: COMBI field priority (positive int). Lower = higher priority when shared resources contend (tower crane). Prompt block Priority: Task: n. Default = declaration order.
+- Multi-demand shared resource: one QUEUE feeding several COMBIs (DSL links). Prompt: Resource: TaskA | TaskB | TaskC
 
 Return ONLY YAML Neo-CYCLONE DSL ${DSL_VERSION}. No markdown.
 
@@ -56,6 +58,7 @@ model: { id, name, description, time_unit, production_unit, nodes, links }
 run: { seed, max_time, max_cycles }
 
 QUEUE fields: initial, generate, cost_usd_h
+COMBI/NORMAL: duration, priority
 CONSOLIDATE: consolidate
 links: from, to, probability
 Duration kinds: constant, uniform, triangular, normal, lognormal, beta, gamma.`;

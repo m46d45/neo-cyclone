@@ -51,7 +51,7 @@ Where our **diagram notation** differs slightly from some Halpin print figures, 
 ## 3. Prompt format
 
 Resource cycles, counts, production unit, durations (minutes).  
-Optional: `Cost USD/h:`, `Sensitivity: Resource: low..high`.  
+Optional: `Cost USD/h:`, `Sensitivity:`, `Priority:` (lower number = first when COMBIs compete).  
 `#` / `//` = notes only.
 
 ### Distributions
@@ -111,7 +111,19 @@ Never draw undirected segments: every arc is a **panah** (arrow).
 - Classic pair: GEN multiplies work units; CON reunites them for one production unit (see Example *GEN and CON Scale*).  
 - Do **not** put `probability` on COMBI multi-out used only for resource return fan-out.
 
-### 6.4 Probabilistic branch
+### 6.4 Priority (shared resources)
+
+| | |
+|--|--|
+| Prompt | `Priority:` then `Task: 1` (lower = higher priority) |
+| DSL | COMBI `priority: n` |
+| Default | Model order if omitted |
+| Diagram | **P1**, **P2**, … |
+| Multi-demand | `Crane: Lift A \| Lift B \| Lift C` (pipe, not sequence) |
+
+MicroCYCLONE used **smaller node numbers** first; Neo-CYCLONE makes that explicit in the prompt.
+
+### 6.5 Probabilistic branch
 
 ```yaml
 - from: c_inspect
@@ -124,7 +136,7 @@ Never draw undirected segments: every arc is a **panah** (arrow).
 
 Results → **Branches**: declared vs empirical.
 
-### 6.5 Consistency checklist
+### 6.6 Consistency checklist
 
 - [ ] Visible **arrowhead** on every arc  
 - [ ] Solid black = forward; dashed gold into QUEUE = return  
@@ -142,6 +154,7 @@ Results → **Branches**: declared vs empirical.
 5. Masonry (pairwise sensitivity)  
 6. Inspect and rework (**branch p**)  
 7. GEN and CON scale (**GEN 4 + CON 4**)
+8. Tower crane multi-demand (**Priority**)
 
 ---
 

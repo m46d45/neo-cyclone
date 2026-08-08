@@ -9,12 +9,20 @@ import {
   parseCostAndSensitivity,
   applyCostsToModel,
 } from "./sensitivity";
+import { parsePriorityBlock, applyPrioritiesToModel } from "./priority";
 
 export type ResourceCycle = {
   id: string;
   label: string;
   count: number;
+  /** Primary task sequence for this resource. */
   itinerary: string[];
+  /**
+   * Extra first COMBIs served from the same home QUEUE (shared resource multi-demand).
+   * Example tower crane: itinerary=["Lift Steel"], alsoServes=["Lift Forms","Lift Bucket"].
+   * Engine/priority decide which COMBI wins when the resource is free.
+   */
+  alsoServes?: string[];
 };
 
 export type OperationSpec = {
@@ -106,29 +114,36 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
     });
   });
 
-  const firstLabels = new Set(spec.resources.map((r) => normLabel(r.itinerary[0]!)));
+  const firstLabels = new Set<string>();
+  for (const r of spec.resources) {
+    if (r.itinerary[0]) firstLabels.add(normLabel(r.itinerary[0]));
+    for (const a of r.alsoServes ?? []) firstLabels.add(normLabel(a));
+  }
   const activityId = new Map<string, string>();
   const activityType = new Map<string, "COMBI" | "NORMAL">();
 
+  const ensureActivity = (lab: string) => {
+    const key = normLabel(lab);
+    if (activityId.has(key)) return;
+    const isCombi = firstLabels.has(key);
+    const id = uniqueId(isCombi ? `c_${key}` : `n_${key}`, used);
+    activityId.set(key, id);
+    activityType.set(key, isCombi ? "COMBI" : "NORMAL");
+    const dur =
+      lookupDur(spec.durations, lab) ?? lookupDur(spec.durations, key) ?? DEFAULT_DUR;
+    nodes.push({
+      id,
+      type: isCombi ? "COMBI" : "NORMAL",
+      label: lab.trim(),
+      x: 0,
+      y: 0,
+      duration: dur,
+    });
+  };
+
   for (const r of spec.resources) {
-    for (const lab of r.itinerary) {
-      const key = normLabel(lab);
-      if (activityId.has(key)) continue;
-      const isCombi = firstLabels.has(key);
-      const id = uniqueId(isCombi ? `c_${key}` : `n_${key}`, used);
-      activityId.set(key, id);
-      activityType.set(key, isCombi ? "COMBI" : "NORMAL");
-      const dur =
-        lookupDur(spec.durations, lab) ?? lookupDur(spec.durations, key) ?? DEFAULT_DUR;
-      nodes.push({
-        id,
-        type: isCombi ? "COMBI" : "NORMAL",
-        label: lab.trim(),
-        x: 0,
-        y: 0,
-        duration: dur,
-      });
-    }
+    for (const lab of r.itinerary) ensureActivity(lab);
+    for (const lab of r.alsoServes ?? []) ensureActivity(lab);
   }
 
   const prodRes =
@@ -185,6 +200,15 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
       addLink(counterId, home);
     } else {
       addLink(last.id, home);
+    }
+
+    // Multi-demand: home QUEUE also feeds other COMBIs; return to home after each
+    for (const alt of r.alsoServes ?? []) {
+      const aid = activityId.get(normLabel(alt));
+      if (!aid) continue;
+      addLink(home, aid);
+      // Shared resource returns home after serving this demand COMBI
+      addLink(aid, home);
     }
   }
 
@@ -352,52 +376,105 @@ export function parseExplicitResourceCycles(text: string): {
     Object.assign(inlineDurations, durations);
     if (!itinerary.length) continue;
     const id = slug(label);
-    if (seen.has(id)) continue;
+    if (seen.has(id)) {
+      mergeAlsoServes(cycles, id, itinerary);
+      continue;
+    }
     seen.add(id);
-    cycles.push({ id, label, count, itinerary });
+    cycles.push({ id, label, count, itinerary, alsoServes: [] });
   }
 
   const lines = text.split(/\n|;/).map((l) => l.trim()).filter(Boolean);
+  /** Skip Cost / Priority / Sensitivity / Durations section bodies. */
+  let section: "none" | "skip" | "cycle" = "none";
   for (const line of lines) {
-    if (/^durations?\s*:/i.test(line) || /^durasi\s*:/i.test(line)) continue;
+    if (/^(durations?|durasi|cost\b|sensitivity|priority)\s*:/i.test(line)) {
+      section = "skip";
+      // Single-line headers only — body lines are pure "Name: number" or durations
+      continue;
+    }
+    // New resource cycle line re-enables parsing when it looks like a cycle
     const m = line.match(/^(?:(\d+)\s+)?([A-Za-z][A-Za-z0-9 \-]{1,28}?)\s*:\s*(.+)$/);
     if (!m) continue;
-    const label = titleCase(m[2]!.trim());
-    if (/^(http|https|min|note|phase|load|haul|dump|return|work|travel|pour)/i.test(label)) {
-      if (parseDurationToken(m[3]!) && !/→|->|=>/.test(m[3]!)) continue;
-    }
-    if (!/→|->|=>|—/.test(m[3]!) && !/\[/.test(m[3]!)) {
-      if (parseDurationToken(m[3]!) && /const|tri|unif|normal|norm|logn|beta|gamma|uniform|triangular/i.test(m[3]!)) {
-        if (!/trucks?|loader|crew|pump|crane|mixer/i.test(label)) continue;
-      }
-    }
-    if (/^(http|https|min|note|phase)/i.test(label)) continue;
 
-    let itinerary: string[];
-    if (/→|->|=>|—/.test(m[3]!) || /\(.*\d/.test(m[3]!)) {
-      const parsed = parseStepsWithInlineDurations(m[3]!);
-      itinerary = parsed.labels;
-      Object.assign(inlineDurations, parsed.durations);
-    } else {
-      itinerary = splitSteps(m[3]!);
-    }
-    if (!itinerary.length) continue;
+    const rhs = m[3]!.trim();
+    const label = titleCase(m[2]!.trim());
+
+    // Pure numeric RHS → cost rate, priority rank, or count — never a cycle
+    if (/^\d+(\.\d+)?\s*$/.test(rhs)) continue;
+    // low..high sensitivity
+    if (/^\d+\s*\.\.\s*\d+/.test(rhs)) continue;
+    // Duration-only lines
     if (
-      itinerary.length === 1 &&
-      parseDurationToken(m[3]!) &&
-      /const|tri|unif|normal|logn|beta|gamma|uniform|triangular/i.test(m[3]!)
+      parseDurationToken(rhs) &&
+      /const|tri|unif|normal|norm|logn|beta|gamma|uniform|triangular/i.test(rhs) &&
+      !/→|->|=>|—|\|/.test(rhs)
     ) {
       continue;
     }
+    if (/^(http|https|min|note|phase|cost|priority|sensitivity|duration)/i.test(label)) continue;
+
+    // Must look like a task sequence or multi-demand
+    const looksLikeCycle =
+      /→|->|=>|—/.test(rhs) ||
+      /\|/.test(rhs) ||
+      (/\[/.test(rhs) && /\]/.test(rhs));
+    if (!looksLikeCycle) {
+      // bare "Loader: Load" single task is OK for supporting resources
+      if (!/^[A-Za-z][A-Za-z0-9 \/-]{0,30}$/.test(rhs)) continue;
+    }
+
+    section = "cycle";
+
+    let itinerary: string[];
+    if (/→|->|=>|—/.test(rhs) || /\(.*\d/.test(rhs)) {
+      const parsed = parseStepsWithInlineDurations(rhs);
+      itinerary = parsed.labels;
+      Object.assign(inlineDurations, parsed.durations);
+    } else {
+      itinerary = splitSteps(rhs);
+    }
+    if (!itinerary.length) continue;
+
+    // Pipe multi-demand: Crane: Lift Steel | Lift Forms | Lift Bucket
+    let alsoServes: string[] = [];
+    if (/\|/.test(rhs) && !/→|->|=>|—/.test(rhs)) {
+      const parts = rhs.split("|").map((s) => s.trim()).filter(Boolean);
+      if (parts.length > 1) {
+        itinerary = [parts[0]!];
+        alsoServes = parts.slice(1);
+      }
+    }
 
     const id = slug(label);
-    if (seen.has(id)) continue;
+    if (seen.has(id)) {
+      mergeAlsoServes(cycles, id, itinerary);
+      for (const a of alsoServes) mergeAlsoServes(cycles, id, [a]);
+      continue;
+    }
     seen.add(id);
     const count = m[1] ? Math.max(1, Math.floor(Number(m[1]))) : guessCount(text, label);
-    cycles.push({ id, label, count, itinerary });
+    cycles.push({
+      id,
+      label,
+      count,
+      itinerary,
+      alsoServes,
+    });
   }
 
   return cycles.length ? { resources: cycles, inlineDurations } : null;
+}
+
+/** Merge additional first-task demands onto an existing resource (shared crane, etc.). */
+function mergeAlsoServes(cycles: ResourceCycle[], id: string, itinerary: string[]) {
+  const r = cycles.find((c) => c.id === id);
+  if (!r || !itinerary.length) return;
+  const first = itinerary[0]!;
+  const primary = r.itinerary[0] ? normLabel(r.itinerary[0]) : "";
+  if (normLabel(first) === primary) return;
+  const bag = r.alsoServes ?? (r.alsoServes = []);
+  if (!bag.some((x) => normLabel(x) === normLabel(first))) bag.push(first);
 }
 
 function splitSteps(s: string): string[] {
@@ -573,6 +650,8 @@ export function buildOperationFromText(text: string): CycloneModel | null {
     });
     const { costs, sensitivity } = parseCostAndSensitivity(raw);
     model = applyCostsToModel(model, costs);
+    const pri = parsePriorityBlock(raw);
+    model = applyPrioritiesToModel(model, pri);
     if (sensitivity.length) {
       model = { ...model, sensitivity };
     }

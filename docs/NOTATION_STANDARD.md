@@ -166,6 +166,34 @@ Cost attaches to **home QUEUE** resources (`cost_usd_h` in DSL).
 
 ---
 
+
+
+---
+
+## 6. Priority (shared resource contention)
+
+| Item | Standard |
+|------|----------|
+| **Where stored** | On **COMBI** (and optionally NORMAL) as `priority: n` in DSL / node field |
+| **Prompt** | Optional block `Priority:` then `TaskName: n` |
+| **Rule** | **Lower number = higher priority** (MicroCYCLONE node-number tradition) |
+| **Default** | If omitted, **model declaration order** (first declared COMBI wins ties) |
+| **Engine** | When a shared QUEUE (e.g. crane idle) can start several COMBIs, scan in ascending priority |
+| **Diagram** | Subtitle **`P1`**, **`P2`**, … next to duration |
+
+### Prompt example (tower crane)
+
+```
+Crane: Lift Steel | Lift Forms | Lift Bucket
+
+Priority:
+Lift Steel: 1
+Lift Forms: 2
+Lift Bucket: 3
+```
+
+Pipe `|` on a resource line = multi-demand from one home QUEUE (not a sequence).
+
 ## 8. Relation to Halpin
 
 | Keep from Halpin | Neo-CYCLONE choice |

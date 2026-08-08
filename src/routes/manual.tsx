@@ -266,6 +266,24 @@ function ManualPage() {
             plain line. Legend appears on the diagram canvas.
           </p>
 
+          <h4 className="mb-1 text-xs font-semibold text-foreground">Priority (shared resource)</h4>
+          <ul className="mb-3 list-disc space-y-1.5 pl-5 text-xs">
+            <li>
+              Prompt block <code className="text-foreground">Priority:</code> then{" "}
+              <code className="text-foreground">Task: 1</code> —{" "}
+              <strong className="text-foreground">lower number = higher priority</strong>{" "}
+              (MicroCYCLONE node-number tradition).
+            </li>
+            <li>
+              Stored on COMBI as <code className="text-foreground">priority</code>; diagram shows{" "}
+              <code className="text-foreground">P1</code>, <code className="text-foreground">P2</code>…
+            </li>
+            <li>
+              Multi-demand shared pool:{" "}
+              <code className="text-foreground">Crane: Lift A | Lift B | Lift C</code>
+            </li>
+            <li>Example preset: Tower crane multi-demand (priority).</li>
+          </ul>
           <h4 className="mb-1 text-xs font-semibold text-foreground">GEN and CON (writing standard)</h4>
           <ul className="list-disc space-y-1.5 pl-5 text-xs">
             <li>

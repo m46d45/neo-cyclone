@@ -210,6 +210,48 @@ Return: const 0.5
 `,
   },
 
+  {
+    id: "tower-crane",
+    title: "8. Tower crane multi-demand (priority)",
+    goal: "Shared crane serves several lifts; Priority block decides who goes first.",
+    source: "Halpin multi-work / crane contention teaching pattern (simplified).",
+    features: ["shared QUEUE → several COMBIs", "Priority lower=first", "cost optional"],
+    prompt: `# Example 8 — Tower crane with competing demands
+# One crane idle pool feeds several lift COMBIs. Lower Priority number = first.
+
+Steel crew: Lift Steel → Place Steel
+Form crew: Lift Forms → Place Forms
+Concrete crew: Lift Bucket → Pour
+# Shared resource multi-demand: pipe = several COMBIs from same home QUEUE
+Crane: Lift Steel | Lift Forms | Lift Bucket
+
+1 steel crew, 2 form crew, 2 concrete crew, 1 crane
+production = 1 lift
+
+# MicroCYCLONE-style: smaller number = higher priority when crane is free.
+# With only 1 steel crew, after Lift Steel the crew is busy at Place Steel,
+# so the crane can serve Lift Forms / Lift Bucket (P2, P3). If steel count is
+# high and always waiting, P1 starves lower priorities — that is intentional.
+Priority:
+Lift Steel: 1
+Lift Forms: 2
+Lift Bucket: 3
+
+Cost USD/h:
+Crane: 280
+Steel crew: 95
+Form crew: 80
+Concrete crew: 90
+
+Durations:
+Lift Steel: tri 4, 6, 9
+Place Steel: normal 12, 2
+Lift Forms: tri 3, 5, 8
+Place Forms: normal 10, 1.5
+Lift Bucket: tri 2, 3, 5
+Pour: normal 8, 1.2`,
+  },
+
 ];
 
 export function getExampleById(id: string): ExamplePrompt | undefined {

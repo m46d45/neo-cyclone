@@ -210,8 +210,11 @@ function NodeShape({
           if (node.initialUnits != null) bits.push(`n = ${node.initialUnits}`);
           if (node.generateCount != null && node.generateCount >= 2) bits.push(`GEN ${node.generateCount}`);
           sub = bits.join(" · ");
-        } else if ((node.type === "COMBI" || node.type === "NORMAL") && node.duration) {
-          sub = formatDuration(node.duration);
+        } else if (node.type === "COMBI" || node.type === "NORMAL") {
+          const bits: string[] = [];
+          if (node.duration) bits.push(formatDuration(node.duration));
+          if (node.priority != null && node.priority > 0) bits.push(`P${node.priority}`);
+          sub = bits.join(" · ");
         } else if (node.type === "COUNTER" && node.productionAmount != null) {
           sub = `+${node.productionAmount}`;
         } else if (node.type === "CONSOLIDATE") {

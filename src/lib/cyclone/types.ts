@@ -43,6 +43,13 @@ export interface CycloneNode {
   consolidateCount?: number;
   /** QUEUE: owning resource hourly cost (USD/h) for cost report. */
   costPerHourUsd?: number;
+  /**
+   * COMBI (and optionally NORMAL): scan / contention priority.
+   * Lower number = higher priority (MicroCYCLONE node-number tradition).
+   * When a shared resource (e.g. tower crane) can serve several COMBIs,
+   * the engine tries lower priority values first.
+   */
+  priority?: number;
 }
 
 export interface CycloneLink {

@@ -16,6 +16,7 @@ import {
 } from "@/lib/cyclone/prompt-template";
 import { EXAMPLE_PROMPTS } from "@/lib/cyclone/example-prompts";
 import { parseCostAndSensitivity, applyCostsToModel } from "@/lib/cyclone/sensitivity";
+import { parsePriorityBlock, applyPrioritiesToModel } from "@/lib/cyclone/priority";
 import { t } from "@/lib/cyclone/agent/i18n";
 
 export function AIAssist() {
@@ -36,10 +37,12 @@ export function AIAssist() {
       const checked = parseDsl(ai.dsl);
       if (checked.ok && applyAgentDraft(ai.dsl, "draft")) {
         const { costs, sensitivity } = parseCostAndSensitivity(prompt);
+        const pri = parsePriorityBlock(prompt);
         if (Object.keys(costs).length || sensitivity.length) {
           const st = useCycloneStore.getState();
           let m = st.model;
           if (Object.keys(costs).length) m = applyCostsToModel(m, costs);
+          if (Object.keys(pri).length) m = applyPrioritiesToModel(m, pri);
           if (sensitivity.length) m = { ...m, sensitivity };
           st.setModel(m);
           st.markModelReady(true);

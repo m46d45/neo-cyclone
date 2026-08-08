@@ -70,6 +70,13 @@ export function serializeDsl(
         if ((n.type === "COMBI" || n.type === "NORMAL") && n.duration) {
           base.duration = fromDuration(n.duration);
         }
+        if (
+          (n.type === "COMBI" || n.type === "NORMAL") &&
+          n.priority != null &&
+          n.priority > 0
+        ) {
+          base.priority = n.priority;
+        }
         if (n.type === "COUNTER") base.production = n.productionAmount ?? 1;
         if (n.type === "CONSOLIDATE") base.consolidate = n.consolidateCount ?? 2;
         return base;
