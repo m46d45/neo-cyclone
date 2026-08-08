@@ -14,6 +14,7 @@ import {
   GENERAL_TEMPLATE,
   PRODUCT_TAGLINE,
 } from "@/lib/cyclone/prompt-template";
+import { EXAMPLE_PROMPTS } from "@/lib/cyclone/example-prompts";
 import { parseCostAndSensitivity, applyCostsToModel } from "@/lib/cyclone/sensitivity";
 import { t } from "@/lib/cyclone/agent/i18n";
 
@@ -34,7 +35,6 @@ export function AIAssist() {
     if (ai.ok && ai.dsl) {
       const checked = parseDsl(ai.dsl);
       if (checked.ok && applyAgentDraft(ai.dsl, "draft")) {
-        // Attach Cost USD/h + Sensitivity plan from the prompt (DSL omits them).
         const { costs, sensitivity } = parseCostAndSensitivity(prompt);
         if (Object.keys(costs).length || sensitivity.length) {
           const st = useCycloneStore.getState();
@@ -108,10 +108,30 @@ export function AIAssist() {
         </details>
 
         <div>
-          <label className="mb-1 block text-[11px] font-medium text-foreground">
-            {c.promptLabel}
-          </label>
+          <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+            <label className="text-[11px] font-medium text-foreground" htmlFor="op-prompt">
+              {c.promptLabel}
+            </label>
+            <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              <span className="whitespace-nowrap">Example</span>
+              <select
+                className="max-w-[220px] rounded-[var(--radius-sm)] border border-border bg-background px-1.5 py-1 text-[10px] text-foreground"
+                defaultValue="earthmoving"
+                onChange={(e) => {
+                  const ex = EXAMPLE_PROMPTS.find((x) => x.id === e.target.value);
+                  if (ex) setInput(ex.prompt);
+                }}
+              >
+                {EXAMPLE_PROMPTS.map((ex) => (
+                  <option key={ex.id} value={ex.id}>
+                    {ex.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
           <Textarea
+            id="op-prompt"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             rows={12}
