@@ -16,7 +16,6 @@ export type DistType =
 
 export interface DurationSpec {
   type: DistType;
-  /** Parameters depend on distribution (e.g. CONSTANT: [value]). */
   params: number[];
 }
 
@@ -28,6 +27,12 @@ export interface CycloneNode {
   y: number;
   /** QUEUE: starting resource units in the home pool. */
   initialUnits?: number;
+  /**
+   * QUEUE: Halpin GENERATE (GEN k).
+   * Each unit that *arrives* during the run is multiplied to k units in this QUEUE
+   * (1 arrival → k available). Independent of CONSOLIDATE. Does not multiply initialUnits.
+   */
+  generateCount?: number;
   /** COMBI / NORMAL duration. */
   duration?: DurationSpec;
   /** COUNTER: production amount per passage. */
@@ -44,9 +49,7 @@ export interface CycloneLink {
   to: string;
 }
 
-/** Sensitivity range for one resource (home QUEUE), Halpin-style. */
 export interface SensitivityRange {
-  /** Match resource / queue label (case-insensitive). */
   resourceLabel: string;
   low: number;
   high: number;
@@ -64,7 +67,6 @@ export interface CycloneModel {
   defaultRuns: number;
   defaultMaxTime: number;
   defaultMaxCycles: number;
-  /** Optional sensitivity plan from the prompt. */
   sensitivity?: SensitivityRange[];
 }
 
@@ -75,13 +77,11 @@ export interface SimConfig {
   warmupTime?: number;
 }
 
-/** Per-resource cost line (Process / cost report). */
 export interface ResourceCostStat {
   nodeId: string;
   label: string;
   count: number;
   costPerHourUsd: number;
-  /** costPerHourUsd × count × runHours */
   totalCostUsd: number;
 }
 
@@ -90,13 +90,11 @@ export interface CostReport {
   runHours: number;
   resources: ResourceCostStat[];
   totalCostUsd: number;
-  /** Total cost / total production (USD per production unit). */
   unitCostUsd: number;
   production: number;
   productionUnit: string;
 }
 
-/** MicroCYCLONE-style QUEUE node statistics (Report by Element). */
 export interface QueueStat {
   nodeId: string;
   label: string;
@@ -153,32 +151,24 @@ export interface SimResult {
     rate: number;
     unitsPerHour: number;
   }[];
-  /** Present when any home QUEUE carries costPerHourUsd. */
   cost?: CostReport;
 }
 
-/** One cell of a Halpin-style sensitivity batch. */
 export interface SensitivityRow {
-  /** Resource counts keyed by queue node id */
   counts: Record<string, number>;
-  /** Short label e.g. "Trucks=4, Loader=1" */
   label: string;
   unitsPerHour: number;
   unitCostUsd: number | null;
   totalCostUsd: number | null;
   runLength: number;
   cycles: number;
-  /** Key activity utilizations (label → 0–1) */
   utilizations: Record<string, number>;
 }
 
-/** One resource-pair slice (pairwise sensitivity when ≥3 resources). */
 export interface SensitivityPairResult {
-  /** e.g. "Trucks × Loader" */
   pairLabel: string;
   resourceA: string;
   resourceB: string;
-  /** Fixed counts for resources not in this pair (label → units). */
   baseline: Record<string, number>;
   rows: SensitivityRow[];
   bestProductivityLabel: string | null;
@@ -202,7 +192,7 @@ export const NODE_META: Record<
     label: "QUEUE",
     shape: "Q-circle",
     description:
-      "Idle resource pool. Circle with lower-right slash (Halpin “Q”). Units wait until a following COMBI can start.",
+      "Idle resource pool. Circle with lower-right slash (Halpin “Q”). Units wait until a following COMBI can start. Optional GEN k multiplies each arriving unit into k units (Halpin GENERATE; independent of CON).",
   },
   COMBI: {
     label: "COMBI",
