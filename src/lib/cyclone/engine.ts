@@ -3,6 +3,7 @@ import { createRng, sampleDuration } from "./distributions";
 import { buildCostReport } from "./cost";
 import type {
   ActivityStat,
+  BranchEvent,
   BranchStat,
   CounterStat,
   CycloneModel,
@@ -115,6 +116,7 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
   const counters = new Map<string, RuntimeCounter>();
   const consolidates = new Map<string, RuntimeConsolidate>();
   const branchHits = new Map<string, number>();
+  const branchEvents: BranchEvent[] = [];
 
   for (const n of model.nodes) {
     if (n.type === "QUEUE") {
@@ -216,6 +218,32 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     branchHits.set(arc.id, (branchHits.get(arc.id) ?? 0) + 1);
   }
 
+  /** Record a true probabilistic choice (declared p) for the cycle chart. */
+  function recordProbChoice(fromId: string, arc: OutArc, siblingP: OutArc[]) {
+    noteBranch(arc);
+    if (arc.probability == null) return;
+    const fromLab = nodeById.get(fromId)?.label ?? fromId;
+    const toLab = nodeById.get(arc.to)?.label ?? arc.to;
+    const maxP = Math.max(
+      0,
+      ...siblingP.map((o) => o.probability ?? 0),
+    );
+    const isDetour = (arc.probability ?? 0) < maxP - 1e-9;
+    const completed = primaryCounterId
+      ? (counters.get(primaryCounterId)?.count ?? 0)
+      : cycles;
+    // Associate with the next production count (branch usually before COUNTER)
+    const cycle = Math.max(1, completed + 1);
+    branchEvents.push({
+      t: Math.round(time * 100) / 100,
+      cycle,
+      fromLabel: fromLab,
+      toLabel: toLab,
+      probability: arc.probability,
+      isDetour,
+    });
+  }
+
   function resolveWeights(outs: OutArc[]): number[] {
     const specified = outs.map((o) =>
       o.probability != null && o.probability > 0 ? o.probability : null,
@@ -263,7 +291,7 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
       r -= weights[i]!;
       if (r <= 0) {
         const chosen = outs[i]!;
-        noteBranch(chosen);
+        recordProbChoice(fromId, chosen, outs);
         const fromLab = nodeById.get(fromId)?.label ?? fromId;
         const toLab = nodeById.get(chosen.to)?.label ?? chosen.to;
         const pLabel =
@@ -275,7 +303,7 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
       }
     }
     const last = outs[outs.length - 1]!;
-    noteBranch(last);
+    recordProbChoice(fromId, last, outs);
     return last.to;
   }
 
@@ -485,7 +513,7 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
             break;
           }
         }
-        noteBranch(chosen);
+        recordProbChoice(ev.activityId, chosen, pOuts);
         const fromLab = nodeById.get(ev.activityId)?.label ?? ev.activityId;
         const toLab = nodeById.get(chosen.to)?.label ?? chosen.to;
         record(
@@ -713,6 +741,7 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     activityStats,
     counterStats,
     branchStats,
+    branchEvents,
     timeline,
     productivitySeries,
     cost,

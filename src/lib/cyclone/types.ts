@@ -161,6 +161,18 @@ export interface BranchStat {
   empiricalShare: number;
 }
 
+/** Single probabilistic branch take, tied to production cycle for charts. */
+export interface BranchEvent {
+  t: number;
+  /** Production cycle this event is associated with (1-based; usually next counter hit). */
+  cycle: number;
+  fromLabel: string;
+  toLabel: string;
+  probability: number;
+  /** True if this arm is not the highest-declared-p arm (e.g. Breakdown). */
+  isDetour: boolean;
+}
+
 export interface SimResult {
   modelId: string;
   modelName: string;
@@ -172,6 +184,8 @@ export interface SimResult {
   activityStats: ActivityStat[];
   counterStats: CounterStat[];
   branchStats: BranchStat[];
+  /** Chronological probabilistic branch takes (for cycle chart markers). */
+  branchEvents: BranchEvent[];
   timeline: { t: number; event: string }[];
   productivitySeries: {
     t: number;

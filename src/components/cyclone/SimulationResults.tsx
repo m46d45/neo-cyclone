@@ -5,6 +5,7 @@ import {
   LabelList,
   Line,
   LineChart,
+  ReferenceDot,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -115,6 +116,21 @@ export function SimulationResults({
   const ss = detectSteadyState(series.filter((p) => p.cycle > 0));
   const branches = result.branchStats ?? [];
   const hasBranches = branches.length > 0;
+  const branchEvents = result.branchEvents ?? [];
+  const detourEvents = branchEvents.filter((e) => e.isDetour);
+  // One marker per cycle that had a detour (e.g. Breakdown)
+  const detourMarks = (() => {
+    const byCycle = new Map<number, { cycle: number; y: number; labels: string[] }>();
+    for (const ev of detourEvents) {
+      const pt = series.find((s) => s.cycle === ev.cycle);
+      const y = pt?.unitsPerHour ?? series.filter((s) => s.cycle > 0).at(-1)?.unitsPerHour ?? 0;
+      const row = byCycle.get(ev.cycle) ?? { cycle: ev.cycle, y, labels: [] };
+      if (!row.labels.includes(ev.toLabel)) row.labels.push(ev.toLabel);
+      if (pt) row.y = pt.unitsPerHour;
+      byCycle.set(ev.cycle, row);
+    }
+    return [...byCycle.values()].sort((a, b) => a.cycle - b.cycle);
+  })();
 
   return (
     <div className="space-y-4">
@@ -297,7 +313,32 @@ export function SimulationResults({
             declared when consecutive changes stay under <strong className="text-foreground">5%</strong>{" "}
             for at least {SS_MIN_STREAK} consecutive cycles (5% rule; teaching heuristic). The red dashed line is the
             steady-state productivity level.
+            {detourEvents.length > 0 && (
+              <>
+                {" "}
+                <strong className="text-destructive">Red dots</strong> mark cycles where a detour
+                branch was taken (e.g. Breakdown) — compare productivity around those cycles.
+              </>
+            )}
           </p>
+          {detourEvents.length > 0 && (
+            <div className="rounded-[var(--radius-sm)] border border-destructive/25 bg-destructive/5 px-3 py-2 text-[11px]">
+              <span className="font-medium text-foreground">Detour branch events: </span>
+              <span className="text-muted-foreground">
+                {detourMarks
+                  .slice(0, 24)
+                  .map((m) => `cycle ${m.cycle} → ${m.labels.join("/")}`)
+                  .join(" · ")}
+                {detourMarks.length > 24 ? ` · … +${detourMarks.length - 24} more` : ""}
+              </span>
+              <span className="mt-1 block text-muted-foreground">
+                Total detours: {detourEvents.length}
+                {branchEvents.length > detourEvents.length
+                  ? ` · main-path samples also recorded (${branchEvents.length} branch takes)`
+                  : ""}
+              </span>
+            </div>
+          )}
           {ss && (
             <div className="rounded-[var(--radius-sm)] border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs">
               <span className="font-medium text-foreground">Steady-state productivity: </span>
@@ -359,7 +400,12 @@ export function SimulationResults({
                   />
                   <Tooltip
                     formatter={(v) => [`${v}`, "Units / hour"]}
-                    labelFormatter={(c) => `Cycle ${c}`}
+                    labelFormatter={(c) => {
+                      const marks = detourMarks.find((m) => m.cycle === Number(c));
+                      return marks
+                        ? `Cycle ${c} · DETOUR: ${marks.labels.join(", ")}`
+                        : `Cycle ${c}`;
+                    }}
                   />
                   {ss && (
                     <ReferenceLine
@@ -390,6 +436,18 @@ export function SimulationResults({
                       }}
                     />
                   )}
+                  {detourMarks.map((m) => (
+                    <ReferenceDot
+                      key={`detour-${m.cycle}`}
+                      x={m.cycle}
+                      y={m.y}
+                      r={5}
+                      fill="#c41e3a"
+                      stroke="#ffffff"
+                      strokeWidth={1.5}
+                      ifOverflow="extendDomain"
+                    />
+                  ))}
                   <Line
                     type="monotone"
                     dataKey="unitsPerHour"
@@ -411,25 +469,35 @@ export function SimulationResults({
                   <th className="px-2 py-1.5 font-medium">Cycle #</th>
                   <th className="px-2 py-1.5 font-medium">Sim time ({unit})</th>
                   <th className="px-2 py-1.5 font-medium">Units / hour</th>
+                  {branchEvents.length > 0 && (
+                    <th className="px-2 py-1.5 font-medium">Branch</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
                 {cycleTable.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="px-2 py-3 text-center text-muted-foreground">
+                    <td
+                      colSpan={branchEvents.length > 0 ? 4 : 3}
+                      className="px-2 py-3 text-center text-muted-foreground"
+                    >
                       No cycles completed
                     </td>
                   </tr>
                 ) : (
                   cycleTable.map((row) => {
                     const inSs = ss != null && row.cycle >= ss.startCycle;
+                    const rowEv = branchEvents.filter((e) => e.cycle === row.cycle);
+                    const detour = rowEv.filter((e) => e.isDetour);
                     return (
                       <tr
                         key={row.cycle}
                         className={
-                          inSs
-                            ? "border-b border-border/60 bg-destructive/[0.04]"
-                            : "border-b border-border/60"
+                          detour.length
+                            ? "border-b border-border/60 bg-destructive/10"
+                            : inSs
+                              ? "border-b border-border/60 bg-destructive/[0.04]"
+                              : "border-b border-border/60"
                         }
                       >
                         <td className="px-2 py-1 tabular-nums">{row.cycle}</td>
@@ -437,6 +505,21 @@ export function SimulationResults({
                         <td className="px-2 py-1 tabular-nums font-medium text-foreground">
                           {formatNum(row.unitsPerHour)}
                         </td>
+                        {branchEvents.length > 0 && (
+                          <td className="px-2 py-1 text-[10px]">
+                            {detour.length > 0 ? (
+                              <span className="font-semibold text-destructive">
+                                {detour.map((e) => e.toLabel).join(", ")}
+                              </span>
+                            ) : rowEv.length > 0 ? (
+                              <span className="text-muted-foreground">
+                                {rowEv.map((e) => e.toLabel).join(", ")}
+                              </span>
+                            ) : (
+                              "—"
+                            )}
+                          </td>
+                        )}
                       </tr>
                     );
                   })
