@@ -47,26 +47,8 @@ Task2: <dist> <params…>
 
 # lines starting with # or // are notes (ignored)`;
 
-export const DEFAULT_EXAMPLE_PROMPT = `# Default example (earthmoving) — replace with your operation
-# Durations in minutes. Costs in USD per hour. Seed default = 12345.
-
-Trucks: Load → Haul → Dump → Return
-Loader: Load
-5 trucks, 1 loader, 12 m3
-
-Cost USD/h:
-Trucks: 85
-Loader: 120
-
-Sensitivity:
-Trucks: 2..8
-Loader: 1..2
-
-Durations:
-Load: tri 1.5, 2, 3
-Haul: normal 8, 1.5
-Dump: const 1.2
-Return: lognormal 7, 1.5`;
+export { DEFAULT_EXAMPLE_PROMPT, EXAMPLE_PROMPTS, getExampleById } from "./example-prompts";
+export type { ExamplePrompt } from "./example-prompts";
 
 export const DIST_TABLE = `Distributions (durations in minutes):
   const   value
