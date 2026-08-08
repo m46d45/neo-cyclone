@@ -254,13 +254,38 @@ function NodeShape({
 }
 
 /**
- * Path between node centers, trimmed to shape edges so **arrowheads stay visible**.
- * Return arcs use a curved bow; forward arcs are straight.
+ * Distance from point P to segment AB.
+ */
+function distPointToSeg(
+  px: number,
+  py: number,
+  ax: number,
+  ay: number,
+  bx: number,
+  by: number,
+): number {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const len2 = dx * dx + dy * dy || 1;
+  let t = ((px - ax) * dx + (py - ay) * dy) / len2;
+  t = Math.max(0, Math.min(1, t));
+  const qx = ax + t * dx;
+  const qy = ay + t * dy;
+  return Math.hypot(px - qx, py - qy);
+}
+
+/**
+ * Path between node centers, trimmed so arrowheads stay visible.
+ * Forward AND return may be curved so strokes do not cut through other
+ * symbols — general for every model.
  */
 function linkPath(
   from: CycloneNode,
   to: CycloneNode,
   isReturn: boolean,
+  others: CycloneNode[] = [],
+  fanIndex = 0,
+  fanCount = 1,
 ): { d: string; mx: number; my: number } {
   const half = 30;
   const ax = from.x + half;
@@ -272,15 +297,35 @@ function linkPath(
   const len = Math.hypot(dx, dy) || 1;
   const ux = dx / len;
   const uy = dy / len;
-  // Keep stroke outside the symbol so the arrow tip is not buried under the shape
   const startPad = 32;
   const endPad = 36;
   const x1 = ax + ux * startPad;
   const y1 = ay + uy * startPad;
   const x2 = bx - ux * endPad;
   const y2 = by - uy * endPad;
+  const span = Math.hypot(x2 - x1, y2 - y1);
 
-  if (!isReturn) {
+  const hitR = 48;
+  let biasY = 0;
+  let hits = 0;
+  for (const n of others) {
+    if (n.id === from.id || n.id === to.id) continue;
+    const cx = n.x + half;
+    const cy = n.y + half;
+    const d = distPointToSeg(cx, cy, x1, y1, x2, y2);
+    if (d < hitR) {
+      hits += 1;
+      const midY = (y1 + y2) / 2;
+      biasY += cy < midY ? 1 : -1;
+    }
+  }
+
+  const multiFan = fanCount > 1;
+  const longHop = span > 160;
+  const tallHop = Math.abs(dy) > 36;
+  const needCurve = isReturn || hits > 0 || multiFan || longHop || tallHop;
+
+  if (!needCurve) {
     return {
       d: `M ${x1} ${y1} L ${x2} ${y2}`,
       mx: (x1 + x2) / 2,
@@ -292,17 +337,27 @@ function linkPath(
   const my = (y1 + y2) / 2;
   const px = -uy;
   const py = ux;
-  const span = Math.hypot(x2 - x1, y2 - y1);
-  const bow = Math.min(90, Math.max(44, span * 0.32));
-  // Prefer bow "outside" (down/right-ish) for return arcs
-  let sx = px;
-  let sy = py;
-  if (sy < 0) {
-    sx = -sx;
-    sy = -sy;
+  let side = 1;
+  if (isReturn) {
+    if (py < 0) side = -1;
+  } else if (biasY !== 0) {
+    side = biasY > 0 ? 1 : -1;
+  } else if (multiFan) {
+    const mid = (fanCount - 1) / 2;
+    if (fanIndex < mid) side = -1;
+    else if (fanIndex > mid) side = 1;
+    else side = py >= 0 ? 1 : -1;
+  } else {
+    side = py >= 0 ? 1 : -1;
   }
-  const cx = mx + sx * bow;
-  const cy = my + sy * bow;
+
+  const baseBow = isReturn
+    ? Math.min(100, Math.max(48, span * 0.34))
+    : Math.min(88, Math.max(28, span * 0.22 + hits * 14));
+  const fanSpread = multiFan ? 18 + fanIndex * 12 : 0;
+  const bow = baseBow + fanSpread;
+  const cx = mx + px * side * bow;
+  const cy = my + py * side * bow;
   return {
     d: `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`,
     mx: (x1 + 2 * cx + x2) / 4,
@@ -311,25 +366,16 @@ function linkPath(
 }
 
 /**
- * Neo-CYCLONE arrow standard (all models, not per-case):
- * - Forward = solid black + tip: work progresses (toward COUNTER / next task).
- * - Return  = dashed gold + tip: resource closes its cycle into a **home** QUEUE.
- *
- * Important: not every QUEUE is "home". Staging queues (e.g. "Trucks @ Dump",
- * GEN pools with n=0) are still **forward** when entered — only the idle home
- * pool (resource return) is dashed gold.
+ * Neo-CYCLONE arrow standard (all models):
+ * - Forward = solid black + tip (may be curved to clear other nodes)
+ * - Return  = dashed gold + tip into a **home** QUEUE only
  */
 function isHomeQueue(node: CycloneNode): boolean {
   if (node.type !== "QUEUE") return false;
-  // Explicit staging labels from the builder: "Resource @ Task"
   if (/\s@\s/.test(node.label)) return false;
-  // Home pools almost always start with resources (n ≥ 1)
   if ((node.initialUnits ?? 0) > 0) return true;
-  // Named idle / home pools even if n happens to be 0 after edits
-  if (/(idle|home)/i.test(node.label)) return true;
-  // GEN function queues (BucketPool, PartsPool, …) are work buffers, not home
+  if (/(idle|home)/i.test(node.label)) return true;
   if ((node.generateCount ?? 0) >= 2) return false;
-  // Unknown empty queue: treat as staging (forward), not return
   return false;
 }
 
@@ -365,13 +411,28 @@ export function DiagramCanvas() {
 
   const linksDrawn = useMemo(() => {
     if (!model) return [];
+    const byFrom = new Map<string, string[]>();
+    for (const l of model.links) {
+      const arr = byFrom.get(l.from) ?? [];
+      arr.push(l.id);
+      byFrom.set(l.from, arr);
+    }
+    const fanOf = new Map<string, { i: number; n: number }>();
+    for (const [, ids] of byFrom) {
+      ids.forEach((id, i) => fanOf.set(id, { i, n: ids.length }));
+    }
     return model.links
       .map((link) => {
         const from = nodeMap.get(link.from);
         const to = nodeMap.get(link.to);
         if (!from || !to) return null;
         const cycle = isReturnLink(from, to);
-        return { link, cycle, path: linkPath(from, to, cycle) };
+        const fan = fanOf.get(link.id) ?? { i: 0, n: 1 };
+        return {
+          link,
+          cycle,
+          path: linkPath(from, to, cycle, model.nodes, fan.i, fan.n),
+        };
       })
       .filter(Boolean) as {
       link: (typeof model.links)[0];
@@ -379,7 +440,7 @@ export function DiagramCanvas() {
       cycle: boolean;
       path: { d: string; mx: number; my: number };
     }[];
-  }, [model.links, nodeMap]);
+  }, [model, nodeMap]);
 
   if (!model) {
     return (

@@ -66,8 +66,10 @@ Use this document when drawing diagrams, writing prompts, writing DSL, or updati
 
 ### Geometry
 
-- Forward arcs: straight line, endpoints **outside** node bodies so the tip is visible.  
-- Return arcs: curved bow + dashed gold + tip.  
+- Forward arcs: **straight or curved** (quadratic). Curve when the hop is long, multi-out, or would pass through another symbol.  
+- Return arcs: curved bow + dashed gold + tip into home QUEUE.  
+- Endpoints stay **outside** node bodies so the tip is visible.  
+- Layout: one row per resource; staging QUEUE on-row before COMBI; COUNTER beside its predecessor.  
 - Diagram footer legend: Forward vs Return.
 
 ---

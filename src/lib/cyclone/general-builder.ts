@@ -428,7 +428,7 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
     }
   }
 
-  layoutNodes(nodes, spec.resources, homeQueue, activityId, counterId, stagingByResource);
+  layoutNodes(nodes, links, spec.resources, homeQueue, activityId, counterId, stagingByResource);
 
   return {
     id: uniqueId(slug(spec.name) || "operation", new Set()),
@@ -448,13 +448,16 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
 
 
 /**
- * Multi-resource layout (fixes stacked labels e.g. masonry SupplyBrick/MoveScaffold):
+ * Multi-resource layout (general):
  * - one horizontal row per resource (home QUEUE + exclusive tasks)
- * - shared COMBI: common x, y averaged across resources that meet
- * - collision pass separates any remaining overlaps
+ * - shared COMBI: common x, y averaged across meeting resources
+ * - staging QUEUE ("R @ Task") sits on the row, mid-column before COMBI
+ * - COUNTER sits just right of its predecessor (not floating far away)
+ * - collision pass separates remaining overlaps
  */
 function layoutNodes(
   nodes: CycloneNode[],
+  links: { from: string; to: string }[],
   resources: ResourceCycle[],
   homeQueue: Map<string, string>,
   activityId: Map<string, string>,
@@ -462,11 +465,11 @@ function layoutNodes(
   stagingByResource: Map<string, string[]> = new Map(),
 ): void {
   const byId = new Map(nodes.map((n) => [n.id, n]));
-  const ROW = 150;
-  const COL = 180;
+  const ROW = 170;
+  const COL = 200;
   const LEFT = 70;
-  const ACT0 = 280;
-  const TOP = 70;
+  const ACT0 = 260;
+  const TOP = 80;
 
   const useCount = new Map<string, number>();
   const useRows = new Map<string, number[]>();
@@ -486,6 +489,15 @@ function layoutNodes(
     q.y = TOP + i * ROW;
   });
 
+  // Column index per activity key (max index across resources that use it)
+  const colOf = new Map<string, number>();
+  resources.forEach((r) => {
+    r.itinerary.forEach((lab, j) => {
+      const key = normLabel(lab);
+      colOf.set(key, Math.max(colOf.get(key) ?? 0, j));
+    });
+  });
+
   const placed = new Set<string>();
   resources.forEach((r, ri) => {
     const rowY = TOP + ri * ROW;
@@ -501,36 +513,63 @@ function layoutNodes(
       } else if (shared) {
         const rows = useRows.get(key) ?? [ri];
         n.y = rows.reduce((s, idx) => s + (TOP + idx * ROW), 0) / rows.length;
+        // Keep shared node at earliest column where it appears
         n.x = Math.min(n.x, x);
       }
     });
-
-    const stags = stagingByResource.get(r.id) ?? [];
-    stags.forEach((sid, si) => {
-      const sn = byId.get(sid);
-      if (!sn) return;
-      sn.x = ACT0 + (si + 0.5) * COL;
-      sn.y = rowY + 72;
-    });
   });
 
-  const primary = resources[0]!;
-  const lastLab = primary.itinerary[primary.itinerary.length - 1]!;
-  const last = byId.get(activityId.get(normLabel(lastLab))!)!;
-  const ctr = byId.get(counterId)!;
-  ctr.x = last.x + COL;
-  ctr.y = Math.max(TOP - 10, last.y - 40);
+  // Staging queues: on the resource row, halfway before the COMBI they feed
+  resources.forEach((r, ri) => {
+    const rowY = TOP + ri * ROW;
+    const stags = stagingByResource.get(r.id) ?? [];
+    for (const sid of stags) {
+      const sn = byId.get(sid);
+      if (!sn) continue;
+      // Label form: "Trucks @ DumpToPaver"
+      const m = sn.label.match(/@\s*(.+)$/);
+      const taskKey = m ? normLabel(m[1]!) : null;
+      const combi = taskKey ? byId.get(activityId.get(taskKey)!) : null;
+      if (combi) {
+        sn.x = combi.x - COL * 0.48;
+        sn.y = rowY;
+      } else {
+        sn.x = ACT0 + COL * 0.5;
+        sn.y = rowY;
+      }
+      placed.add(sn.id);
+    }
+  });
 
+  // COUNTER: just to the right of its real predecessor(s)
+  const ctr = byId.get(counterId)!;
+  const preds = links
+    .filter((l) => l.to === counterId)
+    .map((l) => byId.get(l.from))
+    .filter((n): n is CycloneNode => !!n);
+  if (preds.length) {
+    const maxX = Math.max(...preds.map((n) => n.x));
+    const avgY = preds.reduce((s, n) => s + n.y, 0) / preds.length;
+    ctr.x = maxX + COL * 0.9;
+    ctr.y = avgY;
+  } else {
+    ctr.x = ACT0 + COL * 4;
+    ctr.y = TOP;
+  }
+
+  // Exclusive post-shared tasks already placed on rows; give orphans a row below
   let orphan = 0;
   for (const n of nodes) {
-    if (n.x === 0 && n.y === 0) {
-      n.x = ACT0 + (orphan % 3) * COL;
-      n.y = TOP + resources.length * ROW + Math.floor(orphan / 3) * ROW;
+    if (n.id === counterId) continue;
+    if (!placed.has(n.id) && n.x === 0 && n.y === 0) {
+      n.x = ACT0 + (orphan % 4) * COL;
+      n.y = TOP + resources.length * ROW + Math.floor(orphan / 4) * ROW;
       orphan++;
     }
   }
+  placed.add(ctr.id);
 
-  resolveCollisions(nodes, 155, 115);
+  resolveCollisions(nodes, 170, 125);
 }
 
 function resolveCollisions(nodes: CycloneNode[], minDx: number, minDy: number): void {
