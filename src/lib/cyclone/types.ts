@@ -30,12 +30,23 @@ export interface CycloneNode {
   duration?: DurationDist;
   productionAmount?: number;
   consolidateCount?: number;
+  /** Hourly ownership/operating cost in USD (home QUEUE resources). */
+  costPerHourUsd?: number;
 }
 
 export interface CycloneLink {
   id: string;
   from: string;
   to: string;
+}
+
+/** Sensitivity range for one resource (home QUEUE), Halpin-style. */
+export interface SensitivityRange {
+  /** Match resource / queue label (case-insensitive). */
+  resourceLabel: string;
+  low: number;
+  high: number;
+  step?: number;
 }
 
 export interface CycloneModel {
@@ -49,6 +60,8 @@ export interface CycloneModel {
   defaultRuns: number;
   defaultMaxTime: number;
   defaultMaxCycles: number;
+  /** Optional sensitivity plan from the prompt. */
+  sensitivity?: SensitivityRange[];
 }
 
 export interface SimConfig {
@@ -58,56 +71,62 @@ export interface SimConfig {
   warmupTime?: number;
 }
 
+/** Per-resource cost line (Process / cost report). */
+export interface ResourceCostStat {
+  nodeId: string;
+  label: string;
+  count: number;
+  costPerHourUsd: number;
+  /** costPerHourUsd × count × runHours */
+  totalCostUsd: number;
+}
+
+export interface CostReport {
+  currency: "USD";
+  runHours: number;
+  resources: ResourceCostStat[];
+  totalCostUsd: number;
+  /** Total cost / total production (USD per production unit). */
+  unitCostUsd: number;
+  production: number;
+  productionUnit: string;
+}
+
 /** MicroCYCLONE-style QUEUE node statistics (Report by Element). */
 export interface QueueStat {
   nodeId: string;
   label: string;
-  /** Average number of units at the queue over simulation time */
   avgLength: number;
   maxLength: number;
-  /** Average waiting time per departing unit */
   avgWaitTime: number;
   totalWaitTime: number;
   departures: number;
-  /** Units still in queue at end of run */
   unitsAtEnd: number;
-  /** Fraction of time the queue was non-empty (0–1) */
   percentOccupied: number;
   initialUnits: number;
 }
 
-/** MicroCYCLONE-style COMBI/NORMAL statistics (Report by Element). */
 export interface ActivityStat {
   nodeId: string;
   label: string;
   type: "COMBI" | "NORMAL";
   busyTime: number;
-  /** Number of times the work task was activated */
   starts: number;
-  /** Percentage of time the work task was in operation (0–1) */
   utilization: number;
-  /** Mean duration of the work task */
   avgDuration: number;
-  /** Average time between arrivals / activations */
   avgInterArrival: number;
-  /** Average number of units positioned at the work task */
   avgUnitsAtTask: number;
 }
 
-/** COUNTER / production statistics. */
 export interface CounterStat {
   nodeId: string;
   label: string;
   count: number;
   production: number;
-  /** Production per simulation time unit (e.g. units/min) */
   productivity: number;
-  /** Production per hour (Halpin Process Report style when time is minutes) */
   unitsPerHour: number;
   avgCycleTime: number;
-  /** Simulation time of first unit through the counter */
   firstPassageTime: number;
-  /** Average time between successive units through the counter */
   avgTimeBetweenUnits: number;
   unitsPerCycle: number;
 }
@@ -116,7 +135,6 @@ export interface SimResult {
   modelId: string;
   modelName: string;
   seed: number;
-  /** Run length (simulation clock at stop) */
   simTime: number;
   cyclesCompleted: number;
   maxCyclesRequested: number;
@@ -124,19 +142,36 @@ export interface SimResult {
   activityStats: ActivityStat[];
   counterStats: CounterStat[];
   timeline: { t: number; event: string }[];
-  /**
-   * Production by Cycle (MicroCYCLONE):
-   * cycle number, sim time at completion, cumulative production & productivity.
-   */
   productivitySeries: {
     t: number;
     cycle: number;
     production: number;
-    /** Cumulative productivity in units per simulation time unit */
     rate: number;
-    /** Cumulative productivity in units per hour (if time unit is minutes) */
     unitsPerHour: number;
   }[];
+  /** Present when any home QUEUE carries costPerHourUsd. */
+  cost?: CostReport;
+}
+
+/** One cell of a Halpin-style sensitivity batch. */
+export interface SensitivityRow {
+  /** Resource counts keyed by queue node id */
+  counts: Record<string, number>;
+  /** Short label e.g. "Trucks=4, Loader=1" */
+  label: string;
+  unitsPerHour: number;
+  unitCostUsd: number | null;
+  totalCostUsd: number | null;
+  runLength: number;
+  cycles: number;
+  /** Key activity utilizations (label → 0–1) */
+  utilizations: Record<string, number>;
+}
+
+export interface SensitivityResult {
+  rows: SensitivityRow[];
+  bestProductivityLabel: string | null;
+  bestUnitCostLabel: string | null;
 }
 
 export const NODE_META: Record<
@@ -153,7 +188,7 @@ export const NODE_META: Record<
     label: "COMBI",
     shape: "cut-square",
     description:
-      "Constrained activity. Square with top-left corner cut. Starts only when every preceding QUEUE has a unit.",
+      "Constrained activity. Square with top-left corner cut. Starts only when every preceding QUEUE can provide a unit.",
   },
   NORMAL: {
     label: "NORMAL",
