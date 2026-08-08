@@ -20,7 +20,7 @@ function ManualPage() {
             <BookOpen className="size-4 text-primary" />
             <h1 className="font-display text-base font-semibold">Neo-CYCLONE Manual</h1>
             <Badge variant="secondary" className="border-primary/25 bg-primary/10 text-primary">
-              v0.8
+              v0.9
             </Badge>
           </div>
           <Button asChild variant="outline" size="sm">
@@ -44,93 +44,67 @@ function ManualPage() {
           <div className="gold-rule my-3 max-w-xs" />
           <div className="space-y-4 text-[15px] leading-[1.7]">
             <p>
-              This work is first of all a{" "}
+              This work is a{" "}
               <strong className="text-foreground">tribute to Professor Daniel W. Halpin</strong>.
             </p>
             <p>
               I am a construction management educator and researcher who studied under Professor
-              Halpin and also had the privilege of working for him. Through him I first met{" "}
+              Halpin and also worked for him. Through him I first met{" "}
               <strong className="text-foreground">construction operations</strong> as a serious
-              subject: the idea that production on site is a{" "}
-              <strong className="text-foreground">flow</strong>, and that{" "}
-              <strong className="text-foreground">idleness</strong> (waiting, waste) is not an
-              accident but something we can see, model, and improve. That way of seeing construction
-              shaped how I think about process design.
+              subject: production on site as a <strong className="text-foreground">flow</strong>, and{" "}
+              <strong className="text-foreground">idleness</strong> (waiting, waste) as something we
+              can see, model, and improve.
             </p>
 
             <h3 className="font-display pt-1 text-base font-semibold text-foreground">
               CYCLONE as model, MicroCYCLONE as early application
             </h3>
             <p>
-              In the literature, two layers should stay distinct.{" "}
               <strong className="text-foreground">CYCLONE</strong> (
-              <em>CYCLic Operations NEtwork</em> / CYCLic Operation Networks) is the{" "}
+              <em>CYCLic Operations NEtwork</em>) is the{" "}
               <strong className="text-foreground">modeling methodology</strong> Halpin introduced in
               the 1970s: queues, constrained and unconstrained work, counters, and cyclic resource
-              logic for construction operations.{" "}
-              <strong className="text-foreground">MicroCYCLONE</strong> is an early{" "}
+              logic. <strong className="text-foreground">MicroCYCLONE</strong> is an early{" "}
               <strong className="text-foreground">computer application</strong> of that methodology—a
-              microcomputer discrete-event / Monte Carlo system (Purdue manuals, c. 1990) that made
-              CYCLONE models runnable on personal computers and became a main teaching vehicle in
-              academia.
-            </p>
-            <p className="rounded-[var(--radius-md)] border border-primary/25 bg-primary/5 px-3 py-2.5 text-[14px] text-foreground">
-              <strong>In short:</strong> CYCLONE is the model; MicroCYCLONE was a principal early
-              software embodiment. Later systems extended platforms and interfaces around the same
-              cyclic-network idea—e.g. DISCO (often as graphical support for MicroCYCLONE), PROSIDYC,
-              COST, WebCYCLONE, Symphony.Net, and others developed with students and colleagues.
+              microcomputer discrete-event / Monte Carlo system (Purdue, c. 1990) that made the
+              models runnable on personal computers and became a main teaching vehicle.
             </p>
             <p>
-              Those systems were hard-won: built when explaining operations, queues, and simulation
-              to students and industry was already an uphill fight.
+              Later systems—<strong className="text-foreground">DISCO</strong>,{" "}
+              <strong className="text-foreground">PROSIDYC</strong>,{" "}
+              <strong className="text-foreground">COST</strong>,{" "}
+              <strong className="text-foreground">WebCYCLONE</strong>,{" "}
+              <strong className="text-foreground">Symphony.Net</strong>, and others—extended platforms
+              around the same idea rather than replacing the model.
             </p>
             <p>
-              <strong className="text-foreground">
-                Neo-CYCLONE is not a special-purpose industrial simulator
-              </strong>{" "}
-              meant to replace research-grade or commercial engines. Its purpose is{" "}
+              <strong className="text-foreground">Neo-CYCLONE</strong> is for{" "}
               <strong className="text-foreground">education</strong> and{" "}
-              <strong className="text-foreground">first contact</strong>: to introduce construction
-              operations; to show why simulation belongs in the design of construction processes;
-              and to connect that design thinking to{" "}
+              <strong className="text-foreground">first contact</strong>, not a special-purpose
+              industrial simulator: introduce construction operations; show why simulation belongs
+              in process design; and connect to{" "}
               <strong className="text-foreground">Lean Construction</strong> and{" "}
-              <strong className="text-foreground">Project Production Management</strong>, where
-              flow, cycle time, utilization, and waste are central.
+              <strong className="text-foreground">Project Production Management</strong>.
             </p>
             <p className="rounded-[var(--radius-md)] border border-primary/25 bg-primary/5 px-3 py-2.5 text-[14px] text-foreground">
-              <strong>What you should leave with:</strong> after a short session, you can state one
-              resource cycle (home queue → work → return), read idleness and utilization from the
-              results, and see why process design matters before “optimizing” with more technology.
+              <strong>What you should leave with:</strong> one clear resource cycle (home queue →
+              work → return), a reading of idleness and utilization, and a sense that process design
+              matters before “optimizing” with more technology.
             </p>
             <p>
-              I know how scarce this literacy still is. Even today, the importance of operations and
-              of simulation for high-performing construction is too little known, too little taught,
-              and too rarely implemented. Looking back, one might even feel that the struggle of the
-              1970s and after—to put CYCLONE and MicroCYCLONE in front of students and
-              practitioners—was somehow made obsolete by AI.{" "}
-              <strong className="text-foreground">It was not wasted.</strong>
-            </p>
-            <p>
-              That work laid a <strong className="text-foreground">foundation</strong>. Without
-              clear concepts of resources, queues, constrained work, cycles, and production, “AI for
-              construction simulation” would have nothing solid to stand on. Halpin’s legacy is what
-              makes it possible, now and in the future, to use AI{" "}
-              <em className="text-foreground">with</em> rigorous operations models rather than
-              instead of them.
-            </p>
-            <p>
-              Neo-CYCLONE is my way of looking back with gratitude—and looking forward: an{" "}
-              <strong className="text-foreground">AI-assisted</strong> doorway into the same
-              tradition—the <strong className="text-foreground">CYCLONE model</strong>, first widely
-              practiced through <strong className="text-foreground">MicroCYCLONE</strong> and then
-              through its descendants—so that the next generation can learn faster, go deeper, and
-              still respect the craft of modeling construction as a production system.
+              This literacy is still scarce. The long effort to teach CYCLONE and MicroCYCLONE was
+              not made obsolete by AI—it laid the{" "}
+              <strong className="text-foreground">foundation</strong>. Without resources, queues,
+              constrained work, cycles, and production as clear concepts, AI for construction
+              simulation would have little to stand on. Neo-CYCLONE is an{" "}
+              <strong className="text-foreground">AI-assisted</strong> doorway into that tradition:
+              learn faster, go deeper, and keep modeling construction as a production system.
             </p>
             <p className="text-xs text-muted-foreground">
-              Literature anchors: Halpin (1970s CYCLONE methodology); Halpin & Woodhead; Halpin
-              MicroCYCLONE manuals (Purdue, c. 1990); Halpin & Riggs,{" "}
-              <em>Planning and Analysis of Construction Operations</em> (Wiley, 1992); later
-              CYCLONE-format tools (DISCO, PROSIDYC, COST, WebCYCLONE, and related systems).
+              Literature: Halpin (1970s CYCLONE); Halpin & Woodhead; Halpin MicroCYCLONE manuals
+              (Purdue, c. 1990); Halpin & Riggs,{" "}
+              <em>Planning and Analysis of Construction Operations</em> (Wiley, 1992); later tools
+              (DISCO, PROSIDYC, COST, WebCYCLONE).
             </p>
           </div>
         </section>
@@ -175,11 +149,11 @@ function ManualPage() {
           <ul className="list-disc space-y-1 pl-5 text-xs">
             <li>
               <strong className="text-foreground">Is:</strong> educational first contact with the
-              CYCLONE <em>model</em>; AI-assisted heir to the MicroCYCLONE teaching tradition
+              CYCLONE model; AI-assisted heir to the MicroCYCLONE teaching tradition
             </li>
             <li>
               <strong className="text-foreground">Is not:</strong> a drop-in replacement of
-              MicroCYCLONE / DISCO / WebCYCLONE / research-grade engines
+              MicroCYCLONE / DISCO / WebCYCLONE
             </li>
           </ul>
         </Section>
