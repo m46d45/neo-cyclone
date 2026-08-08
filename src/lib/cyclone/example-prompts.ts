@@ -25,18 +25,12 @@ export const EXAMPLE_PROMPTS: ExamplePrompt[] = [
   {
     id: "earthmoving",
     title: "1. Earthmoving fleet (loader + trucks)",
-    goal: "Classic fleet (default). Optional: uncomment Branch for truck breakdown on return.",
-    source: "Halpin earthmoving; optional stochastic return/breakdown for branch-p lesson.",
-    features: [
-      "COMBI Load",
-      "cost",
-      "sensitivity",
-      "steady-state",
-      "branch p optional (commented)",
-    ],
-    prompt: `# Example 1 — Earthmoving fleet
-# Default = classic cycle (no breakdown). Good first lesson: cost, sensitivity, steady-state.
-# Optional branch p: see commented block near the end (uncomment to study delayed return).
+    goal: "Classic deterministic fleet — cost, sensitivity, steady-state (no branch).",
+    source: "Halpin earthmoving teaching model (classic).",
+    features: ["COMBI Load", "cost", "sensitivity", "steady-state"],
+    prompt: `# Example 1 — Earthmoving fleet (classic)
+# Pure classic cycle: no breakdown / no probabilistic branch.
+# Focus: resource cycles, cost, sensitivity, steady-state productivity.
 
 Trucks: Load → Haul → Dump → Return
 Loader: Load
@@ -58,29 +52,24 @@ Load: tri 1.5, 2, 3
 Haul: normal 8, 1.5
 Dump: const 1.2
 Return: lognormal 7, 1.5
-
-# ------------------------------------------------------------
-# OPTIONAL — truck breakdown on return (branch p)
-# Uncomment the next lines to compare normal Return vs delayed Breakdown.
-# Keep Counter after: Dump so production is counted before the branch.
-# Also uncomment Breakdown duration below.
-# Branch:
-# After Dump: Return p=0.85, Breakdown p=0.15
-# Breakdown: tri 25, 40, 60
-# ------------------------------------------------------------
 `,
   },
   {
     id: "asphalt-paving",
-    title: "2. Asphalt paving (paver + trucks)",
-    goal: "Simple two-task truck cycle + paver. Meeting at DumpToPaver; production after Pave.",
-    source: "Halpin / asphalt paving teaching models (strongly simplified).",
-    features: ["two resource cycles", "COMBI DumpToPaver", "Counter after Pave", "cost", "sensitivity"],
-    prompt: `# Example 2 — Asphalt paving (simplified)
-# Two resource cycles only:
-#   Trucks: dump mix to paver → refill asphalt (then back to dump)
-#   Paver: meet truck at DumpToPaver → pave → idle
-# Production counted AFTER Pave (mix placed), not at dump.
+    title: "2. Asphalt paving (paver + branch p)",
+    goal: "Dump+Refill truck cycle; meeting at DumpToPaver; truck breakdown branch p; count after Pave.",
+    source: "Halpin asphalt simplified + stochastic return delay (breakdown).",
+    features: [
+      "COMBI DumpToPaver",
+      "branch p",
+      "Counter after Pave",
+      "cost",
+      "sensitivity",
+    ],
+    prompt: `# Example 2 — Asphalt paving (simplified + breakdown)
+# Trucks: dump to paver → refill asphalt (usually)
+#   with probability of Breakdown (extra delay) before refill.
+# Paver: DumpToPaver → Pave. Production after Pave.
 
 Trucks: DumpToPaver → RefillAsphalt
 Paver: DumpToPaver → Pave
@@ -88,6 +77,9 @@ Paver: DumpToPaver → Pave
 
 Counter after: Pave
 production = 1 load
+
+Branch:
+After DumpToPaver: RefillAsphalt p=0.85, Breakdown p=0.15
 
 Cost:
 Trucks: 95
@@ -100,6 +92,7 @@ Paver: 1..2
 Durations:
 DumpToPaver: tri 0.8, 1.2, 1.8
 RefillAsphalt: tri 8, 12, 18
+Breakdown: tri 20, 35, 55
 Pave: normal 3.5, 0.6
 `,
   },

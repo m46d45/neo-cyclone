@@ -466,9 +466,39 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
       a.concurrent = Math.max(0, a.concurrent - 1);
       if (a.concurrent === 0) a.busyUntil = 0;
       const outs = outArcs.get(ev.activityId) ?? [];
-      const anyP = outs.some((o) => o.probability != null);
-      // Deterministic COMBI multi-out: entity i → arc i (resource fan-out)
-      if (!anyP && outs.length >= ev.entities.length && ev.entities.length > 1) {
+      const pOuts = outs.filter((o) => o.probability != null && o.probability > 0);
+      const plainOuts = outs.filter((o) => o.probability == null);
+      const anyP = pOuts.length > 0;
+
+      // Mixed: probabilistic arms (first resource path) + plain fan-out (other resources)
+      // e.g. DumpToPaver → Refill p=0.85 / Breakdown p=0.15 + Pave (paver)
+      if (anyP && plainOuts.length > 0 && ev.entities.length > 1) {
+        const weights = resolveWeights(pOuts);
+        let sum = 0;
+        for (const w of weights) sum += w;
+        let r = rng() * (sum > 0 ? sum : 1);
+        let chosen = pOuts[pOuts.length - 1]!;
+        for (let i = 0; i < pOuts.length; i++) {
+          r -= weights[i]!;
+          if (r <= 0) {
+            chosen = pOuts[i]!;
+            break;
+          }
+        }
+        noteBranch(chosen);
+        const fromLab = nodeById.get(ev.activityId)?.label ?? ev.activityId;
+        const toLab = nodeById.get(chosen.to)?.label ?? chosen.to;
+        record(
+          `BRANCH "${fromLab}" → "${toLab}" (p=${chosen.probability ?? weights[0]})`,
+        );
+        enterNode(chosen.to, ev.entities[0]!);
+        for (let i = 1; i < ev.entities.length; i++) {
+          const arc = plainOuts[i - 1] ?? plainOuts[plainOuts.length - 1]!;
+          noteBranch(arc);
+          enterNode(arc.to, ev.entities[i]!);
+        }
+      } else if (!anyP && outs.length >= ev.entities.length && ev.entities.length > 1) {
+        // Deterministic COMBI multi-out: entity i → arc i (resource fan-out)
         for (let i = 0; i < ev.entities.length; i++) {
           const arc = outs[i] ?? outs[outs.length - 1]!;
           noteBranch(arc);

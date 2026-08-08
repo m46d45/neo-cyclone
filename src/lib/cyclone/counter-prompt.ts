@@ -71,13 +71,11 @@ export function resolveCounterAfter(
   if (!productionItinerary.length) return null;
   if (placement.afterLabel) {
     const want = norm(placement.afterLabel);
+    // Exact match only — "Pave" must not match "DumpToPaver"
     const hit = productionItinerary.find((lab) => norm(lab) === want);
     if (hit) return hit;
-    // fuzzy contains
-    const fuzzy = productionItinerary.find(
-      (lab) => norm(lab).includes(want) || want.includes(norm(lab)),
-    );
-    if (fuzzy) return fuzzy;
+    // Label not on this itinerary (e.g. count on another resource) → null
+    return null;
   }
   // Default: last task of the production (first) resource cycle
   return productionItinerary[productionItinerary.length - 1]!;

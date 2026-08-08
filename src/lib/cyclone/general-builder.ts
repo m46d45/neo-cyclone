@@ -307,9 +307,14 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
     for (let i = 0; i < steps.length - 1; i++) {
       const a = steps[i]!;
       const b = steps[i + 1]!;
-      // Skip sequential link if `a` is a Branch fork (handled later)
-      const isBranchFork = fn.branches.some((br) => normLabel(br.afterLabel) === a.key);
-      if (isBranchFork) continue;
+      // Skip sequential A→B only if B is a declared branch arm after A
+      // (keeps Dump→Pave for the other resource when trucks branch after Dump).
+      const isBranchArm = fn.branches.some(
+        (br) =>
+          normLabel(br.afterLabel) === a.key &&
+          br.arms.some((arm) => normLabel(arm.toLabel) === b.key),
+      );
+      if (isBranchArm) continue;
       // COUNTER sits between count-at task and its successor
       if (countAtKey && a.key === countAtKey) continue;
 
@@ -403,21 +408,19 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
     });
   };
 
-  // Resolved count-at task for production resource (COUNTER insertion point)
-  const prodCountAtLab = resolveCounterAfter(
-    spec.counter ?? { afterLabel: null, amount: 1, unit: "unit" },
-    prodRes.itinerary,
-  );
-  const prodCountAtKey = prodCountAtLab ? normLabel(prodCountAtLab) : null;
+  // Exact Counter after: label (any resource) — used for branch fork-from-counter
+  const countAfterExact = spec.counter?.afterLabel
+    ? normLabel(spec.counter.afterLabel)
+    : null;
 
   for (const br of fn.branches) {
     const afterKey = normLabel(br.afterLabel);
     const fromId = activityId.get(afterKey);
     if (!fromId) continue;
 
-    // If branch is "After Dump" and Counter after: Dump, fork FROM the COUNTER
-    // so every unit is counted first, then Return vs Breakdown is sampled.
-    const afterIsCountAt = prodCountAtKey != null && afterKey === prodCountAtKey;
+    // If Branch after the same task as Counter after:, fork FROM the COUNTER
+    // so production is counted before Return vs Breakdown is sampled.
+    const afterIsCountAt = countAfterExact != null && afterKey === countAfterExact;
     const forkFrom = afterIsCountAt ? counterId : fromId;
 
     for (const arm of br.arms) {
