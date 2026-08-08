@@ -186,17 +186,11 @@ export interface SensitivityPairResult {
 }
 
 export interface SensitivityResult {
-  /**
-   * Rows for the default view (full factorial if ≤2 resources,
-   * or the first pair if pairwise). Prefer `pairs` when mode is pairwise.
-   */
   rows: SensitivityRow[];
   bestProductivityLabel: string | null;
   bestUnitCostLabel: string | null;
-  /** factorial = 1–2 resources varied together; pairwise = C(n,2) pairs. */
   mode: "factorial" | "pairwise";
   pairs: SensitivityPairResult[];
-  /** e.g. when more than 5 resources were listed in the prompt. */
   note?: string;
 }
 
@@ -229,6 +223,7 @@ export const NODE_META: Record<
   CONSOLIDATE: {
     label: "CONSOLIDATE",
     shape: "triangle",
-    description: "Gathers several units before releasing one downstream.",
+    description:
+      "Function node (Halpin CON). Buffers arriving units until N are collected, then releases one unit downstream (time = 0). Independent of GEN — use only when the operation logic requires aggregating flow units (e.g. N bucket cycles → 1 truck departure).",
   },
 };
