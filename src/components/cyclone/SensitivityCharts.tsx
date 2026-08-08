@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import type { SensitivityResult, SensitivityRow } from "@/lib/cyclone/types";
 import { formatNum } from "@/lib/utils";
+import { ChartDownloadFrame } from "@/components/cyclone/ChartDownload";
 
 const SERIES_COLORS = [
   "var(--chart-2)",
@@ -112,12 +113,10 @@ function SensitivityLineChart({
   xName: string;
   best?: { x: number; y: number; caption: string } | null;
 }) {
+  const fileBase = title.replace(/[^a-zA-Z0-9]+/g, "_").slice(0, 40) || "sensitivity_chart";
   return (
     <div className="min-w-0 rounded-[var(--radius-sm)] border border-border bg-card p-3">
-      <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {title}
-      </h4>
-      <div className="h-60 w-full min-w-0">
+      <ChartDownloadFrame title={title} filename={`chart_${fileBase}`} chartClassName="h-60">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 12, right: 52, left: 4, bottom: 28 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -188,7 +187,7 @@ function SensitivityLineChart({
             )}
           </LineChart>
         </ResponsiveContainer>
-      </div>
+      </ChartDownloadFrame>
       {best && (
         <p className="mt-1 text-[10px] text-destructive">
           Best: {best.caption} → {xName}={best.x}, {formatNum(best.y)} {yLabel}

@@ -15,6 +15,7 @@ import type { CycloneModel, SimResult } from "@/lib/cyclone/types";
 import { formatNum, formatPct } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CostReportSection } from "@/components/cyclone/CostSensitivityPanels";
+import { ChartDownloadFrame } from "@/components/cyclone/ChartDownload";
 
 /** Relative change between consecutive cycle rates must stay under this. */
 const SS_REL_EPS = 0.05;
@@ -319,7 +320,11 @@ export function SimulationResults({
             </p>
           )}
           {series.length > 1 && (
-            <div className="h-[28rem] w-full min-w-0 sm:h-[32rem]">
+            <ChartDownloadFrame
+              title="Units per hour by cycle"
+              filename="chart_units_per_hour_by_cycle"
+              chartClassName="h-[28rem] sm:h-[32rem]"
+            >
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={series} margin={{ top: 16, right: 56, left: 12, bottom: 28 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -397,7 +402,7 @@ export function SimulationResults({
                   />
                 </LineChart>
               </ResponsiveContainer>
-            </div>
+            </ChartDownloadFrame>
           )}
           <div className="max-h-64 overflow-auto rounded-[var(--radius-sm)] border border-border">
             <table className="w-full text-left text-xs">
@@ -442,11 +447,11 @@ export function SimulationResults({
         </TabsContent>
 
         <TabsContent value="charts" className="mt-3 space-y-4">
-          <div>
-            <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              % time in operation
-            </h4>
-            <div className="h-52 w-full min-w-0">
+          <ChartDownloadFrame
+            title="% time in operation"
+            filename="chart_time_in_operation"
+            chartClassName="h-52"
+          >
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={utilData} margin={{ top: 18, right: 8, left: 0, bottom: 4 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -466,8 +471,7 @@ export function SimulationResults({
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
-            </div>
-          </div>
+          </ChartDownloadFrame>
         </TabsContent>
 
           {hasBranches && (
