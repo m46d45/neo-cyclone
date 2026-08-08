@@ -1,5 +1,3 @@
-/** CYCLONE modeling elements (Halpin) */
-
 export type NodeType =
   | "QUEUE"
   | "COMBI"
@@ -7,18 +5,20 @@ export type NodeType =
   | "COUNTER"
   | "CONSOLIDATE";
 
-/**
- * Activity duration distributions (common in construction DES / CYCLONE).
- * All sampled times are clamped to be ≥ 0. Default time unit: **minutes**.
- */
-export type DurationDist =
-  | { kind: "constant"; value: number }
-  | { kind: "uniform"; min: number; max: number }
-  | { kind: "triangular"; min: number; mode: number; max: number }
-  | { kind: "normal"; mean: number; sd: number }
-  | { kind: "lognormal"; mean: number; sd: number }
-  | { kind: "beta"; min: number; max: number; alpha: number; beta: number }
-  | { kind: "gamma"; shape: number; scale: number };
+export type DistType =
+  | "CONSTANT"
+  | "UNIFORM"
+  | "TRIANGULAR"
+  | "NORMAL"
+  | "LOGNORMAL"
+  | "BETA"
+  | "GAMMA";
+
+export interface DurationSpec {
+  type: DistType;
+  /** Parameters depend on distribution (e.g. CONSTANT: [value]). */
+  params: number[];
+}
 
 export interface CycloneNode {
   id: string;
@@ -26,11 +26,15 @@ export interface CycloneNode {
   label: string;
   x: number;
   y: number;
+  /** QUEUE: starting resource units in the home pool. */
   initialUnits?: number;
-  duration?: DurationDist;
+  /** COMBI / NORMAL duration. */
+  duration?: DurationSpec;
+  /** COUNTER: production amount per passage. */
   productionAmount?: number;
+  /** CONSOLIDATE: units needed before release. */
   consolidateCount?: number;
-  /** Hourly ownership/operating cost in USD (home QUEUE resources). */
+  /** QUEUE: owning resource hourly cost (USD/h) for cost report. */
   costPerHourUsd?: number;
 }
 
@@ -168,10 +172,32 @@ export interface SensitivityRow {
   utilizations: Record<string, number>;
 }
 
-export interface SensitivityResult {
+/** One resource-pair slice (pairwise sensitivity when ≥3 resources). */
+export interface SensitivityPairResult {
+  /** e.g. "Trucks × Loader" */
+  pairLabel: string;
+  resourceA: string;
+  resourceB: string;
+  /** Fixed counts for resources not in this pair (label → units). */
+  baseline: Record<string, number>;
   rows: SensitivityRow[];
   bestProductivityLabel: string | null;
   bestUnitCostLabel: string | null;
+}
+
+export interface SensitivityResult {
+  /**
+   * Rows for the default view (full factorial if ≤2 resources,
+   * or the first pair if pairwise). Prefer `pairs` when mode is pairwise.
+   */
+  rows: SensitivityRow[];
+  bestProductivityLabel: string | null;
+  bestUnitCostLabel: string | null;
+  /** factorial = 1–2 resources varied together; pairwise = C(n,2) pairs. */
+  mode: "factorial" | "pairwise";
+  pairs: SensitivityPairResult[];
+  /** e.g. when more than 5 resources were listed in the prompt. */
+  note?: string;
 }
 
 export const NODE_META: Record<
@@ -186,26 +212,23 @@ export const NODE_META: Record<
   },
   COMBI: {
     label: "COMBI",
-    shape: "cut-square",
+    shape: "square-notch",
     description:
-      "Constrained activity. Square with top-left corner cut. Starts only when every preceding QUEUE can provide a unit.",
+      "Constrained work task. Requires one unit from each preceding QUEUE; may run multiple concurrent instances.",
   },
   NORMAL: {
     label: "NORMAL",
-    shape: "rectangle",
-    description:
-      "Unconstrained activity. Plain rectangle (no corner cut). Processes units as they arrive.",
+    shape: "square",
+    description: "Unconstrained work task. Starts when a unit arrives from upstream.",
   },
   COUNTER: {
     label: "COUNTER",
-    shape: "golf-flag",
-    description:
-      "Production tally. Drawn as a golf flag: vertical pole + triangular pennant. Counts each pass and drives productivity stats.",
+    shape: "flag",
+    description: "Production counter (golf-flag notation). Records cycles and output.",
   },
   CONSOLIDATE: {
     label: "CONSOLIDATE",
-    shape: "barred-circle",
-    description:
-      "Function node: circle with a horizontal bar. Merges N arriving units into one outgoing unit.",
+    shape: "triangle",
+    description: "Gathers several units before releasing one downstream.",
   },
 };
