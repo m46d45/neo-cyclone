@@ -128,6 +128,24 @@ function NodeShape({
         />
       </>
     );
+  } else if (node.type === "CONSOLIDATE") {
+    // Halpin function node: upright triangle (CON).
+    const m = 6;
+    const path = [
+      `M ${half} ${m}`,
+      `L ${size - m} ${size - m}`,
+      `L ${m} ${size - m}`,
+      `Z`,
+    ].join(" ");
+    shape = (
+      <path
+        d={path}
+        fill={fill}
+        stroke={stroke}
+        strokeWidth={strokeW}
+        strokeLinejoin="miter"
+      />
+    );
   } else {
     const r = half - 6;
     shape = (
@@ -197,58 +215,50 @@ function NodeShape({
           +{node.productionAmount}
         </text>
       )}
+      {node.type === "CONSOLIDATE" && (
+        <text
+          x={half}
+          y={labelY + 14}
+          textAnchor="middle"
+          fill="var(--diagram-muted)"
+          style={{ fontSize: 10, fontFamily: "ui-monospace, monospace" }}
+        >
+          CON {node.consolidateCount ?? 2}
+        </text>
+      )}
     </g>
   );
 }
 
-function isCycleLink(from: CycloneNode, to: CycloneNode): boolean {
-  if (to.type === "QUEUE") return true;
-  if (to.x + 40 < from.x) return true;
-  if (to.y > from.y + 80 && to.x <= from.x + 40) return true;
-  return false;
-}
-
-function nodeCenter(n: CycloneNode): { x: number; y: number } {
-  return { x: n.x + 30, y: n.y + 30 };
-}
-
-function linkPath(from: CycloneNode, to: CycloneNode, cycle: boolean): { d: string } {
-  const a = nodeCenter(from);
-  const b = nodeCenter(to);
-  const dx = b.x - a.x;
-  const dy = b.y - a.y;
-  const len = Math.hypot(dx, dy) || 1;
-  const ux = dx / len;
-  const uy = dy / len;
-  const startPad = 34;
-  const endPad = 38;
-  const x1 = a.x + ux * startPad;
-  const y1 = a.y + uy * startPad;
-  const x2 = b.x - ux * endPad;
-  const y2 = b.y - uy * endPad;
-
+function linkPath(
+  from: CycloneNode,
+  to: CycloneNode,
+  cycle: boolean,
+): { d: string } {
+  const size = 60;
+  const half = size / 2;
+  const x1 = from.x + half;
+  const y1 = from.y + half;
+  const x2 = to.x + half;
+  const y2 = to.y + half;
   if (!cycle) {
     return { d: `M ${x1} ${y1} L ${x2} ${y2}` };
   }
-
   const mx = (x1 + x2) / 2;
   const my = (y1 + y2) / 2;
-  let px = -uy;
-  let py = ux;
-  const preferDown = my > 180 || to.y >= from.y;
-  if (preferDown && py < 0) {
-    px = -px;
-    py = -py;
-  }
-  if (!preferDown && py > 0) {
-    px = -px;
-    py = -py;
-  }
-  const span = Math.hypot(x2 - x1, y2 - y1);
-  const bow = Math.min(90, Math.max(48, span * 0.35));
-  const cx = mx + px * bow;
-  const cy = my + py * bow;
-  return { d: `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}` };
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len = Math.hypot(dx, dy) || 1;
+  const ox = (-dy / len) * 28;
+  const oy = (dx / len) * 28;
+  return { d: `M ${x1} ${y1} Q ${mx + ox} ${my + oy} ${x2} ${y2}` };
+}
+
+function isCycleLink(from: CycloneNode, to: CycloneNode): boolean {
+  // Resource return arcs: QUEUE ← activity, or activity → its home QUEUE.
+  if (to.type === "QUEUE" && (from.type === "COMBI" || from.type === "NORMAL")) return true;
+  if (from.type === "QUEUE" && to.type === "QUEUE") return true;
+  return false;
 }
 
 export function DiagramCanvas() {
@@ -256,12 +266,26 @@ export function DiagramCanvas() {
   const selectedNodeId = useCycloneStore((s) => s.selectedNodeId);
   const selectNode = useCycloneStore((s) => s.selectNode);
 
-  const nodeMap = useMemo(() => new Map(model.nodes.map((n) => [n.id, n])), [model.nodes]);
+  const width = useMemo(() => {
+    if (!model?.nodes.length) return 640;
+    const maxX = Math.max(...model.nodes.map((n) => n.x + 80));
+    return Math.max(640, maxX + 40);
+  }, [model]);
 
-  const width = Math.max(820, ...model.nodes.map((n) => n.x + 140));
-  const height = Math.max(480, ...model.nodes.map((n) => n.y + 140), 520);
+  const height = useMemo(() => {
+    if (!model?.nodes.length) return 360;
+    const maxY = Math.max(...model.nodes.map((n) => n.y + 100));
+    return Math.max(360, maxY + 40);
+  }, [model]);
+
+  const nodeMap = useMemo(() => {
+    const m = new Map<string, CycloneNode>();
+    if (model) for (const n of model.nodes) m.set(n.id, n);
+    return m;
+  }, [model]);
 
   const linksDrawn = useMemo(() => {
+    if (!model) return [];
     return model.links
       .map((link) => {
         const from = nodeMap.get(link.from);
@@ -276,6 +300,14 @@ export function DiagramCanvas() {
       path: { d: string };
     }[];
   }, [model.links, nodeMap]);
+
+  if (!model) {
+    return (
+      <div className="flex h-full min-h-[280px] items-center justify-center rounded-[var(--radius-md)] border-2 border-dashed border-primary/30 bg-diagram text-sm text-muted-foreground">
+        Draw a model to see the CYCLONE diagram.
+      </div>
+    );
+  }
 
   return (
     <div
