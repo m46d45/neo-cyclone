@@ -128,23 +128,32 @@ export const useCycloneStore = create<CycloneStore>((set, get) => ({
 
   run: () => {
     let { model, seed, maxTime, maxCycles, agent } = get();
-    // Re-apply Cost USD/h from prompt so costs survive DSL round-trip.
+    // Re-apply Cost USD/h + Sensitivity plan from prompt (DSL does not carry them).
+    let sensPlan = model.sensitivity ?? [];
     if (agent.brief) {
-      const { costs } = parseCostAndSensitivity(agent.brief);
+      const { costs, sensitivity } = parseCostAndSensitivity(agent.brief);
       if (Object.keys(costs).length) {
         model = applyCostsToModel(model, costs);
-        set({ model });
       }
+      if (sensitivity.length) {
+        sensPlan = sensitivity;
+        model = { ...model, sensitivity };
+      }
+      set({ model });
     }
     set({ isRunning: true, lastError: null, sensitivityResult: null });
     try {
       const result = runCyclone(model, { seed, maxTime, maxCycles });
       let sensitivityResult: SensitivityResult | null = null;
-      if (model.sensitivity && model.sensitivity.length > 0) {
+      if (sensPlan.length > 0) {
         try {
-          sensitivityResult = runSensitivity(model, { seed, maxTime, maxCycles });
+          sensitivityResult = runSensitivity(
+            model,
+            { seed, maxTime, maxCycles },
+            sensPlan,
+          );
         } catch {
-          // optional
+          // optional teaching feature — do not fail the base run
         }
       }
       set({ result, sensitivityResult, isRunning: false });
