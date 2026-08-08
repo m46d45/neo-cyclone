@@ -1,6 +1,6 @@
 # Neo-CYCLONE — User Manual
 
-**Version:** 0.10  
+**Version:** 0.11  
 **Language:** English  
 **Tagline:** AI-agent of Daniel W. Halpin's CYCLONE
 
@@ -146,6 +146,36 @@ QUEUE = Q-circle · COMBI = cut corner · NORMAL = rectangle · COUNTER = golf f
 |---------|-------------|
 | Educational first contact with the **CYCLONE model** | A full special-purpose industrial simulator |
 | AI-assisted heir to the **MicroCYCLONE** teaching tradition | A drop-in replacement of MicroCYCLONE / DISCO / WebCYCLONE |
+
+---
+
+## 9. Teaching examples (presets)
+
+Five copy-paste prompts are built into the app (**Example** dropdown next to the prompt box).  
+They are simplified Halpin / MicroCYCLONE-style operations for education and regression testing — not full textbook figures.
+
+| # | Id | Goal | Notes |
+|---|-----|------|--------|
+| 1 | `earthmoving` | Loader + trucks; cost; sensitivity; steady state | Default preset |
+| 2 | `asphalt-paving` | Paver + trucks | Multi-step haul |
+| 3 | `concrete-crane` | Crane + trucks | Classic GEN/CON scale **later** (Phase B); simplified 1:1 pour cycle for now |
+| 4 | `precast-forms` | Forms + crew | Longer form cycle |
+| 5 | `masonry` | Masons + helpers + scaffold | **3 resources** → pairwise sensitivity |
+
+### Modeling notes
+
+- **GEN** and **CON** are independent Halpin functions. Use them only when production-unit logic requires multiplying or aggregating flow units. Many models need neither.
+- **Example 3** comments document the classic truck↔bucket GEN/CON pair; the current engine runs the simplified cycle without GEN/CON.
+- **Example 5** exercises pairwise sensitivity (3 resources in the `Sensitivity:` block).
+
+### How to use
+
+1. Choose an example from the dropdown (prompt fills automatically).  
+2. **Draw Model** → check the CYCLONE diagram.  
+3. Adjust counts, durations, or sensitivity ranges if desired.  
+4. **Simulate** → compare Process / Element / cost / sensitivity reports.
+
+Full prompt texts live in source: `src/lib/cyclone/example-prompts.ts`.
 
 ---
 
