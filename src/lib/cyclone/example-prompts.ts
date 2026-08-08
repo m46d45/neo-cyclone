@@ -73,16 +73,16 @@ Return: lognormal 7, 1.5
   {
     id: "asphalt-paving",
     title: "2. Asphalt paving (paver + trucks)",
-    goal: "Two clear cycles: truck plant↔site; paver Dump→Pave. Production counted after Pave.",
-    source: "Halpin / asphalt paving teaching models (simplified).",
+    goal: "Simple two-task truck cycle + paver. Meeting at DumpToPaver; production after Pave.",
+    source: "Halpin / asphalt paving teaching models (strongly simplified).",
     features: ["two resource cycles", "COMBI DumpToPaver", "Counter after Pave", "cost", "sensitivity"],
-    prompt: `# Example 2 — Asphalt paving
-# Two resource cycles:
-#   Trucks: load at plant → haul full → dump to paver → return empty to plant
-#   Paver: meet truck at DumpToPaver → pave the mix → idle
-# Production = one truck load placed by the paver → count AFTER Pave (not at dump).
+    prompt: `# Example 2 — Asphalt paving (simplified)
+# Two resource cycles only:
+#   Trucks: dump mix to paver → refill asphalt (then back to dump)
+#   Paver: meet truck at DumpToPaver → pave → idle
+# Production counted AFTER Pave (mix placed), not at dump.
 
-Trucks: LoadAtPlant → HaulToSite → DumpToPaver → ReturnEmpty
+Trucks: DumpToPaver → RefillAsphalt
 Paver: DumpToPaver → Pave
 4 trucks, 1 paver
 
@@ -98,10 +98,8 @@ Trucks: 2..10
 Paver: 1..2
 
 Durations:
-LoadAtPlant: tri 2, 3, 4
-HaulToSite: normal 12, 2
 DumpToPaver: tri 0.8, 1.2, 1.8
-ReturnEmpty: normal 11, 2
+RefillAsphalt: tri 8, 12, 18
 Pave: normal 3.5, 0.6
 `,
   },
