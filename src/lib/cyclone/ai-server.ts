@@ -32,7 +32,7 @@ Honor per-resource cycles when listed:
   Resource: Task1 → Task2 → …
   counts and production unit
   Durations: Task: dist params
-  Optional: Cost USD/h, Sensitivity: Resource: low..high
+  Prompt order: network → Durations → Priority → GEN/CON/branch → Cost (USD/h) → Sensitivity (last)
 
 CORE RULES:
 - Every resource has a home QUEUE; returns to the same QUEUE.

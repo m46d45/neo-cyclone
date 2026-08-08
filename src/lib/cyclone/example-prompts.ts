@@ -35,7 +35,7 @@ Trucks: Load → Haul → Dump → Return
 Loader: Load
 5 trucks, 1 loader, 12 m3
 
-Cost USD/h:
+Cost:
 Trucks: 85
 Loader: 120
 
@@ -62,7 +62,7 @@ Trucks: DumpToPaver → HaulEmpty → LoadAtPlant → ReturnToPaver
 Paver: DumpToPaver → Pave
 4 trucks, 1 paver, 1 load
 
-Cost USD/h:
+Cost:
 Trucks: 95
 Paver: 180
 
@@ -92,7 +92,7 @@ Trucks: SpotLoad → WaitPour → Leave
 Crane: SpotLoad → Swing → Pour → ReturnSwing
 3 trucks, 1 crane, 1 pour
 
-Cost USD/h:
+Cost:
 Trucks: 90
 Crane: 200
 
@@ -121,7 +121,7 @@ Forms: Strip → Clean → Set → Pour → Cure
 Crew: Strip → Clean → Set → Pour
 6 forms, 1 crew, 1 panel
 
-Cost USD/h:
+Cost:
 Forms: 15
 Crew: 110
 
@@ -150,7 +150,7 @@ Helpers: Lay → SupplyBrick
 Scaffold: Lay → MoveScaffold
 4 masons, 2 helpers, 1 scaffold, 1 course
 
-Cost USD/h:
+Cost:
 Masons: 75
 Helpers: 45
 Scaffold: 25
@@ -237,7 +237,7 @@ Lift Steel: 1
 Lift Forms: 2
 Lift Bucket: 3
 
-Cost USD/h:
+Cost:
 Crane: 280
 Steel crew: 95
 Form crew: 80

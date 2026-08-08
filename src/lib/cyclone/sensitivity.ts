@@ -257,7 +257,7 @@ export function runSensitivity(
   };
 }
 
-/** Parse "Sensitivity:" / "Cost USD/h:" blocks from a prompt. */
+/** Parse "Sensitivity:" / "Cost:" (or legacy "Cost USD/h:") blocks from a prompt. */
 export function parseCostAndSensitivity(text: string): {
   costs: Record<string, number>;
   sensitivity: SensitivityRange[];
@@ -280,7 +280,7 @@ export function parseCostAndSensitivity(text: string): {
       if (rest) parseSensLine(rest, sensitivity);
       continue;
     }
-    if (/^(durations?|resource|n\s|production)\b/i.test(line) && !/usd|cost|sensitivity/i.test(line)) {
+    if (/^(durations?|priority|resource|n\s|production)\b/i.test(line) && !/usd|cost|sensitivity/i.test(line)) {
       mode = "none";
     }
     if (mode === "cost") parseCostLine(line, costs);

@@ -147,7 +147,7 @@ Not graph glyphs, but part of the product standard:
 
 | Block | Example |
 |-------|---------|
-| Cost | `Cost USD/h:` then `Trucks: 85` |
+| Cost | `Cost:` then `Trucks: 85` |
 | Sensitivity | `Sensitivity:` then `Trucks: 2..12` |
 
 Cost attaches to **home QUEUE** resources (`cost_usd_h` in DSL).

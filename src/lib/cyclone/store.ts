@@ -151,7 +151,7 @@ export const useCycloneStore = create<CycloneStore>((set, get) => ({
     let { model, seed, maxTime, maxCycles, agent } = get();
     maxCycles = clampMaxCycles(maxCycles);
     maxTime = horizonForCycles(maxCycles, maxTime);
-    // Re-apply Cost USD/h + Sensitivity plan from prompt (DSL does not carry them).
+    // Re-apply Cost + Sensitivity + Priority plan from prompt (DSL does not carry them).
     let sensPlan = model.sensitivity ?? [];
     if (agent.brief) {
       const { costs, sensitivity } = parseCostAndSensitivity(agent.brief);

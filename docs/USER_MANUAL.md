@@ -48,11 +48,18 @@ Where our **diagram notation** differs slightly from some Halpin print figures, 
 
 ---
 
-## 3. Prompt format
+## 3. Prompt format (structured)
 
-Resource cycles, counts, production unit, durations (minutes).  
-Optional: `Cost USD/h:`, `Sensitivity:`, `Priority:` (lower number = first when COMBIs compete).  
-`#` / `//` = notes only.
+Order in **Format Prompt** (top → bottom):
+
+1. **Network** — resource cycles, counts, production (required)  
+2. **Durations** — minutes (required)  
+3. **Priority** — optional; lower number = higher priority  
+4. **GEN / CON / branch** — optional notes  
+5. **Cost** — optional; rates in **USD**/resource-hour (`Cost:`)  
+6. **Sensitivity** — optional; usually **last**  
+
+`#` / `//` = notes only (ignored).
 
 ### Distributions
 
