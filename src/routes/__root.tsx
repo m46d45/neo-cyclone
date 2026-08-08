@@ -19,7 +19,7 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "Neo-CYCLONE — Halpin CYCLONE construction simulation. White field, black & old gold. Activity Cycle Diagrams with AI model agent.",
+          "Neo-CYCLONE — AI-agent of Daniel W. Halpin's CYCLONE. Construction operation simulation with Activity Cycle Diagrams.",
       },
       { name: "apple-mobile-web-app-title", content: APP_NAME },
       { name: "theme-color", content: "#ffffff" },
@@ -33,26 +33,28 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+      { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32.png" },
+      { rel: "icon", type: "image/png", sizes: "48x48", href: "/favicon-48.png" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/__grok/manifest.webmanifest" },
-      { rel: "apple-touch-icon", href: "/__grok/icon-180.png" },
     ],
   }),
-  component: RootDocument,
+  component: RootComponent,
 });
 
-function RootDocument() {
+function RootComponent() {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <head>
         <HeadContent />
       </head>
       <body>
-        <CreatedWithGrokBanner />
         <AuthProvider>
+          <CreatedWithGrokBanner />
           <Outlet />
+          <Toaster richColors position="top-center" />
         </AuthProvider>
-        <Toaster theme="light" position="bottom-right" richColors closeButton />
         <Scripts />
       </body>
     </html>

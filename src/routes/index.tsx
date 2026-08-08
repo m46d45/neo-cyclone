@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BookOpen, Network } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { SignedIn, SignedOut, UserButton } from "@/lib/auth/gates";
 import { AIAssist } from "@/components/cyclone/AIAssist";
 import { DiagramCanvas } from "@/components/cyclone/DiagramCanvas";
 import { ModelSimulateBar } from "@/components/cyclone/ModelSimulateBar";
 import { ResultsPanel } from "@/components/cyclone/ResultsPanel";
+import { LogoMark } from "@/components/cyclone/LogoMark";
 import { PRODUCT_TAGLINE } from "@/lib/cyclone/prompt-template";
 import { Button } from "@/components/ui/button";
 
@@ -19,9 +20,7 @@ function StudioPage() {
       <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur-md pt-[var(--grok-banner-h,0px)]">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-sm)] border border-primary/40 bg-card">
-              <Network className="size-4 text-primary" strokeWidth={2.25} />
-            </div>
+            <LogoMark className="size-9 shrink-0" />
             <div className="min-w-0">
               <h1 className="font-display truncate text-base font-semibold tracking-tight">
                 Neo-CYCLONE
