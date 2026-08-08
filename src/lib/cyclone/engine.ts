@@ -1,4 +1,5 @@
 import { createRng, sampleDuration } from "./distributions";
+import { buildCostReport } from "./cost";
 import type {
   ActivityStat,
   CounterStat,
@@ -74,13 +75,12 @@ function toUnitsPerHour(production: number, simTime: number, timeUnit: string): 
   if (simTime <= 0) return 0;
   if (isMinutes(timeUnit)) return production / (simTime / 60);
   if (timeUnit.toLowerCase().startsWith("h")) return production / simTime;
-  // default: treat as minutes (Halpin teaching default)
   return production / (simTime / 60);
 }
 
 /**
  * Discrete-event CYCLONE engine (Halpin-style).
- * Collects statistics aligned with classic MicroCYCLONE reports.
+ * Collects statistics aligned with classic MicroCYCLONE reports + optional USD cost.
  */
 export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
   const rng = createRng(config.seed);
@@ -453,6 +453,11 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     };
   });
 
+  const primaryProd = primaryCounterId
+    ? (counters.get(primaryCounterId)?.production ?? 0)
+    : [...counters.values()][0]?.production ?? 0;
+  const cost = buildCostReport(model, simTime, primaryProd);
+
   return {
     modelId: model.id,
     modelName: model.name,
@@ -467,6 +472,7 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     counterStats,
     timeline,
     productivitySeries,
+    cost,
   };
 }
 
