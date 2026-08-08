@@ -423,6 +423,20 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
     const afterIsCountAt = countAfterExact != null && afterKey === countAfterExact;
     const forkFrom = afterIsCountAt ? counterId : fromId;
 
+    // Main continuation on a resource cycle that lists After → Next
+    // (e.g. DumpToPaver → RefillAsphalt). Detour arms rejoin this next step.
+    let mainNextLab: string | null = null;
+    for (const r of spec.resources) {
+      const idx = r.itinerary.findIndex((lab) => normLabel(lab) === afterKey);
+      if (idx >= 0 && idx < r.itinerary.length - 1) {
+        mainNextLab = r.itinerary[idx + 1]!;
+        break;
+      }
+    }
+    const mainNextKey = mainNextLab ? normLabel(mainNextLab) : null;
+    const mainNextId = mainNextKey ? activityId.get(mainNextKey) : undefined;
+    const home = homeQueue.get(prodRes.id)!;
+
     for (const arm of br.arms) {
       let toId = activityId.get(normLabel(arm.toLabel));
       if (!toId) {
@@ -437,7 +451,14 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
         addLinkP(forkFrom, toId, arm.p);
         const hasOut = links.some((l) => l.from === toId);
         if (!hasOut) {
-          addLink(toId, homeQueue.get(prodRes.id)!);
+          const armKey = normLabel(arm.toLabel);
+          // Detour (Breakdown, Repair, …) → rejoin main next (Refill), not home.
+          // Home would skip refill and dump again with empty logic error.
+          if (mainNextId && armKey !== mainNextKey) {
+            addLink(toId, mainNextId);
+          } else {
+            addLink(toId, home);
+          }
         }
       }
     }

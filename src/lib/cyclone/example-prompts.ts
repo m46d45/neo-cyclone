@@ -67,8 +67,8 @@ Return: lognormal 7, 1.5
       "sensitivity",
     ],
     prompt: `# Example 2 — Asphalt paving (simplified + breakdown)
-# Trucks: dump to paver → refill asphalt (usually)
-#   with probability of Breakdown (extra delay) before refill.
+# Trucks: DumpToPaver → RefillAsphalt (normal), or Breakdown then RefillAsphalt.
+# Breakdown is a detour delay — then refill — then dump again (never dump right after breakdown).
 # Paver: DumpToPaver → Pave. Production after Pave.
 
 Trucks: DumpToPaver → RefillAsphalt
