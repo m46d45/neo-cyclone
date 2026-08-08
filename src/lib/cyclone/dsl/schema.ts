@@ -57,6 +57,8 @@ const nodeSchema = z
     x: z.number().optional(),
     y: z.number().optional(),
     initial: z.number().int().nonnegative().optional(),
+    /** Hourly cost USD (home QUEUE resources). */
+    cost_usd_h: z.number().nonnegative().optional(),
     duration: durationSchema.optional(),
     production: z.number().nonnegative().optional(),
     consolidate: z.number().int().min(2).optional(),
@@ -77,6 +79,9 @@ const nodeSchema = z
     }
     if (node.type === "COUNTER" && node.duration !== undefined) {
       ctx.addIssue({ code: "custom", message: "COUNTER must not have duration", path: ["duration"] });
+    }
+    if (node.type !== "QUEUE" && node.cost_usd_h !== undefined) {
+      ctx.addIssue({ code: "custom", message: "cost_usd_h is only valid on QUEUE", path: ["cost_usd_h"] });
     }
     if (node.type !== "QUEUE" && node.initial !== undefined) {
       ctx.addIssue({ code: "custom", message: "initial is only valid on QUEUE", path: ["initial"] });
