@@ -16,8 +16,10 @@ import { formatNum, formatPct } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CostReportSection } from "@/components/cyclone/CostSensitivityPanels";
 
+/** Relative change between consecutive cycle rates must stay under this. */
 const SS_REL_EPS = 0.05;
-const SS_MIN_STREAK = 5;
+/** Minimum consecutive stable cycles (user: 10, not 5). */
+const SS_MIN_STREAK = 10;
 
 type CyclePoint = {
   t: number;
@@ -64,7 +66,7 @@ function detectSteadyState(series: CyclePoint[]): {
       stable: true,
     };
   }
-  const n = Math.max(5, Math.ceil(series.length * 0.3));
+  const n = Math.max(SS_MIN_STREAK, Math.ceil(series.length * 0.3));
   const from = Math.max(0, series.length - n);
   const region = rates.slice(from);
   const level = region.reduce((s, x) => s + x, 0) / region.length;
@@ -292,7 +294,7 @@ export function SimulationResults({
           <p className="text-[11px] text-muted-foreground">
             <strong className="text-foreground">Units per hour</strong> by cycle. Steady state is
             declared when consecutive changes stay under <strong className="text-foreground">5%</strong>{" "}
-            for at least {SS_MIN_STREAK} steps (teaching heuristic). The red dashed line is the
+            for at least {SS_MIN_STREAK} consecutive cycles (5% rule; teaching heuristic). The red dashed line is the
             steady-state productivity level.
           </p>
           {ss && (
@@ -305,7 +307,7 @@ export function SimulationResults({
               <span className="text-muted-foreground">
                 {" · from cycle "}{ss.startCycle}
                 {ss.stable
-                  ? " (5% rule)"
+                  ? " (5% · ≥10 cycles)"
                   : " (approx. — curve did not fully stabilize; last ~30% of cycles)"}
               </span>
             </div>
