@@ -55,6 +55,7 @@ function StudioPage() {
       </header>
 
       <main className="mx-auto max-w-[1400px] px-4 py-4 sm:px-6 sm:py-6">
+        {/* Top: Prompt | Model */}
         <div className="grid gap-4 lg:grid-cols-12">
           <section className="min-w-0 lg:col-span-5">
             <AIAssist />
@@ -68,8 +69,12 @@ function StudioPage() {
               </div>
             </div>
             <ModelSimulateBar />
-            <ResultsPanel />
           </section>
+        </div>
+
+        {/* Full-width Results under both columns */}
+        <div className="mt-4 min-w-0">
+          <ResultsPanel />
         </div>
 
         <footer className="mt-10 border-t border-border pt-6 text-center text-xs text-muted-foreground">
