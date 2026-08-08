@@ -15,7 +15,7 @@ export const earthmovingModel: CycloneModel = {
   productionUnit: "m³",
   defaultRuns: 1,
   defaultMaxTime: 480,
-  defaultMaxCycles: 500,
+  defaultMaxCycles: 100,
   nodes: [
     {
       id: "q-trucks",
@@ -102,7 +102,7 @@ export const concretePourModel: CycloneModel = {
   productionUnit: "m³",
   defaultRuns: 1,
   defaultMaxTime: 360,
-  defaultMaxCycles: 200,
+  defaultMaxCycles: 100,
   nodes: [
     {
       id: "q-plant",
@@ -193,7 +193,7 @@ export const trenchExcavationModel: CycloneModel = {
   productionUnit: "m",
   defaultRuns: 1,
   defaultMaxTime: 420,
-  defaultMaxCycles: 300,
+  defaultMaxCycles: 100,
   nodes: [
     {
       id: "q-ex",
@@ -275,7 +275,7 @@ export const inspectReworkModel: CycloneModel = {
   productionUnit: "unit",
   defaultRuns: 1,
   defaultMaxTime: 480,
-  defaultMaxCycles: 200,
+  defaultMaxCycles: 100,
   nodes: [
     { id: "q-crew", type: "QUEUE", label: "Crew Idle", x: 80, y: 180, initialUnits: 1, costPerHourUsd: 70 },
     { id: "c-inspect", type: "COMBI", label: "Inspect", x: 280, y: 180, duration: { kind: "triangular", min: 4, mode: 5, max: 7 } },
@@ -301,7 +301,7 @@ export const genConScaleModel: CycloneModel = {
   productionUnit: "kit",
   defaultRuns: 1,
   defaultMaxTime: 480,
-  defaultMaxCycles: 80,
+  defaultMaxCycles: 100,
   nodes: [
     { id: "q-crew", type: "QUEUE", label: "Crew Idle", x: 60, y: 180, initialUnits: 1, costPerHourUsd: 80 },
     { id: "c-setup", type: "COMBI", label: "Setup Batch", x: 220, y: 180, duration: { kind: "triangular", min: 2, mode: 3, max: 4 } },

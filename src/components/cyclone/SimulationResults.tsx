@@ -103,6 +103,12 @@ export function SimulationResults({
   }));
   const series = result.productivitySeries as CyclePoint[];
   const cycleTable = series;
+  const xMax = Math.max(
+    result.maxCyclesRequested || 0,
+    series.length ? series[series.length - 1]!.cycle : 0,
+  );
+  const stoppedEarly =
+    result.cyclesCompleted < result.maxCyclesRequested && result.maxCyclesRequested > 0;
   const ss = detectSteadyState(series.filter((p) => p.cycle > 0));
   const branches = result.branchStats ?? [];
   const hasBranches = branches.length > 0;
@@ -304,6 +310,12 @@ export function SimulationResults({
               </span>
             </div>
           )}
+          {stoppedEarly && (
+            <p className="rounded-[var(--radius-sm)] border border-amber-500/40 bg-amber-500/10 px-2.5 py-1.5 text-[11px] text-foreground">
+              Stopped at cycle {result.cyclesCompleted} of {result.maxCyclesRequested} (max time reached).
+              Raise <strong>Max time</strong> or keep the auto horizon so the chart can fill to your cycle target.
+            </p>
+          )}
           {series.length > 1 && (
             <div className="h-56 w-full min-w-0">
               <ResponsiveContainer width="100%" height="100%">
@@ -312,10 +324,10 @@ export function SimulationResults({
                   <XAxis
                     dataKey="cycle"
                     type="number"
-                    domain={[0, "dataMax"]}
+                    domain={[0, xMax > 0 ? xMax : "dataMax"]}
                     allowDecimals={false}
                     interval="preserveStartEnd"
-                    tickCount={9}
+                    tickCount={xMax > 200 ? 11 : 9}
                     tick={{ fontSize: 10 }}
                     label={{
                       value: "Cycle #",
@@ -374,7 +386,7 @@ export function SimulationResults({
                     dataKey="unitsPerHour"
                     stroke="var(--chart-2)"
                     strokeWidth={2}
-                    dot={{ r: 2 }}
+                    dot={series.length > 120 ? false : { r: 2 }}
                     activeDot={{ r: 4 }}
                     name="Units / hour"
                     isAnimationActive={false}

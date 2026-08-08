@@ -4,6 +4,12 @@ import { runSensitivity, parseCostAndSensitivity, applyCostsToModel } from "./se
 import { parseDsl, serializeDsl } from "./dsl";
 import { cloneModel, earthmovingModel, PRESET_MODELS } from "./models/presets"
 import { ensureReadableLayout } from "./auto-layout";
+import {
+  DEFAULT_MAX_CYCLES,
+  MAX_CYCLES_LIMIT,
+  clampMaxCycles,
+  horizonForCycles,
+} from "./run-limits";
 import type { CycloneModel, CycloneNode, SimResult, SensitivityResult } from "./types";
 import {
   createAgentSession,
@@ -58,10 +64,13 @@ interface CycloneStore {
   simulateNow: () => { ok: boolean; error?: string };
 }
 
+const initialMaxCycles = DEFAULT_MAX_CYCLES;
+const initialMaxTime = horizonForCycles(initialMaxCycles, earthmovingModel.defaultMaxTime);
+
 const initialDsl = serializeDsl(earthmovingModel, {
   seed: DEFAULT_SEED,
-  maxTime: earthmovingModel.defaultMaxTime,
-  maxCycles: earthmovingModel.defaultMaxCycles,
+  maxTime: initialMaxTime,
+  maxCycles: initialMaxCycles,
 });
 
 export const useCycloneStore = create<CycloneStore>((set, get) => ({
@@ -70,8 +79,8 @@ export const useCycloneStore = create<CycloneStore>((set, get) => ({
   sensitivityResult: null,
   selectedNodeId: null,
   seed: DEFAULT_SEED,
-  maxTime: earthmovingModel.defaultMaxTime,
-  maxCycles: earthmovingModel.defaultMaxCycles,
+  maxTime: initialMaxTime,
+  maxCycles: initialMaxCycles,
   isRunning: false,
   lastError: null,
 
@@ -81,21 +90,24 @@ export const useCycloneStore = create<CycloneStore>((set, get) => ({
 
   agent: createAgentSession("en"),
 
-  setModel: (model) =>
+  setModel: (model) => {
+    const maxCycles = DEFAULT_MAX_CYCLES;
+    const maxTime = horizonForCycles(maxCycles, model.defaultMaxTime);
     set({
       model: ensureReadableLayout(cloneModel(model)),
       result: null,
       sensitivityResult: null,
       selectedNodeId: null,
-      maxTime: model.defaultMaxTime,
-      maxCycles: model.defaultMaxCycles,
+      maxTime,
+      maxCycles,
       lastError: null,
       dslText: serializeDsl(model, {
         seed: get().seed,
-        maxTime: model.defaultMaxTime,
-        maxCycles: model.defaultMaxCycles,
+        maxTime,
+        maxCycles,
       }),
-    }),
+    });
+  },
 
   loadPreset: (id) => {
     const p = PRESET_MODELS.find((m) => m.id === id);
@@ -125,10 +137,19 @@ export const useCycloneStore = create<CycloneStore>((set, get) => ({
 
   setSeed: (seed) => set({ seed: Number.isFinite(seed) ? Math.floor(seed) : DEFAULT_SEED }),
   setMaxTime: (maxTime) => set({ maxTime: Math.max(1, maxTime) }),
-  setMaxCycles: (maxCycles) => set({ maxCycles: Math.max(1, Math.floor(maxCycles)) }),
+  setMaxCycles: (raw) => {
+    const maxCycles = clampMaxCycles(raw);
+    set((s) => ({
+      maxCycles,
+      // Keep charts able to reach the requested cycle count
+      maxTime: horizonForCycles(maxCycles, s.maxTime),
+    }));
+  },
 
   run: () => {
     let { model, seed, maxTime, maxCycles, agent } = get();
+    maxCycles = clampMaxCycles(maxCycles);
+    maxTime = horizonForCycles(maxCycles, maxTime);
     // Re-apply Cost USD/h + Sensitivity plan from prompt (DSL does not carry them).
     let sensPlan = model.sensitivity ?? [];
     if (agent.brief) {
@@ -178,8 +199,11 @@ export const useCycloneStore = create<CycloneStore>((set, get) => ({
         model: ensureReadableLayout(cloneModel(parsed.model)),
         dslText: dslOrModel,
         dslSource: "agent",
-        maxTime: parsed.run?.maxTime ?? parsed.model.defaultMaxTime,
-        maxCycles: parsed.run?.maxCycles ?? parsed.model.defaultMaxCycles,
+        maxTime: horizonForCycles(
+          clampMaxCycles(parsed.run?.maxCycles ?? DEFAULT_MAX_CYCLES),
+          parsed.run?.maxTime ?? parsed.model.defaultMaxTime,
+        ),
+        maxCycles: clampMaxCycles(parsed.run?.maxCycles ?? DEFAULT_MAX_CYCLES),
         result: null,
         sensitivityResult: null,
         selectedNodeId: null,
@@ -188,15 +212,15 @@ export const useCycloneStore = create<CycloneStore>((set, get) => ({
     } else {
       const dsl = serializeDsl(dslOrModel, {
         seed: get().seed,
-        maxTime: dslOrModel.defaultMaxTime,
-        maxCycles: dslOrModel.defaultMaxCycles,
+        maxTime: horizonForCycles(DEFAULT_MAX_CYCLES, dslOrModel.defaultMaxTime),
+        maxCycles: DEFAULT_MAX_CYCLES,
       });
       set({
         model: ensureReadableLayout(cloneModel(dslOrModel)),
         dslText: dsl,
         dslSource: "agent",
-        maxTime: dslOrModel.defaultMaxTime,
-        maxCycles: dslOrModel.defaultMaxCycles,
+        maxTime: horizonForCycles(DEFAULT_MAX_CYCLES, dslOrModel.defaultMaxTime),
+        maxCycles: DEFAULT_MAX_CYCLES,
         result: null,
         sensitivityResult: null,
         selectedNodeId: null,

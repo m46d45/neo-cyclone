@@ -200,7 +200,7 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
     productionUnit: spec.productionUnit ?? "unit",
     defaultRuns: 1,
     defaultMaxTime: spec.maxTime ?? 480,
-    defaultMaxCycles: spec.maxCycles ?? 500,
+    defaultMaxCycles: spec.maxCycles ?? 100,
     nodes,
     links,
   };

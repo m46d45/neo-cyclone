@@ -42,7 +42,7 @@ Where our **diagram notation** differs slightly from some Halpin print figures, 
 1. Prompt or **Example** preset.  
 2. **Draw Model** → diagram + Network logic.  
 3. Refine until the network is right.  
-4. Max cycles · Seed (**12345**) · Max time.  
+4. **Max cycles** (default **100**, product limit **500**) · Seed (**12345**) · Max time (auto-raised with cycles so charts can fill).  
 5. **Simulate**.  
 6. Optional: **Report .md / .txt**, diagram/chart **PNG**, sensitivity tab.
 

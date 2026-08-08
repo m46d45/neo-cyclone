@@ -84,7 +84,7 @@ export function parseDsl(raw: string): ParseResult {
   const run: SimConfig = {
     seed: document.run?.seed ?? 42,
     maxTime: document.run?.max_time ?? 480,
-    maxCycles: document.run?.max_cycles ?? 500,
+    maxCycles: document.run?.max_cycles ?? 100,
   };
 
   return {
@@ -106,7 +106,7 @@ export function documentToModel(doc: NeoCycloneDocument): CycloneModel {
     productionUnit: model.production_unit,
     defaultRuns: 1,
     defaultMaxTime: doc.run?.max_time ?? 480,
-    defaultMaxCycles: doc.run?.max_cycles ?? 500,
+    defaultMaxCycles: doc.run?.max_cycles ?? 100,
     nodes: model.nodes.map((n, i) => ({
       id: n.id,
       type: n.type,

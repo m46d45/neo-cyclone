@@ -1,3 +1,4 @@
+import { MAX_CYCLES_LIMIT, clampMaxCycles } from "./run-limits";
 import { createRng, sampleDuration } from "./distributions";
 import { buildCostReport } from "./cost";
 import type {
@@ -485,7 +486,7 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
   }
 
   const maxTime = config.maxTime;
-  const maxCycles = config.maxCycles;
+  const maxCycles = clampMaxCycles(config.maxCycles);
 
   while (events.length > 0) {
     const ev = events.shift()!;

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCycloneStore } from "@/lib/cyclone/store";
 import { t } from "@/lib/cyclone/agent/i18n";
+import { MAX_CYCLES_LIMIT, DEFAULT_MAX_CYCLES } from "@/lib/cyclone/run-limits";
 
 /**
  * Under CYCLONE Model: set seed + max cycles, then run simulation.
@@ -36,22 +37,27 @@ export function ModelSimulateBar() {
     <div className="space-y-3 rounded-[var(--radius-md)] border border-primary/25 bg-card p-3">
       <p className="text-[11px] text-muted-foreground">
         Activity durations are in <strong className="text-foreground">minutes</strong> (default).
-        Set run parameters, then Simulate.
+        Simulation stops at the earlier of <strong className="text-foreground">max cycles</strong>{" "}
+        (cap {MAX_CYCLES_LIMIT}) or max time. Cycle charts follow completed cycles up to your request.
       </p>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="space-y-1">
           <Label htmlFor="sim-cycles" className="text-[11px]">
-            Max cycles
+            Max cycles (1–{MAX_CYCLES_LIMIT})
           </Label>
           <Input
             id="sim-cycles"
             type="number"
             min={1}
+            max={MAX_CYCLES_LIMIT}
             step={1}
             value={maxCycles}
-            onChange={(e) => setMaxCycles(Number(e.target.value) || 1)}
+            onChange={(e) => setMaxCycles(Number(e.target.value) || DEFAULT_MAX_CYCLES)}
             className="h-9 font-mono text-sm"
           />
+          <p className="text-[10px] text-muted-foreground">
+            Default {DEFAULT_MAX_CYCLES}; product limit {MAX_CYCLES_LIMIT}.
+          </p>
         </div>
         <div className="space-y-1">
           <Label htmlFor="sim-seed" className="text-[11px]">
@@ -79,6 +85,9 @@ export function ModelSimulateBar() {
             onChange={(e) => setMaxTime(Number(e.target.value) || 1)}
             className="h-9 font-mono text-sm"
           />
+          <p className="text-[10px] text-muted-foreground">
+            Auto-raised with cycles so the chart can reach your cycle target.
+          </p>
         </div>
       </div>
       <Button
