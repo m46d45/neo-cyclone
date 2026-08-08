@@ -1,6 +1,6 @@
 # Neo-CYCLONE — User Manual
 
-**Version:** 0.9  
+**Version:** 0.10  
 **Language:** English  
 **Tagline:** AI-agent of Daniel W. Halpin's CYCLONE
 
@@ -98,16 +98,32 @@ Notes: lines starting with `#` or `//` are ignored.
 
 ---
 
-## 5. Results
+## 5. Results (MicroCYCLONE-style)
 
-Summary: cycles completed, production, productivity, average cycle, seed, simulation time.
+Outputs follow the classic MicroCYCLONE report structure (Halpin / teaching tradition):
 
-Tabs:
+### Process Report
 
-- **Utilization** — bar chart with % labels  
-- **Cycles & production** — cumulative production vs cycle  
-- **Productivity** — rate vs time (minutes)  
-- **Queues** — avg / max length  
+| Field | Meaning |
+|-------|---------|
+| Run length | Simulation clock at stop |
+| Number of cycles | COUNTER completions |
+| Units per cycle | Production amount per counter pass |
+| Total production | Cumulative units produced |
+| Units produced per hour | Productivity (Halpin summary form) |
+| Avg cycle time | Mean time between counter passes |
+
+### Report by Element
+
+- **COMBI / NORMAL:** times activated, mean duration, avg inter-arrival, avg units at task, **% time in operation**
+- **QUEUE:** initial units, avg wait time, avg/max units, units at end, **% occupied**, departures
+- **COUNTER:** units through, total production, avg time between units, first passage time
+
+### Production by Cycle
+
+Table: cycle #, simulation time at completion, cumulative production, cumulative units/hour — to observe startup → steady state.
+
+Charts: % time in operation; cumulative production / units per hour vs cycle.
 
 ---
 
