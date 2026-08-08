@@ -127,6 +127,8 @@ const linkSchema = z.object({
   id: z.string().min(1).optional(),
   from: idSchema,
   to: idSchema,
+  /** Halpin probabilistic branch weight (0–1). Optional. */
+  probability: z.number().min(0).max(1).optional(),
 });
 
 export const neoCycloneDocumentSchema = z.object({

@@ -1,43 +1,46 @@
-import type { CycloneModel, DurationSpec } from "../types";
+import type { CycloneModel, DurationDist } from "../types";
 import { DSL_VERSION, type NeoCycloneDocument, type DslDuration } from "./schema";
+
+export type SerializeOptions = {
+  seed?: number;
+  maxTime?: number;
+  maxCycles?: number;
+};
 
 function sanitizeId(id: string): string {
   const s = id.replace(/[^a-zA-Z0-9_-]/g, "_");
   return /^[a-zA-Z]/.test(s) ? s : `n_${s}`;
 }
 
-function fromDuration(d: DurationSpec): DslDuration {
-  const p = d.params;
-  switch (d.type) {
-    case "CONSTANT":
-      return { kind: "constant", value: p[0] ?? 1 };
-    case "UNIFORM":
-      return { kind: "uniform", min: p[0] ?? 0, max: p[1] ?? 1 };
-    case "TRIANGULAR":
-      return { kind: "triangular", min: p[0] ?? 0, mode: p[1] ?? 1, max: p[2] ?? 2 };
-    case "NORMAL":
-      return { kind: "normal", mean: p[0] ?? 1, sd: p[1] ?? 0.1 };
-    case "LOGNORMAL":
-      return { kind: "lognormal", mean: p[0] ?? 1, sd: p[1] ?? 0.1 };
-    case "BETA":
+function fromDuration(d: DurationDist): DslDuration {
+  switch (d.kind) {
+    case "constant":
+      return { kind: "constant", value: d.value };
+    case "uniform":
+      return { kind: "uniform", min: d.min, max: d.max };
+    case "triangular":
+      return { kind: "triangular", min: d.min, mode: d.mode, max: d.max };
+    case "normal":
+      return { kind: "normal", mean: d.mean, sd: d.sd };
+    case "lognormal":
+      return { kind: "lognormal", mean: d.mean, sd: d.sd };
+    case "beta":
       return {
         kind: "beta",
-        min: p[0] ?? 0,
-        max: p[1] ?? 1,
-        alpha: p[2] ?? 2,
-        beta: p[3] ?? 2,
+        min: d.min,
+        max: d.max,
+        alpha: d.alpha,
+        beta: d.beta,
       };
-    case "GAMMA":
-      return { kind: "gamma", shape: p[0] ?? 1, scale: p[1] ?? 1 };
-    default:
-      return { kind: "constant", value: 1 };
+    case "gamma":
+      return { kind: "gamma", shape: d.shape, scale: d.scale };
   }
 }
 
 /** Serialize CycloneModel to Neo-CYCLONE DSL JSON string. */
 export function serializeDsl(
   model: CycloneModel,
-  options: { seed?: number; maxTime?: number; maxCycles?: number } = {},
+  options: SerializeOptions = {},
 ): string {
   const doc: NeoCycloneDocument = {
     dsl: DSL_VERSION,
@@ -71,11 +74,17 @@ export function serializeDsl(
         if (n.type === "CONSOLIDATE") base.consolidate = n.consolidateCount ?? 2;
         return base;
       }),
-      links: model.links.map((l) => ({
-        id: l.id,
-        from: sanitizeId(l.from),
-        to: sanitizeId(l.to),
-      })),
+      links: model.links.map((l) => {
+        const link: NeoCycloneDocument["model"]["links"][0] = {
+          id: l.id,
+          from: sanitizeId(l.from),
+          to: sanitizeId(l.to),
+        };
+        if (l.probability != null && l.probability >= 0 && l.probability <= 1) {
+          link.probability = l.probability;
+        }
+        return link;
+      }),
     },
     run: {
       seed: options.seed ?? 42,

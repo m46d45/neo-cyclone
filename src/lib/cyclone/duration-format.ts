@@ -300,6 +300,8 @@ export function formatDuration(d: DurationDist): string {
       return `beta [${d.min},${d.max}] α=${d.alpha}, β=${d.beta}`;
     case "gamma":
       return `gamma shape=${d.shape}, scale=${d.scale}`;
+    default:
+      return "—";
   }
 }
 

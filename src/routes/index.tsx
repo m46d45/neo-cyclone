@@ -5,6 +5,7 @@ import { SignedIn, SignedOut, UserButton } from "@/lib/auth/gates";
 import { AIAssist } from "@/components/cyclone/AIAssist";
 import { DiagramCanvas } from "@/components/cyclone/DiagramCanvas";
 import { ModelSimulateBar } from "@/components/cyclone/ModelSimulateBar";
+import { NetworkLogic } from "@/components/cyclone/NetworkLogic";
 import { ResultsPanel } from "@/components/cyclone/ResultsPanel";
 import { LogoMark } from "@/components/cyclone/LogoMark";
 import { PRODUCT_TAGLINE } from "@/lib/cyclone/prompt-template";
@@ -68,6 +69,7 @@ function StudioPage() {
                 <DiagramCanvas />
               </div>
             </div>
+            <NetworkLogic />
             <ModelSimulateBar />
           </section>
         </div>

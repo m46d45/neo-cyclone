@@ -1,7 +1,10 @@
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useRef, type ReactNode } from "react";
+import { toast } from "sonner";
 import { useCycloneStore } from "@/lib/cyclone/store";
 import type { CycloneNode } from "@/lib/cyclone/types";
 import { formatDuration } from "@/lib/cyclone/duration-format";
+import { downloadSvgElementAsPng, safeFilename } from "@/lib/cyclone/export-utils";
+import { ZoomToolbar, useZoomState } from "@/components/cyclone/ZoomToolbar";
 import { cn } from "@/lib/utils";
 
 /**
@@ -236,7 +239,7 @@ function linkPath(
   from: CycloneNode,
   to: CycloneNode,
   cycle: boolean,
-): { d: string } {
+): { d: string; mx: number; my: number } {
   const size = 60;
   const half = size / 2;
   const x1 = from.x + half;
@@ -244,7 +247,7 @@ function linkPath(
   const x2 = to.x + half;
   const y2 = to.y + half;
   if (!cycle) {
-    return { d: `M ${x1} ${y1} L ${x2} ${y2}` };
+    return { d: `M ${x1} ${y1} L ${x2} ${y2}`, mx: (x1 + x2) / 2, my: (y1 + y2) / 2 - 8 };
   }
   const mx = (x1 + x2) / 2;
   const my = (y1 + y2) / 2;
@@ -253,7 +256,13 @@ function linkPath(
   const len = Math.hypot(dx, dy) || 1;
   const ox = (-dy / len) * 28;
   const oy = (dx / len) * 28;
-  return { d: `M ${x1} ${y1} Q ${mx + ox} ${my + oy} ${x2} ${y2}` };
+  const cx = mx + ox;
+  const cy = my + oy;
+  return {
+    d: `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`,
+    mx: (x1 + 2 * cx + x2) / 4,
+    my: (y1 + 2 * cy + y2) / 4 - 6,
+  };
 }
 
 function isCycleLink(from: CycloneNode, to: CycloneNode): boolean {
@@ -266,6 +275,8 @@ export function DiagramCanvas() {
   const model = useCycloneStore((s) => s.model);
   const selectedNodeId = useCycloneStore((s) => s.selectedNodeId);
   const selectNode = useCycloneStore((s) => s.selectNode);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const { zoom, minZoom, maxZoom, zoomIn, zoomOut, zoomReset } = useZoomState(1, 0.25, 0.5, 2.5);
 
   const width = useMemo(() => {
     if (!model?.nodes.length) return 640;
@@ -298,7 +309,7 @@ export function DiagramCanvas() {
       .filter(Boolean) as {
       link: (typeof model.links)[0];
       cycle: boolean;
-      path: { d: string };
+      path: { d: string; mx: number; my: number };
     }[];
   }, [model.links, nodeMap]);
 
@@ -310,18 +321,51 @@ export function DiagramCanvas() {
     );
   }
 
+  async function onDownloadPng() {
+    const svg = svgRef.current;
+    if (!svg) {
+      toast.error("Diagram not ready");
+      return;
+    }
+    try {
+      await downloadSvgElementAsPng(svg, safeFilename(`model_${model.id}`, "png"), {
+        scale: 2,
+        background: "#ffffff",
+      });
+      toast.success("Diagram PNG downloaded");
+    } catch {
+      toast.error("Could not export diagram");
+    }
+  }
+
   return (
     <div
       className={cn(
-        "relative h-full min-h-[280px] w-full max-w-full min-w-0 overflow-x-auto overflow-y-auto rounded-[var(--radius-md)] border-2 border-primary/40 bg-diagram shadow-sm",
+        "relative h-full min-h-[280px] w-full max-w-full min-w-0 overflow-hidden rounded-[var(--radius-md)] border-2 border-primary/40 bg-diagram shadow-sm",
       )}
       onClick={() => selectNode(null)}
     >
+      <div className="absolute right-2 top-2 z-10" onClick={(e) => e.stopPropagation()}>
+        <ZoomToolbar
+          zoom={zoom}
+          minZoom={minZoom}
+          maxZoom={maxZoom}
+          onZoomIn={zoomIn}
+          onZoomOut={zoomOut}
+          onZoomReset={zoomReset}
+          onDownload={() => void onDownloadPng()}
+          downloadLabel="PNG"
+        />
+      </div>
+      <div className="h-full w-full overflow-auto">
+        <div style={{ width: width * zoom, height: height * zoom, minWidth: "100%" }}>
       <svg
+        ref={svgRef}
         width={width}
         height={height}
         viewBox={`0 0 ${width} ${height}`}
-        className="block max-w-none"
+        className="block max-w-none origin-top-left"
+        style={{ transform: `scale(${zoom})` }}
         role="img"
         aria-label={`CYCLONE model ${model.name}`}
       >
@@ -348,6 +392,17 @@ export function DiagramCanvas() {
           >
             <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--primary)" />
           </marker>
+          <marker
+            id="arrow-halpin-branch"
+            viewBox="0 0 10 10"
+            refX="9"
+            refY="5"
+            markerWidth="7"
+            markerHeight="7"
+            orient="auto"
+          >
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#8b5a2b" />
+          </marker>
           <pattern id="acd-grid" width="20" height="20" patternUnits="userSpaceOnUse">
             <path
               d="M 20 0 L 0 0 0 20"
@@ -360,17 +415,53 @@ export function DiagramCanvas() {
         <rect width="100%" height="100%" fill="var(--diagram)" />
         <rect width="100%" height="100%" fill="url(#acd-grid)" opacity="0.7" />
 
-        {linksDrawn.map(({ link, cycle, path }) => (
-          <path
-            key={link.id}
-            d={path.d}
-            fill="none"
-            stroke={cycle ? "var(--primary)" : "var(--diagram-ink)"}
-            strokeWidth={cycle ? 2.25 : 1.75}
-            strokeDasharray={cycle ? "7 4" : undefined}
-            markerEnd={cycle ? "url(#arrow-halpin-cycle)" : "url(#arrow-halpin)"}
-          />
-        ))}
+        {linksDrawn.map(({ link, cycle, path }) => {
+          const isBranch = link.probability != null;
+          return (
+            <g key={link.id}>
+              <path
+                d={path.d}
+                fill="none"
+                stroke={
+                  isBranch ? "#8b5a2b" : cycle ? "var(--primary)" : "var(--diagram-ink)"
+                }
+                strokeWidth={isBranch ? 2.1 : cycle ? 2.25 : 1.75}
+                strokeDasharray={cycle && !isBranch ? "7 4" : undefined}
+                markerEnd={
+                  isBranch
+                    ? "url(#arrow-halpin-branch)"
+                    : cycle
+                      ? "url(#arrow-halpin-cycle)"
+                      : "url(#arrow-halpin)"
+                }
+              />
+              {isBranch && (
+                <g>
+                  <rect
+                    x={path.mx - 18}
+                    y={path.my - 9}
+                    width={36}
+                    height={16}
+                    rx={3}
+                    fill="white"
+                    stroke="#8b5a2b"
+                    strokeWidth={1}
+                    opacity={0.95}
+                  />
+                  <text
+                    x={path.mx}
+                    y={path.my + 3}
+                    textAnchor="middle"
+                    fill="#8b5a2b"
+                    style={{ fontSize: 10, fontWeight: 700, fontFamily: "ui-monospace, monospace" }}
+                  >
+                    p={link.probability}
+                  </text>
+                </g>
+              )}
+            </g>
+          );
+        })}
 
         {model.nodes.map((node) => (
           <NodeShape
@@ -381,6 +472,8 @@ export function DiagramCanvas() {
           />
         ))}
       </svg>
+        </div>
+      </div>
     </div>
   );
 }

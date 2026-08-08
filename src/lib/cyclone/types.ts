@@ -5,19 +5,21 @@ export type NodeType =
   | "COUNTER"
   | "CONSOLIDATE";
 
-export type DistType =
-  | "CONSTANT"
-  | "UNIFORM"
-  | "TRIANGULAR"
-  | "NORMAL"
-  | "LOGNORMAL"
-  | "BETA"
-  | "GAMMA";
+/**
+ * Activity duration distributions (common in construction DES / CYCLONE).
+ * All sampled times are clamped to be ≥ 0. Default time unit: **minutes**.
+ */
+export type DurationDist =
+  | { kind: "constant"; value: number }
+  | { kind: "uniform"; min: number; max: number }
+  | { kind: "triangular"; min: number; mode: number; max: number }
+  | { kind: "normal"; mean: number; sd: number }
+  | { kind: "lognormal"; mean: number; sd: number }
+  | { kind: "beta"; min: number; max: number; alpha: number; beta: number }
+  | { kind: "gamma"; shape: number; scale: number };
 
-export interface DurationSpec {
-  type: DistType;
-  params: number[];
-}
+/** @deprecated alias — use DurationDist */
+export type DurationSpec = DurationDist;
 
 export interface CycloneNode {
   id: string;
@@ -34,7 +36,7 @@ export interface CycloneNode {
    */
   generateCount?: number;
   /** COMBI / NORMAL duration. */
-  duration?: DurationSpec;
+  duration?: DurationDist;
   /** COUNTER: production amount per passage. */
   productionAmount?: number;
   /** CONSOLIDATE: units needed before release. */
@@ -47,6 +49,13 @@ export interface CycloneLink {
   id: string;
   from: string;
   to: string;
+  /**
+   * Halpin probabilistic branch (0–1).
+   * When a node has multiple outs and any link carries probability,
+   * the engine samples one successor (weights normalized).
+   * Omit on deterministic arcs (including COMBI multi-out resource returns).
+   */
+  probability?: number;
 }
 
 export interface SensitivityRange {
@@ -133,6 +142,18 @@ export interface CounterStat {
   unitsPerCycle: number;
 }
 
+/** How often each probabilistic branch was taken. */
+export interface BranchStat {
+  linkId: string;
+  fromId: string;
+  toId: string;
+  fromLabel: string;
+  toLabel: string;
+  probability: number | null;
+  timesTaken: number;
+  empiricalShare: number;
+}
+
 export interface SimResult {
   modelId: string;
   modelName: string;
@@ -143,6 +164,7 @@ export interface SimResult {
   queueStats: QueueStat[];
   activityStats: ActivityStat[];
   counterStats: CounterStat[];
+  branchStats: BranchStat[];
   timeline: { t: number; event: string }[];
   productivitySeries: {
     t: number;

@@ -1,5 +1,13 @@
+import { Download, FileText } from "lucide-react";
+import { toast } from "sonner";
 import { useCycloneStore } from "@/lib/cyclone/store";
+import {
+  buildSimulationReport,
+  downloadBlob,
+  safeFilename,
+} from "@/lib/cyclone/export-utils";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SensitivitySection } from "@/components/cyclone/CostSensitivityPanels";
@@ -39,22 +47,54 @@ export function ResultsPanel() {
     );
   }
 
-  const hasSensitivity =
-    !!sensitivityResult && sensitivityResult.rows.length > 0;
+  const hasSensitivity = !!sensitivityResult && sensitivityResult.rows.length > 0;
+
+  function downloadReport(ext: "md" | "txt") {
+    const body = buildSimulationReport(model, result!);
+    const mime = ext === "md" ? "text/markdown;charset=utf-8" : "text/plain;charset=utf-8";
+    downloadBlob(safeFilename(`report_${model.id}`, ext), body, mime);
+    toast.success(`Report downloaded (.${ext})`);
+  }
 
   return (
     <Card id="results" className="border-primary/15">
       <CardHeader className="pb-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <CardTitle className="font-display">Results</CardTitle>
-          <Badge variant="outline" className="border-primary/30 text-primary">
-            MicroCYCLONE-style
-          </Badge>
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <CardTitle className="font-display">Results</CardTitle>
+              <Badge variant="outline" className="border-primary/30 text-primary">
+                MicroCYCLONE-style
+              </Badge>
+            </div>
+            <CardDescription>
+              {model.name} · seed <strong className="text-foreground">{result.seed}</strong> · time
+              unit {unit}
+            </CardDescription>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1.5 text-xs"
+              onClick={() => downloadReport("md")}
+            >
+              <FileText className="size-3.5" />
+              Report .md
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1.5 text-xs"
+              onClick={() => downloadReport("txt")}
+            >
+              <Download className="size-3.5" />
+              Report .txt
+            </Button>
+          </div>
         </div>
-        <CardDescription>
-          {model.name} · seed <strong className="text-foreground">{result.seed}</strong> · time unit{" "}
-          {unit}
-        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <Tabs defaultValue="simulation">

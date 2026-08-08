@@ -104,6 +104,8 @@ export function SimulationResults({
   const series = result.productivitySeries as CyclePoint[];
   const cycleTable = series;
   const ss = detectSteadyState(series.filter((p) => p.cycle > 0));
+  const branches = result.branchStats ?? [];
+  const hasBranches = branches.length > 0;
 
   return (
     <div className="space-y-4">
@@ -157,6 +159,11 @@ export function SimulationResults({
           <TabsTrigger value="charts" className="flex-1 text-xs">
             Charts
           </TabsTrigger>
+          {hasBranches && (
+            <TabsTrigger value="branch" className="flex-1 text-xs">
+              Branches
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="element" className="mt-3 space-y-4">
@@ -446,6 +453,40 @@ export function SimulationResults({
             </div>
           </div>
         </TabsContent>
+
+          {hasBranches && (
+            <TabsContent value="branch" className="mt-3 space-y-3">
+              <p className="text-[11px] text-muted-foreground">
+                Halpin probabilistic arcs: declared p vs empirical share (seed {result.seed}).
+              </p>
+              <div className="overflow-x-auto rounded-[var(--radius-sm)] border border-border">
+                <table className="w-full min-w-[320px] text-left text-xs">
+                  <thead className="border-b border-border bg-muted/40 text-[10px] uppercase text-muted-foreground">
+                    <tr>
+                      <th className="px-2 py-1.5 font-medium">From → To</th>
+                      <th className="px-2 py-1.5 font-medium">p (model)</th>
+                      <th className="px-2 py-1.5 font-medium">Times</th>
+                      <th className="px-2 py-1.5 font-medium">Empirical</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {branches.map((b) => (
+                      <tr key={b.linkId} className="border-b border-border/60">
+                        <td className="px-2 py-1.5 text-foreground">
+                          {b.fromLabel} → {b.toLabel}
+                        </td>
+                        <td className="px-2 py-1.5 tabular-nums">
+                          {b.probability != null ? b.probability : "—"}
+                        </td>
+                        <td className="px-2 py-1.5 tabular-nums">{b.timesTaken}</td>
+                        <td className="px-2 py-1.5 tabular-nums">{formatPct(b.empiricalShare)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </TabsContent>
+          )}
       </Tabs>
     </div>
   );

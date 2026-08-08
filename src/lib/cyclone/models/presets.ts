@@ -264,10 +264,72 @@ export const trenchExcavationModel: CycloneModel = {
   ],
 };
 
+
+/** Inspect & Rework — Halpin probabilistic branch. */
+export const inspectReworkModel: CycloneModel = {
+  id: "inspect-rework",
+  name: "Inspect and Rework",
+  description:
+    "Probabilistic branch after inspection: 90% pass, 10% rework then re-inspect.",
+  timeUnit: "min",
+  productionUnit: "unit",
+  defaultRuns: 1,
+  defaultMaxTime: 480,
+  defaultMaxCycles: 200,
+  nodes: [
+    { id: "q-crew", type: "QUEUE", label: "Crew Idle", x: 80, y: 180, initialUnits: 1, costPerHourUsd: 70 },
+    { id: "c-inspect", type: "COMBI", label: "Inspect", x: 280, y: 180, duration: { kind: "triangular", min: 4, mode: 5, max: 7 } },
+    { id: "n-rework", type: "NORMAL", label: "Rework", x: 280, y: 320, duration: { kind: "triangular", min: 6, mode: 8, max: 12 } },
+    { id: "ctr", type: "COUNTER", label: "Finished Units", x: 500, y: 120, productionAmount: 1 },
+  ],
+  links: [
+    { id: "ir1", from: "q-crew", to: "c-inspect" },
+    { id: "ir2", from: "c-inspect", to: "ctr", probability: 0.9 },
+    { id: "ir3", from: "c-inspect", to: "n-rework", probability: 0.1 },
+    { id: "ir4", from: "n-rework", to: "q-crew" },
+    { id: "ir5", from: "ctr", to: "q-crew" },
+  ],
+};
+
+/** GEN + CON teaching model. */
+export const genConScaleModel: CycloneModel = {
+  id: "gen-con-scale",
+  name: "GEN and CON Scale",
+  description:
+    "Parts Pool GEN 4 multiplies arrivals; CON 4 reunites into one kit. Independent Halpin functions.",
+  timeUnit: "min",
+  productionUnit: "kit",
+  defaultRuns: 1,
+  defaultMaxTime: 480,
+  defaultMaxCycles: 80,
+  nodes: [
+    { id: "q-crew", type: "QUEUE", label: "Crew Idle", x: 60, y: 180, initialUnits: 1, costPerHourUsd: 80 },
+    { id: "c-setup", type: "COMBI", label: "Setup Batch", x: 220, y: 180, duration: { kind: "triangular", min: 2, mode: 3, max: 4 } },
+    { id: "n-prepare", type: "NORMAL", label: "Prepare", x: 380, y: 180, duration: { kind: "constant", value: 1 } },
+    { id: "q-parts", type: "QUEUE", label: "Parts Pool", x: 520, y: 180, initialUnits: 0, generateCount: 4 },
+    { id: "c-process", type: "COMBI", label: "Process Unit", x: 680, y: 180, duration: { kind: "triangular", min: 1.5, mode: 2, max: 3 } },
+    { id: "con", type: "CONSOLIDATE", label: "Assemble Kit", x: 680, y: 320, consolidateCount: 4 },
+    { id: "ctr", type: "COUNTER", label: "Kits Done", x: 520, y: 320, productionAmount: 1 },
+    { id: "n-return", type: "NORMAL", label: "Return", x: 220, y: 320, duration: { kind: "constant", value: 0.5 } },
+  ],
+  links: [
+    { id: "g1", from: "q-crew", to: "c-setup" },
+    { id: "g2", from: "c-setup", to: "n-prepare" },
+    { id: "g3", from: "n-prepare", to: "q-parts" },
+    { id: "g4", from: "q-parts", to: "c-process" },
+    { id: "g5", from: "c-process", to: "con" },
+    { id: "g6", from: "con", to: "ctr" },
+    { id: "g7", from: "ctr", to: "n-return" },
+    { id: "g8", from: "n-return", to: "q-crew" },
+  ],
+};
+
 export const PRESET_MODELS: CycloneModel[] = [
   earthmovingModel,
   concretePourModel,
   trenchExcavationModel,
+  inspectReworkModel,
+  genConScaleModel,
 ];
 
 export function getPreset(id: string): CycloneModel | undefined {

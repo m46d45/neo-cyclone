@@ -1,43 +1,65 @@
-import type { CycloneModel, DurationSpec, DistType } from "../types";
+import { parse as parseYaml } from "yaml";
+import type { CycloneModel, DurationDist, SimConfig } from "../types";
 import {
   neoCycloneDocumentSchema,
   type NeoCycloneDocument,
   type DslDuration,
 } from "./schema";
+import { hasBlockingErrors, validateHalpinRules, type DslIssue } from "./validate";
 
 export type ParseResult =
-  | { ok: true; model: CycloneModel; run?: NeoCycloneDocument["run"] }
-  | { ok: false; errors: string[] };
+  | {
+      ok: true;
+      model: CycloneModel;
+      run: SimConfig;
+      document: NeoCycloneDocument;
+      warnings: DslIssue[];
+    }
+  | { ok: false; errors: string[]; issues?: DslIssue[] };
 
-function toDuration(d: DslDuration): DurationSpec {
+/** Alias used by some callers */
+export type ParseDslResult = ParseResult;
+
+function toDuration(d: DslDuration): DurationDist {
   switch (d.kind) {
     case "constant":
-      return { type: "CONSTANT", params: [d.value] };
+      return { kind: "constant", value: d.value };
     case "uniform":
-      return { type: "UNIFORM", params: [d.min, d.max] };
+      return { kind: "uniform", min: d.min, max: d.max };
     case "triangular":
-      return { type: "TRIANGULAR", params: [d.min, d.mode, d.max] };
+      return { kind: "triangular", min: d.min, mode: d.mode, max: d.max };
     case "normal":
-      return { type: "NORMAL", params: [d.mean, d.sd] };
+      return { kind: "normal", mean: d.mean, sd: d.sd };
     case "lognormal":
-      return { type: "LOGNORMAL", params: [d.mean, d.sd] };
+      return { kind: "lognormal", mean: d.mean, sd: d.sd };
     case "beta":
-      return { type: "BETA", params: [d.min, d.max, d.alpha, d.beta] };
+      return { kind: "beta", min: d.min, max: d.max, alpha: d.alpha, beta: d.beta };
     case "gamma":
-      return { type: "GAMMA", params: [d.shape, d.scale] };
-    default:
-      return { type: "CONSTANT", params: [1] };
+      return { kind: "gamma", shape: d.shape, scale: d.scale };
   }
 }
 
-/** Parse Neo-CYCLONE DSL JSON string into CycloneModel. */
+/** Parse Neo-CYCLONE DSL (JSON or YAML) into CycloneModel. */
 export function parseDsl(raw: string): ParseResult {
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return { ok: false, errors: ["Empty document"] };
+  }
+
   let data: unknown;
   try {
-    data = JSON.parse(raw);
+    if (trimmed.startsWith("{")) {
+      data = JSON.parse(trimmed);
+    } else {
+      data = parseYaml(trimmed);
+    }
   } catch (e) {
-    return { ok: false, errors: [`Invalid JSON: ${(e as Error).message}`] };
+    return {
+      ok: false,
+      errors: [`Syntax error: ${e instanceof Error ? e.message : "invalid YAML/JSON"}`],
+    };
   }
+
   const parsed = neoCycloneDocumentSchema.safeParse(data);
   if (!parsed.success) {
     return {
@@ -47,12 +69,34 @@ export function parseDsl(raw: string): ParseResult {
       ),
     };
   }
-  const doc = parsed.data;
-  const model = docToModel(doc);
-  return { ok: true, model, run: doc.run };
+
+  const document = parsed.data;
+  const issues = validateHalpinRules(document);
+  if (hasBlockingErrors(issues)) {
+    return {
+      ok: false,
+      errors: issues.filter((i) => i.level === "error").map((i) => i.message),
+      issues,
+    };
+  }
+
+  const model = documentToModel(document);
+  const run: SimConfig = {
+    seed: document.run?.seed ?? 42,
+    maxTime: document.run?.max_time ?? 480,
+    maxCycles: document.run?.max_cycles ?? 500,
+  };
+
+  return {
+    ok: true,
+    model,
+    run,
+    document,
+    warnings: issues.filter((i) => i.level === "warning"),
+  };
 }
 
-function docToModel(doc: NeoCycloneDocument): CycloneModel {
+export function documentToModel(doc: NeoCycloneDocument): CycloneModel {
   const { model } = doc;
   return {
     id: model.id,
@@ -62,7 +106,7 @@ function docToModel(doc: NeoCycloneDocument): CycloneModel {
     productionUnit: model.production_unit,
     defaultRuns: 1,
     defaultMaxTime: doc.run?.max_time ?? 480,
-    defaultMaxCycles: doc.run?.max_cycles ?? 100,
+    defaultMaxCycles: doc.run?.max_cycles ?? 500,
     nodes: model.nodes.map((n, i) => ({
       id: n.id,
       type: n.type,
@@ -86,6 +130,10 @@ function docToModel(doc: NeoCycloneDocument): CycloneModel {
       id: l.id ?? `l${i + 1}`,
       from: l.from,
       to: l.to,
+      probability:
+        l.probability != null && l.probability >= 0 && l.probability <= 1
+          ? l.probability
+          : undefined,
     })),
   };
 }

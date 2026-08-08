@@ -2,6 +2,7 @@ import { createRng, sampleDuration } from "./distributions";
 import { buildCostReport } from "./cost";
 import type {
   ActivityStat,
+  BranchStat,
   CounterStat,
   CycloneModel,
   QueueStat,
@@ -56,6 +57,12 @@ interface RuntimeConsolidate {
   buffer: Entity[];
 }
 
+type OutArc = {
+  id: string;
+  to: string;
+  probability?: number;
+};
+
 type EventKind = "END_ACTIVITY";
 
 interface SimEvent {
@@ -80,19 +87,23 @@ function toUnitsPerHour(production: number, simTime: number, timeUnit: string): 
 
 /**
  * Discrete-event CYCLONE engine (Halpin-style).
- * Collects statistics aligned with classic MicroCYCLONE reports + optional USD cost.
+ * MicroCYCLONE-style stats + optional USD cost + GEN / CON / probabilistic branch.
  */
 export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
   const rng = createRng(config.seed);
   const nodeById = new Map(model.nodes.map((n) => [n.id, n]));
-  const outLinks = new Map<string, string[]>();
+  const outArcs = new Map<string, OutArc[]>();
   const inLinks = new Map<string, string[]>();
   for (const n of model.nodes) {
-    outLinks.set(n.id, []);
+    outArcs.set(n.id, []);
     inLinks.set(n.id, []);
   }
   for (const l of model.links) {
-    outLinks.get(l.from)?.push(l.to);
+    outArcs.get(l.from)?.push({
+      id: l.id,
+      to: l.to,
+      probability: l.probability,
+    });
     inLinks.get(l.to)?.push(l.from);
   }
 
@@ -100,6 +111,7 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
   const activities = new Map<string, RuntimeActivity>();
   const counters = new Map<string, RuntimeCounter>();
   const consolidates = new Map<string, RuntimeConsolidate>();
+  const branchHits = new Map<string, number>();
 
   for (const n of model.nodes) {
     if (n.type === "QUEUE") {
@@ -197,12 +209,76 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     events.sort((a, b) => a.time - b.time);
   }
 
-  function routeDownstream(fromId: string, entity: Entity, outIndex?: number) {
-    const outs = outLinks.get(fromId) ?? [];
-    if (!outs.length) return;
-    const target =
-      outIndex != null && outs[outIndex] ? outs[outIndex]! : outs[0]!;
-    enterNode(target, entity);
+  function noteBranch(arc: OutArc) {
+    branchHits.set(arc.id, (branchHits.get(arc.id) ?? 0) + 1);
+  }
+
+  function resolveWeights(outs: OutArc[]): number[] {
+    const specified = outs.map((o) =>
+      o.probability != null && o.probability > 0 ? o.probability : null,
+    );
+    let sumSpec = 0;
+    let missing = 0;
+    for (const p of specified) {
+      if (p != null) sumSpec += p;
+      else missing += 1;
+    }
+    if (missing > 0) {
+      const residual = Math.max(0, 1 - sumSpec);
+      const each = residual / missing;
+      return specified.map((p) => (p != null ? p : each));
+    }
+    if (sumSpec <= 0) return outs.map(() => 1 / outs.length);
+    return specified.map((p) => p ?? 0);
+  }
+
+  /** Sample one target when any arc has probability; else first arc. */
+  function pickTarget(fromId: string): string | null {
+    const outs = outArcs.get(fromId) ?? [];
+    if (!outs.length) return null;
+    if (outs.length === 1) {
+      noteBranch(outs[0]!);
+      return outs[0]!.to;
+    }
+
+    const anyP = outs.some((o) => o.probability != null && o.probability > 0);
+    if (!anyP) {
+      noteBranch(outs[0]!);
+      return outs[0]!.to;
+    }
+
+    const weights = resolveWeights(outs);
+    let sum = 0;
+    for (const w of weights) sum += w;
+    if (sum <= 0) {
+      noteBranch(outs[0]!);
+      return outs[0]!.to;
+    }
+
+    let r = rng() * sum;
+    for (let i = 0; i < outs.length; i++) {
+      r -= weights[i]!;
+      if (r <= 0) {
+        const chosen = outs[i]!;
+        noteBranch(chosen);
+        const fromLab = nodeById.get(fromId)?.label ?? fromId;
+        const toLab = nodeById.get(chosen.to)?.label ?? chosen.to;
+        const pLabel =
+          chosen.probability != null
+            ? `p=${chosen.probability}`
+            : `w=${weights[i]!.toFixed(2)}`;
+        record(`BRANCH "${fromLab}" → "${toLab}" (${pLabel})`);
+        return chosen.to;
+      }
+    }
+    const last = outs[outs.length - 1]!;
+    noteBranch(last);
+    return last.to;
+  }
+
+  function routeDownstream(fromId: string, entity: Entity) {
+    const target = pickTarget(fromId);
+    if (target) enterNode(target, entity);
   }
 
   function enterNode(nodeId: string, entity: Entity) {
@@ -230,7 +306,7 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
       hitConsolidate(nodeId, entity);
     } else if (node.type === "COMBI") {
       const qFallback = [...queues.values()].find((q) =>
-        (outLinks.get(q.nodeId) ?? []).includes(nodeId),
+        (outArcs.get(q.nodeId) ?? []).some((a) => a.to === nodeId),
       );
       if (qFallback) {
         touchQueue(qFallback);
@@ -269,16 +345,16 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
   }
 
   function tryStartCombisFedBy(queueId: string) {
-    const outs = outLinks.get(queueId) ?? [];
-    for (const actId of outs) {
-      const node = nodeById.get(actId);
-      if (node?.type === "COMBI") tryStartCombi(actId);
+    const outs = outArcs.get(queueId) ?? [];
+    for (const arc of outs) {
+      const node = nodeById.get(arc.to);
+      if (node?.type === "COMBI") tryStartCombi(arc.to);
     }
   }
 
   /**
    * COMBI (classic CYCLONE): start as many concurrent instances as preceding
-   * QUEUE resources allow. A second loader + idle trucks → second parallel Load.
+   * QUEUE resources allow.
    */
   function tryStartCombi(activityId: string) {
     const a = activities.get(activityId);
@@ -336,20 +412,29 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     if (a.type === "COMBI") {
       a.concurrent = Math.max(0, a.concurrent - 1);
       if (a.concurrent === 0) a.busyUntil = 0;
-      const outs = outLinks.get(ev.activityId) ?? [];
-      for (let i = 0; i < ev.entities.length; i++) {
-        const target = outs[i] ?? outs[outs.length - 1];
-        if (target) enterNode(target, ev.entities[i]!);
+      const outs = outArcs.get(ev.activityId) ?? [];
+      const anyP = outs.some((o) => o.probability != null);
+      // Deterministic COMBI multi-out: entity i → arc i (resource fan-out)
+      if (!anyP && outs.length >= ev.entities.length && ev.entities.length > 1) {
+        for (let i = 0; i < ev.entities.length; i++) {
+          const arc = outs[i] ?? outs[outs.length - 1]!;
+          noteBranch(arc);
+          enterNode(arc.to, ev.entities[i]!);
+        }
+      } else if (!anyP && outs.length > 0 && ev.entities.length === 1) {
+        noteBranch(outs[0]!);
+        enterNode(outs[0]!.to, ev.entities[0]!);
+      } else {
+        for (const ent of ev.entities) {
+          routeDownstream(ev.activityId, ent);
+        }
       }
       for (const qid of ev.fromQueues) tryStartCombisFedBy(qid);
       tryStartCombi(ev.activityId);
     } else {
       a.concurrent = Math.max(0, a.concurrent - 1);
       const entity = ev.entities[0];
-      if (entity) {
-        const outs = outLinks.get(ev.activityId) ?? [];
-        if (outs[0]) enterNode(outs[0], entity);
-      }
+      if (entity) routeDownstream(ev.activityId, entity);
     }
   }
 
@@ -374,7 +459,8 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
       cycle: c.count,
       production: Math.round(c.production * 1000) / 1000,
       rate: Math.round(rate * 1000) / 1000,
-      unitsPerHour: Math.round(toUnitsPerHour(c.production, time, model.timeUnit) * 1000) / 1000,
+      unitsPerHour:
+        Math.round(toUnitsPerHour(c.production, time, model.timeUnit) * 1000) / 1000,
     });
     routeDownstream(counterId, entity);
   }
@@ -389,7 +475,7 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     if (c.buffer.length >= c.need) {
       c.buffer.splice(0, c.need);
       const merged: Entity = { id: entitySeq++, arrivedAt: time };
-      record(`CONSOLIDATE "${c.label}" released unit`);
+      record(`CONSOLIDATE "${c.label}" released unit (need ${c.need})`);
       routeDownstream(nodeId, merged);
     }
   }
@@ -446,7 +532,11 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
       utilization: util,
       avgDuration: a.starts > 0 ? a.totalDuration / a.starts : 0,
       avgInterArrival:
-        a.starts > 1 ? a.interArrivalSum / (a.starts - 1) : simTime > 0 && a.starts === 1 ? simTime : 0,
+        a.starts > 1
+          ? a.interArrivalSum / (a.starts - 1)
+          : simTime > 0 && a.starts === 1
+            ? simTime
+            : 0,
       avgUnitsAtTask: simTime > 0 ? a.busyIntegral / simTime : 0,
     };
   });
@@ -472,6 +562,33 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     };
   });
 
+  const fromTotals = new Map<string, number>();
+  for (const l of model.links) {
+    const hits = branchHits.get(l.id) ?? 0;
+    fromTotals.set(l.from, (fromTotals.get(l.from) ?? 0) + hits);
+  }
+
+  const branchStats: BranchStat[] = model.links
+    .map((l) => {
+      const hits = branchHits.get(l.id) ?? 0;
+      const total = fromTotals.get(l.from) ?? 0;
+      const outs = outArcs.get(l.from) ?? [];
+      const isBranchNode =
+        outs.length > 1 && outs.some((o) => o.probability != null);
+      if (!isBranchNode) return null;
+      return {
+        linkId: l.id,
+        fromId: l.from,
+        toId: l.to,
+        fromLabel: nodeById.get(l.from)?.label ?? l.from,
+        toLabel: nodeById.get(l.to)?.label ?? l.to,
+        probability: l.probability ?? null,
+        timesTaken: hits,
+        empiricalShare: total > 0 ? hits / total : 0,
+      };
+    })
+    .filter(Boolean) as BranchStat[];
+
   const primaryProd = primaryCounterId
     ? (counters.get(primaryCounterId)?.production ?? 0)
     : [...counters.values()][0]?.production ?? 0;
@@ -489,6 +606,7 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     queueStats,
     activityStats,
     counterStats,
+    branchStats,
     timeline,
     productivitySeries,
     cost,

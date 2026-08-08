@@ -20,7 +20,7 @@ function ManualPage() {
             <BookOpen className="size-4 text-primary" />
             <h1 className="font-display text-base font-semibold">Neo-CYCLONE Manual</h1>
             <Badge variant="secondary" className="border-primary/25 bg-primary/10 text-primary">
-              v0.9
+              v1.1
             </Badge>
           </div>
           <Button asChild variant="outline" size="sm">
@@ -156,6 +156,36 @@ function ManualPage() {
               MicroCYCLONE / DISCO / WebCYCLONE
             </li>
           </ul>
+        </Section>
+
+        <Section title="Results, cost, sensitivity, export">
+          <ul className="list-disc space-y-1.5 pl-5 text-xs">
+            <li>
+              MicroCYCLONE-style process report, element tables, production-by-cycle, charts.
+            </li>
+            <li>
+              Optional <strong className="text-foreground">cost (USD/h)</strong> and{" "}
+              <strong className="text-foreground">Sensitivity:</strong> block in the prompt.
+            </li>
+            <li>
+              <strong className="text-foreground">Report .md / .txt</strong> download after Simulate.
+            </li>
+            <li>
+              Diagram and charts: zoom +/− and <strong className="text-foreground">PNG</strong> export.
+            </li>
+            <li>
+              Function nodes: <strong className="text-foreground">GEN</strong> on QUEUE,{" "}
+              <strong className="text-foreground">CON</strong>, probabilistic{" "}
+              <strong className="text-foreground">branch p</strong> (Results → Branches).
+            </li>
+          </ul>
+        </Section>
+
+        <Section title="Deploy">
+          <p className="text-xs">
+            Production site is built from GitHub <code className="text-foreground">main</code> (Vercel).
+            Preview work in Grok Build is only live on the public site after a successful push/deploy.
+          </p>
         </Section>
       </main>
     </div>

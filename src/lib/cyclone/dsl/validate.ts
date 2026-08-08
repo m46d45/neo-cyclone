@@ -81,6 +81,27 @@ export function validateHalpinRules(doc: NeoCycloneDocument): DslIssue[] {
     }
   }
 
+  // Probabilistic branches: sum of declared p on multi-outs should be ~1
+  const byFrom = new Map<string, typeof links>();
+  for (const l of links) {
+    const arr = byFrom.get(l.from) ?? [];
+    arr.push(l);
+    byFrom.set(l.from, arr);
+  }
+  for (const [from, outs] of byFrom) {
+    if (outs.length < 2) continue;
+    const withP = outs.filter((l) => l.probability != null);
+    if (!withP.length) continue;
+    const sum = withP.reduce((s, l) => s + (l.probability ?? 0), 0);
+    if (Math.abs(sum - 1) > 0.05) {
+      issues.push({
+        level: "warning",
+        code: "branch_p_sum",
+        message: `Outgoing probabilities from "${from}" sum to ${sum.toFixed(3)} (expect ~1.0); engine will normalize`,
+      });
+    }
+  }
+
   const counters = nodes.filter((n) => n.type === "COUNTER");
   if (counters.length === 0) {
     issues.push({

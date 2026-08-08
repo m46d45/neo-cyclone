@@ -1,7 +1,7 @@
 /**
  * Teaching examples for Neo-CYCLONE (Halpin / MicroCYCLONE tradition).
  * Each entry is a ready-to-paste prompt. GEN / CON / probabilistic branch
- * are noted where classic models use them; the engine may not yet support all.
+ * are noted where classic models use them (GEN, CON, branch p supported).
  *
  * Source orientation: Halpin & Riggs, Planning and Analysis of Construction
  * Operations (Wiley, 1992) and related CYCLONE teaching examples — simplified
@@ -80,13 +80,13 @@ ReturnToPaver: normal 11, 2`,
   {
     id: "concrete-crane",
     title: "3. Concrete placing (crane + trucks)",
-    goal: "Shared Load/Spot; crane swing cycle. Classic GEN/CON scale is deferred to Phase B.",
-    source: "Halpin concrete / crane–bucket family (simplified without GEN/CON for now).",
-    features: ["COMBI SpotLoad", "crane cycle", "cost", "note: GEN/CON later"],
+    goal: "Shared Load/Spot; crane swing cycle. See also GEN and CON Scale preset for GEN/CON.",
+    source: "Halpin concrete / crane–bucket family (simplified 1:1 pour; GEN/CON in Example 6).",
+    features: ["COMBI SpotLoad", "crane cycle", "cost"],
     prompt: `# Example 3 — Concrete placing (crane + trucks)
 # Simplified: one truck load = one crane pour cycle.
 # Classic MicroCYCLONE often uses GEN (truck → N bucket loads) + CON (N → truck leaves).
-# That pair is planned for a later engine phase — not required in this prompt.
+# Use Example 6 (GEN and CON Scale) to exercise that pair.
 
 Trucks: SpotLoad → WaitPour → Leave
 Crane: SpotLoad → Swing → Pour → ReturnSwing
@@ -166,6 +166,50 @@ MortarPrep: normal 3, 0.5
 SupplyBrick: normal 2.5, 0.4
 MoveScaffold: tri 8, 12, 18`,
   },
+  {
+    id: "inspect-rework",
+    title: "6. Inspect and rework (branch p)",
+    goal: "Probabilistic arc after inspection: pass vs rework.",
+    source: "Halpin stochastic branch / quality teaching examples (simplified).",
+    features: ["probability branch", "rework loop", "empirical share"],
+    prompt: `# Example 6 — Inspect and rework
+# After Inspect: p=0.9 pass → finished unit; p=0.1 rework then re-enter crew queue.
+# Branch probabilities are set in the model (diagram shows p=…).
+
+Crew: Inspect → (pass / rework)
+1 crew, 1 unit
+
+Durations:
+Inspect: tri 4, 5, 7
+Rework: tri 6, 8, 12
+
+# Notes: Draw Model then Simulate. Results → Branches compares declared vs empirical p.
+`,
+  },
+  {
+    id: "gen-con-scale",
+    title: "7. GEN and CON scale",
+    goal: "GENERATE multiplies arrivals; CONSOLIDATE reunites N units into one production unit.",
+    source: "Halpin GEN/CON function-node teaching (kit / bucket-scale simplified).",
+    features: ["GEN 4", "CON 4", "independent function nodes"],
+    prompt: `# Example 7 — GEN and CON scale
+# After Setup Batch → Prepare, Parts Pool multiplies each arrival into 4 (GEN 4).
+# Process Unit works each part; Assemble Kit (CON 4) releases one kit.
+
+Crew: SetupBatch → Prepare → ProcessUnit → AssembleKit → Return
+1 crew, 1 kit
+
+Durations:
+SetupBatch: tri 2, 3, 4
+Prepare: const 1
+ProcessUnit: tri 1.5, 2, 3
+Return: const 0.5
+
+# Prefer loading network via Example dropdown "GEN and CON Scale" if listed,
+# or Draw Model — AI should place QUEUE generate:4 and CONSOLIDATE consolidate:4.
+`,
+  },
+
 ];
 
 export function getExampleById(id: string): ExamplePrompt | undefined {
