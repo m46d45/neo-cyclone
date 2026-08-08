@@ -14,6 +14,7 @@ import {
   GENERAL_TEMPLATE,
   PRODUCT_TAGLINE,
 } from "@/lib/cyclone/prompt-template";
+import { parseCostAndSensitivity, applyCostsToModel } from "@/lib/cyclone/sensitivity";
 import { t } from "@/lib/cyclone/agent/i18n";
 
 export function AIAssist() {
@@ -33,6 +34,13 @@ export function AIAssist() {
     if (ai.ok && ai.dsl) {
       const checked = parseDsl(ai.dsl);
       if (checked.ok && applyAgentDraft(ai.dsl, "draft")) {
+        // Attach Cost USD/h from the prompt (DSL may omit them).
+        const { costs } = parseCostAndSensitivity(prompt);
+        if (Object.keys(costs).length) {
+          const st = useCycloneStore.getState();
+          st.setModel(applyCostsToModel(st.model, costs));
+          st.markModelReady(true);
+        }
         return true;
       }
     }
