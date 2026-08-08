@@ -319,9 +319,9 @@ export function SimulationResults({
             </p>
           )}
           {series.length > 1 && (
-            <div className="h-56 w-full min-w-0">
+            <div className="h-[28rem] w-full min-w-0 sm:h-[32rem]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={series} margin={{ top: 12, right: 52, left: 8, bottom: 22 }}>
+                <LineChart data={series} margin={{ top: 16, right: 56, left: 12, bottom: 28 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                   <XAxis
                     dataKey="cycle"
@@ -330,24 +330,26 @@ export function SimulationResults({
                     allowDecimals={false}
                     interval="preserveStartEnd"
                     tickCount={xMax > 200 ? 11 : 9}
-                    tick={{ fontSize: 10 }}
+                    tick={{ fontSize: 11 }}
                     label={{
                       value: "Cycle #",
                       position: "insideBottom",
-                      offset: -12,
-                      style: { fontSize: 10, fill: "var(--muted-foreground)" },
+                      offset: -14,
+                      style: { fontSize: 11, fill: "var(--muted-foreground)" },
                     }}
                   />
                   <YAxis
                     domain={[0, "auto"]}
                     allowDecimals={false}
-                    tick={{ fontSize: 10 }}
-                    width={42}
+                    tick={{ fontSize: 11 }}
+                    width={52}
+                    tickCount={10}
                     label={{
                       value: `${model.productionUnit}/h`,
                       angle: -90,
                       position: "insideLeft",
-                      style: { fontSize: 10, fill: "var(--muted-foreground)" },
+                      offset: 4,
+                      style: { fontSize: 11, fill: "var(--muted-foreground)" },
                     }}
                   />
                   <Tooltip
