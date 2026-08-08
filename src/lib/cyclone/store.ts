@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { runCyclone } from "./engine";
-import { runSensitivity } from "./sensitivity";
+import { runSensitivity, parseCostAndSensitivity, applyCostsToModel } from "./sensitivity";
 import { parseDsl, serializeDsl } from "./dsl";
 import { cloneModel, earthmovingModel, PRESET_MODELS } from "./models/presets";
 import type { CycloneModel, CycloneNode, SimResult, SensitivityResult } from "./types";
@@ -127,7 +127,15 @@ export const useCycloneStore = create<CycloneStore>((set, get) => ({
   setMaxCycles: (maxCycles) => set({ maxCycles: Math.max(1, Math.floor(maxCycles)) }),
 
   run: () => {
-    const { model, seed, maxTime, maxCycles } = get();
+    let { model, seed, maxTime, maxCycles, agent } = get();
+    // Re-apply Cost USD/h from prompt so costs survive DSL round-trip.
+    if (agent.brief) {
+      const { costs } = parseCostAndSensitivity(agent.brief);
+      if (Object.keys(costs).length) {
+        model = applyCostsToModel(model, costs);
+        set({ model });
+      }
+    }
     set({ isRunning: true, lastError: null, sensitivityResult: null });
     try {
       const result = runCyclone(model, { seed, maxTime, maxCycles });
