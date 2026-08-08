@@ -128,7 +128,7 @@ Never draw undirected segments: every arc is a **panah** (arrow).
 | **CON n** | Triangle **`CON n`** | `type: CONSOLIDATE`, `consolidate: n` (n ≥ 2) | Collect n units → release 1 (time 0) |
 
 - GEN and CON are **independent** — a model may use one, both, or neither.  
-- Classic pair: GEN multiplies work units; CON reunites them for one production unit (see Example *GEN and CON Scale*).  
+- Classic pair: GEN multiplies work units; CON reunites them for one production unit (see Example 3 Concrete placing).  
 - Do **not** put `probability` on COMBI multi-out used only for resource return fan-out.
 
 ### 6.4 Priority (shared resources)
