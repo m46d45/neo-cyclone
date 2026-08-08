@@ -9,7 +9,6 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-  Legend,
 } from "recharts";
 import { useCycloneStore } from "@/lib/cyclone/store";
 import { formatNum, formatPct } from "@/lib/utils";
@@ -74,7 +73,6 @@ export function ResultsPanel() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* —— Process Report (Halpin / MicroCYCLONE summary) —— */}
         <section className="space-y-2">
           <h3 className="font-display text-sm font-semibold text-foreground">Process Report</h3>
           <p className="text-[11px] text-muted-foreground">
@@ -125,7 +123,6 @@ export function ResultsPanel() {
             </TabsTrigger>
           </TabsList>
 
-          {/* —— Report by Element —— */}
           <TabsContent value="element" className="mt-3 space-y-4">
             <div>
               <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -242,26 +239,65 @@ export function ResultsPanel() {
             )}
           </TabsContent>
 
-          {/* —— Production by Cycle —— */}
           <TabsContent value="cycle" className="mt-3 space-y-3">
             <p className="text-[11px] text-muted-foreground">
-              Cycle number, simulation time when the cycle completed, and cumulative productivity
-              (startup → steady state).
+              <strong className="text-foreground">Units per hour</strong> by cycle — use this to see
+              startup vs <strong className="text-foreground">steady state</strong> (low variation).
+              Read the productivity level once the curve stabilizes.
             </p>
+            {series.length > 1 && (
+              <div className="h-52 w-full min-w-0">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={series} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis
+                      dataKey="cycle"
+                      tick={{ fontSize: 10 }}
+                      label={{
+                        value: "Cycle #",
+                        position: "insideBottom",
+                        offset: -2,
+                        style: { fontSize: 10, fill: "var(--muted-foreground)" },
+                      }}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 10 }}
+                      label={{
+                        value: `${model.productionUnit}/h`,
+                        angle: -90,
+                        position: "insideLeft",
+                        style: { fontSize: 10, fill: "var(--muted-foreground)" },
+                      }}
+                    />
+                    <Tooltip
+                      formatter={(v) => [`${v}`, "Units / hour"]}
+                      labelFormatter={(c) => `Cycle ${c}`}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="unitsPerHour"
+                      stroke="var(--chart-2)"
+                      strokeWidth={2}
+                      dot={{ r: 2 }}
+                      name="Units / hour"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
             <div className="max-h-64 overflow-auto rounded-[var(--radius-sm)] border border-border">
               <table className="w-full text-left text-xs">
                 <thead className="sticky top-0 border-b border-border bg-muted/90 text-[10px] uppercase text-muted-foreground backdrop-blur">
                   <tr>
                     <th className="px-2 py-1.5 font-medium">Cycle #</th>
                     <th className="px-2 py-1.5 font-medium">Sim time ({unit})</th>
-                    <th className="px-2 py-1.5 font-medium">Cumulative production</th>
-                    <th className="px-2 py-1.5 font-medium">Cumulative units/hour</th>
+                    <th className="px-2 py-1.5 font-medium">Units / hour</th>
                   </tr>
                 </thead>
                 <tbody>
                   {cycleTable.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="px-2 py-3 text-center text-muted-foreground">
+                      <td colSpan={3} className="px-2 py-3 text-center text-muted-foreground">
                         No cycles completed
                       </td>
                     </tr>
@@ -270,47 +306,17 @@ export function ResultsPanel() {
                       <tr key={row.cycle} className="border-b border-border/60">
                         <td className="px-2 py-1 tabular-nums">{row.cycle}</td>
                         <td className="px-2 py-1 tabular-nums">{formatNum(row.t)}</td>
-                        <td className="px-2 py-1 tabular-nums">{formatNum(row.production)}</td>
-                        <td className="px-2 py-1 tabular-nums">{formatNum(row.unitsPerHour)}</td>
+                        <td className="px-2 py-1 tabular-nums font-medium text-foreground">
+                          {formatNum(row.unitsPerHour)}
+                        </td>
                       </tr>
                     ))
                   )}
                 </tbody>
               </table>
             </div>
-            {series.length > 1 && (
-              <div className="h-44 w-full min-w-0">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={series} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis dataKey="cycle" tick={{ fontSize: 10 }} />
-                    <YAxis tick={{ fontSize: 10 }} />
-                    <Tooltip />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="unitsPerHour"
-                      stroke="var(--chart-2)"
-                      strokeWidth={2}
-                      dot={false}
-                      name="Units / hour (cumulative)"
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="production"
-                      stroke="var(--chart-1)"
-                      strokeWidth={1.5}
-                      strokeDasharray="4 3"
-                      dot={false}
-                      name="Cumulative production"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            )}
           </TabsContent>
 
-          {/* —— Charts —— */}
           <TabsContent value="charts" className="mt-3 space-y-4">
             <div>
               <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
