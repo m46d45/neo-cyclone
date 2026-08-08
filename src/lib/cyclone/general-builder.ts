@@ -376,19 +376,22 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
     });
   };
 
+  // Resolved count-at task for production resource (COUNTER insertion point)
+  const prodCountAtLab = resolveCounterAfter(
+    spec.counter ?? { afterLabel: null, amount: 1, unit: "unit" },
+    prodRes.itinerary,
+  );
+  const prodCountAtKey = prodCountAtLab ? normLabel(prodCountAtLab) : null;
+
   for (const br of fn.branches) {
     const afterKey = normLabel(br.afterLabel);
     const fromId = activityId.get(afterKey);
     if (!fromId) continue;
 
-    // If this branch is the production "return fork" (after Dump etc.),
-    // production already linked after → counter; put p-arcs on the COUNTER.
-    const afterIsProdLast = (() => {
-      const prodIt = prodRes.itinerary;
-      if (!prodIt.length) return false;
-      return normLabel(prodIt[prodIt.length - 1]!) === afterKey;
-    })();
-    const forkFrom = afterIsProdLast ? counterId : fromId;
+    // If branch is "After Dump" and Counter after: Dump, fork FROM the COUNTER
+    // so every unit is counted first, then Return vs Breakdown is sampled.
+    const afterIsCountAt = prodCountAtKey != null && afterKey === prodCountAtKey;
+    const forkFrom = afterIsCountAt ? counterId : fromId;
 
     for (const arm of br.arms) {
       let toId = activityId.get(normLabel(arm.toLabel));
@@ -398,11 +401,11 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
       }
       if (!toId) continue;
 
-      if (/^(pass|ok|done|accept|good|finish)/i.test(arm.toLabel) && !afterIsProdLast) {
+      if (/^(pass|ok|done|accept|good|finish)/i.test(arm.toLabel) && !afterIsCountAt) {
         addLinkP(fromId, counterId, arm.p);
       } else {
         addLinkP(forkFrom, toId, arm.p);
-        const hasOut = links.some((l) => l.from === toId && l.to !== toId);
+        const hasOut = links.some((l) => l.from === toId);
         if (!hasOut) {
           addLink(toId, homeQueue.get(prodRes.id)!);
         }
