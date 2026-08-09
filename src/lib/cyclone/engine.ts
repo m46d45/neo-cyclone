@@ -183,6 +183,8 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     production: number;
     rate: number;
     unitsPerHour: number;
+    byCounter?: Record<string, number>;
+    hitCounter?: string;
   }[] = [{ t: 0, cycle: 0, production: 0, rate: 0, unitsPerHour: 0 }];
 
   const primaryCounterId = model.nodes.find((n) => n.type === "COUNTER")?.id;
@@ -623,6 +625,11 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     );
     const totProd = totalProduction();
     const rate = time > 0 ? totProd / time : 0;
+    const byCounter: Record<string, number> = {};
+    for (const cc of counters.values()) {
+      byCounter[cc.label] =
+        Math.round(toUnitsPerHour(cc.production, time, model.timeUnit) * 1000) / 1000;
+    }
     // Cycle index = sum of all counter hits (multi-counter teaching)
     productivitySeries.push({
       t: Math.round(time * 100) / 100,
@@ -631,6 +638,8 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
       rate: Math.round(rate * 1000) / 1000,
       unitsPerHour:
         Math.round(toUnitsPerHour(totProd, time, model.timeUnit) * 1000) / 1000,
+      byCounter,
+      hitCounter: c.label,
     });
     routeDownstream(counterId, entity);
   }
@@ -757,6 +766,29 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
   const primaryProd = totalProduction();
   const cost = buildCostReport(model, simTime, primaryProd);
 
+  // Home queues (initial fleet) → resource idleness / waste
+  const resourceIdleStats = queueStats
+    .filter((q) => q.initialUnits > 0)
+    .map((q) => {
+      const n = Math.max(1, q.initialUnits);
+      const avgIdle = q.avgLength;
+      // Average fraction of the fleet sitting in home QUEUE
+      let idlePct = (avgIdle / n) * 100;
+      // Single-server: occupied share of idle QUEUE is cleaner
+      if (n === 1) idlePct = q.percentOccupied * 100;
+      idlePct = Math.max(0, Math.min(100, idlePct));
+      const busyPct = Math.max(0, Math.min(100, 100 - idlePct));
+      const resourceLabel = q.label.replace(/\s+Idle\s*$/i, "").trim() || q.label;
+      return {
+        resourceLabel,
+        homeQueueLabel: q.label,
+        n: q.initialUnits,
+        idlePct: Math.round(idlePct * 10) / 10,
+        busyPct: Math.round(busyPct * 10) / 10,
+        avgIdleUnits: Math.round(avgIdle * 1000) / 1000,
+      };
+    });
+
   return {
     modelId: model.id,
     modelName: model.name,
@@ -771,6 +803,7 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     branchEvents,
     timeline,
     productivitySeries,
+    resourceIdleStats,
     cost,
   };
 }

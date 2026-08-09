@@ -3,6 +3,7 @@ import {
   BarChart,
   CartesianGrid,
   LabelList,
+  Legend,
   Line,
   LineChart,
   ReferenceDot,
@@ -29,6 +30,8 @@ type CyclePoint = {
   production: number;
   rate: number;
   unitsPerHour: number;
+  byCounter?: Record<string, number>;
+  hitCounter?: string;
 };
 
 function detectSteadyState(series: CyclePoint[]): {
@@ -100,12 +103,57 @@ export function SimulationResults({
   unit: string;
 }) {
   const primary = result.counterStats[0];
+  const multiCounter = result.counterStats.length > 1;
+  const totalProduction = result.counterStats.reduce((s, c) => s + c.production, 0);
+  const totalCount = result.counterStats.reduce((s, c) => s + c.count, 0);
+  const lastSeries = result.productivitySeries.at(-1);
+  const totalUnitsPerHour = lastSeries?.unitsPerHour ?? primary?.unitsPerHour ?? 0;
+  const avgUnitsPerCycle =
+    totalCount > 0 ? totalProduction / totalCount : primary?.unitsPerCycle ?? 0;
+
   const utilData = result.activityStats.map((a) => ({
     name: a.label,
     util: Math.round(a.utilization * 1000) / 10,
     starts: a.starts,
   }));
-  const series = result.productivitySeries as CyclePoint[];
+
+  const idleStats = result.resourceIdleStats ?? [];
+  const idleData = idleStats.map((r) => ({
+    name: r.resourceLabel,
+    idle: r.idlePct,
+    busy: r.busyPct,
+    n: r.n,
+  }));
+
+  const COUNTER_COLORS = [
+    "#1a1a1a",
+    "#8b6914",
+    "#4a7c59",
+    "#3d5a80",
+    "#9b2226",
+    "#6a4c93",
+  ];
+  const counterLineKeys = multiCounter
+    ? result.counterStats.map((c, i) => ({
+        key: `ctr_${i}`,
+        label: c.label.replace(/^Prod\s+/i, ""),
+        full: c.label,
+        color: COUNTER_COLORS[i % COUNTER_COLORS.length]!,
+      }))
+    : [];
+
+  const series = (result.productivitySeries as CyclePoint[]).map((p) => {
+    const row: CyclePoint & { [k: string]: number | string | undefined | Record<string, number> } = {
+      ...p,
+    };
+    if (multiCounter && p.byCounter) {
+      for (const ck of counterLineKeys) {
+        const v = p.byCounter[ck.full] ?? p.byCounter[ck.label];
+        if (v != null) row[ck.key] = v;
+      }
+    }
+    return row;
+  });
   const cycleTable = series;
   const xMax = Math.max(
     result.maxCyclesRequested || 0,
@@ -141,20 +189,23 @@ export function SimulationResults({
         </p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
           <Stat label="Run length" value={formatNum(result.simTime)} unit={unit} />
-          <Stat label="Number of cycles" value={String(result.cyclesCompleted)} />
           <Stat
-            label="Units per cycle"
-            value={primary ? formatNum(primary.unitsPerCycle) : "—"}
+            label={multiCounter ? "Production events (all counters)" : "Number of cycles"}
+            value={String(result.cyclesCompleted)}
+          />
+          <Stat
+            label="Units per event"
+            value={totalCount ? formatNum(avgUnitsPerCycle) : "—"}
             unit={model.productionUnit}
           />
           <Stat
             label="Total production"
-            value={primary ? formatNum(primary.production) : "—"}
+            value={totalCount ? formatNum(totalProduction) : "—"}
             unit={model.productionUnit}
           />
           <Stat
             label="Units produced per hour"
-            value={primary ? formatNum(primary.unitsPerHour) : "—"}
+            value={totalCount ? formatNum(totalUnitsPerHour) : "—"}
             unit={`${model.productionUnit}/h`}
           />
           <Stat
@@ -163,7 +214,51 @@ export function SimulationResults({
             unit={unit}
           />
         </div>
-        {primary && (
+        {multiCounter && (
+          <div className="overflow-x-auto rounded-[var(--radius-sm)] border border-primary/20 bg-primary/5 px-2 py-2">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              By counter (compare zones / products)
+            </p>
+            <table className="w-full min-w-[360px] text-left text-xs">
+              <thead className="text-[10px] uppercase text-muted-foreground">
+                <tr>
+                  <th className="px-1.5 py-0.5 font-medium">Counter</th>
+                  <th className="px-1.5 py-0.5 font-medium">Hits</th>
+                  <th className="px-1.5 py-0.5 font-medium">Production</th>
+                  <th className="px-1.5 py-0.5 font-medium">Share</th>
+                  <th className="px-1.5 py-0.5 font-medium">Units/h</th>
+                </tr>
+              </thead>
+              <tbody>
+                {result.counterStats.map((c) => (
+                  <tr key={c.nodeId} className="border-t border-border/50">
+                    <td className="px-1.5 py-1 font-medium text-foreground">{c.label}</td>
+                    <td className="px-1.5 py-1 tabular-nums">{c.count}</td>
+                    <td className="px-1.5 py-1 tabular-nums">
+                      {formatNum(c.production)} {model.productionUnit}
+                    </td>
+                    <td className="px-1.5 py-1 tabular-nums">
+                      {totalProduction > 0
+                        ? formatPct(c.production / totalProduction)
+                        : "—"}
+                    </td>
+                    <td className="px-1.5 py-1 tabular-nums">{formatNum(c.unitsPerHour)}</td>
+                  </tr>
+                ))}
+                <tr className="border-t border-border font-semibold">
+                  <td className="px-1.5 py-1">Total</td>
+                  <td className="px-1.5 py-1 tabular-nums">{totalCount}</td>
+                  <td className="px-1.5 py-1 tabular-nums">
+                    {formatNum(totalProduction)} {model.productionUnit}
+                  </td>
+                  <td className="px-1.5 py-1">100%</td>
+                  <td className="px-1.5 py-1 tabular-nums">{formatNum(totalUnitsPerHour)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
+        {primary && !multiCounter && (
           <p className="text-[11px] text-muted-foreground">
             First unit at t = {formatNum(primary.firstPassageTime)} {unit} · avg time between units ={" "}
             {formatNum(primary.avgTimeBetweenUnits)} {unit}
@@ -309,9 +404,16 @@ export function SimulationResults({
 
         <TabsContent value="cycle" className="mt-3 space-y-3">
           <p className="text-[11px] text-muted-foreground">
-            <strong className="text-foreground">Units per hour</strong> by cycle. Steady state is
-            declared when consecutive changes stay under <strong className="text-foreground">5%</strong>{" "}
-            for at least {SS_MIN_STREAK} consecutive cycles (5% rule; teaching heuristic). The dark gold dashed line is the steady-state productivity level.
+            <strong className="text-foreground">Units per hour</strong> by production event (cycle index).
+            {multiCounter ? (
+              <>
+                {" "}
+                <strong className="text-foreground">Bold total</strong> = all counters combined; other
+                lines = cumulative units/h for each counter (same X so you can compare zones).
+              </>
+            ) : null}{" "}
+            Steady state (total): consecutive changes under <strong className="text-foreground">5%</strong>{" "}
+            for ≥{SS_MIN_STREAK} cycles. Dark gold dashed = steady-state level.
             {detourEvents.length > 0 && (
               <>
                 {" "}
@@ -451,12 +553,33 @@ export function SimulationResults({
                     type="monotone"
                     dataKey="unitsPerHour"
                     stroke="var(--chart-2)"
-                    strokeWidth={2}
+                    strokeWidth={2.5}
                     dot={series.length > 120 ? false : { r: 2 }}
                     activeDot={{ r: 4 }}
-                    name="Units / hour"
+                    name={multiCounter ? "Total (all counters)" : "Units / hour"}
                     isAnimationActive={false}
                   />
+                  {counterLineKeys.map((ck) => (
+                    <Line
+                      key={ck.key}
+                      type="monotone"
+                      dataKey={ck.key}
+                      stroke={ck.color}
+                      strokeWidth={1.75}
+                      strokeDasharray="4 3"
+                      dot={false}
+                      name={ck.label}
+                      isAnimationActive={false}
+                      connectNulls
+                    />
+                  ))}
+                  {multiCounter && (
+                    <Legend
+                      wrapperStyle={{ fontSize: 11 }}
+                      verticalAlign="top"
+                      height={28}
+                    />
+                  )}
                 </LineChart>
               </ResponsiveContainer>
             </ChartDownloadFrame>
@@ -529,8 +652,43 @@ export function SimulationResults({
         </TabsContent>
 
         <TabsContent value="charts" className="mt-3 space-y-4">
+          <p className="text-[11px] text-muted-foreground">
+            <strong className="text-foreground">Resource idleness</strong> ≈ waste at home QUEUE
+            (fleet share idle).{" "}
+            <strong className="text-foreground">% time in operation</strong> = activity busy share
+            (COMBI/NORMAL).
+          </p>
+          {idleData.length > 0 && (
+            <ChartDownloadFrame
+              title="Resource idleness (waste at home)"
+              filename="chart_resource_idleness"
+              chartClassName="h-56"
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={idleData} margin={{ top: 18, right: 8, left: 0, bottom: 4 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} unit="%" domain={[0, 100]} />
+                  <Tooltip
+                    formatter={(v, name) => [`${v}%`, name === "idle" ? "Idle" : "Busy"]}
+                    labelFormatter={(l) => String(l)}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Bar dataKey="idle" fill="#c41e3a" name="Idle %" stackId="a" radius={[0, 0, 0, 0]}>
+                    <LabelList
+                      dataKey="idle"
+                      position="center"
+                      formatter={(v: number | string) => `${v}%`}
+                      style={{ fontSize: 10, fill: "#fff" }}
+                    />
+                  </Bar>
+                  <Bar dataKey="busy" fill="#4a7c59" name="Busy %" stackId="a" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartDownloadFrame>
+          )}
           <ChartDownloadFrame
-            title="% time in operation"
+            title="% time in operation (activities)"
             filename="chart_time_in_operation"
             chartClassName="h-52"
           >

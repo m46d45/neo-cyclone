@@ -193,6 +193,25 @@ export interface SimResult {
     production: number;
     rate: number;
     unitsPerHour: number;
+    /**
+     * When multiple COUNTERs: cumulative units/hour for each counter label
+     * at this global production event (same x = total cycle index).
+     */
+    byCounter?: Record<string, number>;
+    /** Which counter fired this event (label). */
+    hitCounter?: string;
+  }[];
+  /**
+   * Home-queue idleness (waste teaching): fraction of fleet time idle at home.
+   * idlePct ≈ avgLength / n × 100 for multi-unit; percentOccupied×100 for n=1.
+   */
+  resourceIdleStats: {
+    resourceLabel: string;
+    homeQueueLabel: string;
+    n: number;
+    idlePct: number;
+    busyPct: number;
+    avgIdleUnits: number;
   }[];
   cost?: CostReport;
 }
