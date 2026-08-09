@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   DIST_TABLE,
   GENERAL_TEMPLATE,
+  PRODUCT_DEDICATION,
   PRODUCT_TAGLINE,
 } from "@/lib/cyclone/prompt-template";
 
@@ -19,7 +20,7 @@ function ManualPage() {
             <BookOpen className="size-4 text-primary" />
             <h1 className="font-display text-base font-semibold">Neo-CYCLONE Manual</h1>
             <Badge variant="secondary" className="border-primary/25 bg-primary/10 text-primary">
-              v1.4
+              v1.4.1
             </Badge>
           </div>
           <Button asChild variant="outline" size="sm">
@@ -33,9 +34,12 @@ function ManualPage() {
       </header>
 
       <main className="mx-auto max-w-3xl space-y-10 px-4 py-8 text-sm leading-relaxed text-muted-foreground">
-        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">
-          {PRODUCT_TAGLINE}
-        </p>
+        <div>
+          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">
+            {PRODUCT_TAGLINE}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">{PRODUCT_DEDICATION}</p>
+        </div>
 
         <section>
           <p className="text-[10px] font-semibold uppercase tracking-wider text-primary/80">
@@ -49,8 +53,9 @@ function ManualPage() {
           <h3 className="font-display text-base font-semibold text-foreground">1.1 Purpose</h3>
           <div className="mt-2 space-y-3 text-[15px] leading-[1.7]">
             <p>
-              Neo-CYCLONE is an <strong className="text-foreground">educational web app</strong> for
-              modeling and simulating <strong className="text-foreground">repetitive construction
+              Neo-CYCLONE is <strong className="text-foreground">AI-Assisted Construction Operation
+              Simulation</strong> — an <strong className="text-foreground">educational web app</strong>{" "}
+              for modeling and simulating <strong className="text-foreground">repetitive construction
               operations</strong> in the spirit of Professor{" "}
               <strong className="text-foreground">Daniel W. Halpin’s CYCLONE</strong>{" "}
               (<em>CYCLic Operations NEtwork</em>).
@@ -92,7 +97,8 @@ function ManualPage() {
           </h3>
           <div className="mt-2 space-y-3 text-[15px] leading-[1.7]">
             <p className="rounded-[var(--radius-md)] border border-primary/25 bg-primary/5 px-3 py-2.5 text-[14px] text-foreground">
-              <strong>In practice:</strong> prompt-first → <strong>Draw Model</strong> → check
+              <strong>Product term:</strong> {PRODUCT_TAGLINE}. <strong>Dedication:</strong>{" "}
+              {PRODUCT_DEDICATION}. In practice: prompt-first → <strong>Draw Model</strong> → check
               network → <strong>Simulate</strong>. Examples and Format Prompt are ordinary structured
               text, not magic. See Chapter 8 for the literature behind this tradition.
             </p>
@@ -190,7 +196,6 @@ function ManualPage() {
           </ul>
         </Section>
 
-        {/* —— References —— */}
         <section>
           <p className="text-[10px] font-semibold uppercase tracking-wider text-primary/80">
             Literature
@@ -203,172 +208,14 @@ function ManualPage() {
             Selected works on <strong className="text-foreground">CYCLONE</strong>,{" "}
             <strong className="text-foreground">MicroCYCLONE</strong>, and applications from{" "}
             <strong className="text-foreground">Daniel W. Halpin</strong>, his students, and
-            collaborators. Educational list — not exhaustive.
+            collaborators. Educational list — not exhaustive. Full list in{" "}
+            <code className="text-foreground">docs/USER_MANUAL.md</code>.
           </p>
-
-          <h3 className="font-display text-sm font-semibold text-foreground">
-            Foundations — CYCLONE methodology
-          </h3>
-          <ol className="mt-2 list-decimal space-y-2 pl-5 text-xs leading-relaxed">
-            <li>
-              <strong className="text-foreground">Halpin, D. W.</strong> (1973).{" "}
-              <em>An Investigation of the Use of Simulation Networks for Modeling Construction
-              Operations</em>. Ph.D. dissertation, University of Illinois at Urbana–Champaign.
-            </li>
-            <li>
-              <strong className="text-foreground">Halpin, D. W.</strong> (1977). “CYCLONE: Method for
-              Modeling of Job Site Processes.” <em>Journal of the Construction Division</em>, ASCE,
-              103(3), 489–499.
-            </li>
-            <li>
-              <strong className="text-foreground">Halpin, D. W., & Riggs, L. S.</strong> (1992).{" "}
-              <em>Planning and Analysis of Construction Operations</em>. New York: John Wiley &
-              Sons. ISBN 0-471-55510-X.
-            </li>
-          </ol>
-
-          <h3 className="font-display mt-5 text-sm font-semibold text-foreground">
-            MicroCYCLONE
-          </h3>
-          <ol className="mt-2 list-decimal space-y-2 pl-5 text-xs leading-relaxed" start={4}>
-            <li>
-              <strong className="text-foreground">Lluch, J., & Halpin, D. W.</strong> (1982).
-              “Construction Operations and Microcomputers.” <em>Journal of the Construction
-              Division</em>, ASCE, 108(1), 129–145.
-            </li>
-            <li>
-              <strong className="text-foreground">Halpin, D. W.</strong> (1990). <em>MicroCYCLONE
-              User’s Manual</em> / <em>System Manual</em>. Division of Construction Engineering and
-              Management, Purdue University, West Lafayette, IN.
-            </li>
-            <li>
-              <strong className="text-foreground">Halpin, D. W.</strong> (1992). <em>MicroCYCLONE Users
-              Manual for Construction Operations</em>. Learning Systems, Inc. / Purdue University.
-            </li>
-          </ol>
-
-          <h3 className="font-display mt-5 text-sm font-semibold text-foreground">
-            DISCO (Huang & Halpin)
-          </h3>
-          <ol className="mt-2 list-decimal space-y-2 pl-5 text-xs leading-relaxed" start={7}>
-            <li>
-              <strong className="text-foreground">Huang, R.-Y., & Halpin, D. W.</strong> (1993).
-              “Dynamic Interface Simulation for Construction Operations (DISCO).” <em>Proceedings of
-              the 10th ISARC</em>, Houston, 503–510.
-            </li>
-            <li>
-              <strong className="text-foreground">Huang, R.-Y., & Halpin, D. W.</strong> (1994).
-              “Visual Construction Operation Simulation: The DISCO Approach.” <em>Microcomputers in
-              Civil Engineering</em>, 9(3), 175–184.
-            </li>
-            <li>
-              <strong className="text-foreground">Huang, R.-Y.</strong> (1994). <em>A Graphical-Based
-              Method for Transient Evaluation of Construction Operations</em>. Ph.D. dissertation,
-              Purdue University (advisor: D. W. Halpin).
-            </li>
-            <li>
-              <strong className="text-foreground">Huang, R.-Y., & Halpin, D. W.</strong> (1995).
-              “Graphical-Based Method for Transient Evaluation of Construction Operations.”{" "}
-              <em>Journal of Construction Engineering and Management</em>, ASCE, 121(2), 222–229.
-            </li>
-            <li>
-              <strong className="text-foreground">Huang, R.-Y., Grigoriadis, A. M., & Halpin, D.
-              W.</strong> (1994). “Simulation of Cable-Stayed Bridges Using DISCO.” <em>Winter
-              Simulation Conference</em>, 1130–1136.
-            </li>
-          </ol>
-
-          <h3 className="font-display mt-5 text-sm font-semibold text-foreground">
-            PROSIDYC · COST · WebCYCLONE
-          </h3>
-          <ol className="mt-2 list-decimal space-y-2 pl-5 text-xs leading-relaxed" start={12}>
-            <li>
-              <strong className="text-foreground">Halpin, D. W., & Martinez, L.-H.</strong> (1999).
-              “Real World Applications of Construction Process Simulation.” <em>Winter Simulation
-              Conference</em>, 956–962. (PROSIDYC — Dragados / Purdue.)
-            </li>
-            <li>
-              <strong className="text-foreground">Cheng, T.-M., Wu, H.-T., & Tseng, Y.-W.</strong>{" "}
-              (2000). “Construction Operation Simulation Tool — COST.” <em>17th ISARC</em>, 999–1004.
-            </li>
-            <li>
-              <strong className="text-foreground">Halpin, D. W., Jen, H., & Kim, J.</strong> (2003).
-              “A Construction Process Simulation Web Service.” <em>Winter Simulation Conference</em>,
-              Vol. 2, New Orleans, 1503–1509. (WebCYCLONE.)
-            </li>
-          </ol>
-
-          <h3 className="font-display mt-5 text-sm font-semibold text-foreground">
-            Purdue / Halpin-circle analysis papers
-          </h3>
-          <ol className="mt-2 list-decimal space-y-2 pl-5 text-xs leading-relaxed" start={15}>
-            <li>
-              <strong className="text-foreground">AbouRizk, S. M., & Halpin, D. W.</strong> (1990).
-              “Probabilistic Simulation Studies for Repetitive Construction Processes.” <em>J. Constr.
-              Eng. Manage.</em>, ASCE, 116(4), 575–594.
-            </li>
-            <li>
-              <strong className="text-foreground">Hijazi, A., AbouRizk, S. M., & Halpin, D.
-              W.</strong> (1992). “Modeling and Simulating Learning Development in Construction.”{" "}
-              <em>J. Constr. Eng. Manage.</em>, ASCE, 118(4), 685–700.
-            </li>
-            <li>
-              <strong className="text-foreground">Lutz, J. D., Halpin, D. W., & Wilson, J.
-              R.</strong> (1994). “Simulation of Learning Development in Repetitive Construction.”{" "}
-              <em>J. Constr. Eng. Manage.</em>, ASCE, 120(4), 753–773.
-            </li>
-            <li>
-              <strong className="text-foreground">Gonzalez-Quevedo, A. A.</strong> (c. 1991).{" "}
-              <em>Sensitivity Analysis of Construction Simulation</em>. Ph.D. dissertation, Purdue
-              University (advisor: D. W. Halpin).
-            </li>
-            <li>
-              <strong className="text-foreground">Abraham, D. M., & Halpin, D. W.</strong> (1998).
-              “Simulation of the Construction of Cable-Stayed Bridges.” <em>Canadian Journal of Civil
-              Engineering</em>, 25(3), 490–499.
-            </li>
-            <li>
-              <strong className="text-foreground">Halpin, D. W., Sawhney, A., & AbouRizk, S.
-              M.</strong> (1998). “Construction Project Simulation Using CYCLONE.” <em>Canadian Journal
-              of Civil Engineering</em>, 25(1), 16–25.
-            </li>
-            <li>
-              <strong className="text-foreground">AbouRizk, S., Halpin, D., Mohamed, Y., & Hermann,
-              U.</strong> (2011). “Research in Modeling and Simulation for Improving Construction
-              Engineering Operations.” <em>J. Constr. Eng. Manage.</em>, ASCE, 137(10), 843–852.
-            </li>
-          </ol>
-
-          <h3 className="font-display mt-5 text-sm font-semibold text-foreground">
-            Related lineage (often taught with CYCLONE)
-          </h3>
-          <ol className="mt-2 list-decimal space-y-2 pl-5 text-xs leading-relaxed" start={22}>
-            <li>
-              <strong className="text-foreground">Ioannou, P. G.</strong> (1989). UM-CYCLONE (University
-              of Michigan).
-            </li>
-            <li>
-              <strong className="text-foreground">Martinez, J. C.</strong> (1996). STROBOSCOPE — state-
-              and resource-based construction process simulation.
-            </li>
-            <li>
-              <strong className="text-foreground">Hajjar, D., & AbouRizk, S. M.</strong> (1999).
-              “Simphony: An Environment for Building Special Purpose Construction Simulation Tools.”{" "}
-              <em>Winter Simulation Conference</em>, 998–1006. (Later Simphony.NET, University of
-              Alberta.)
-            </li>
-            <li>
-              <strong className="text-foreground">AbouRizk, S., Hague, S., Ekyalimpa, R., & Newstead,
-              S.</strong> (2016). “Simphony: A Next Generation Simulation Modelling Environment for the
-              Construction Domain.” <em>Journal of Simulation</em>, 10(3), 207–215.
-            </li>
-          </ol>
-
           <p className="mt-4 rounded-[var(--radius-md)] border border-border bg-muted/20 px-3 py-2.5 text-xs">
             Neo-CYCLONE does <strong className="text-foreground">not</strong> replace MicroCYCLONE,
-            DISCO, COST, WebCYCLONE, or Simphony. It is an educational, AI-assisted studio that keeps
-            Halpin’s modeling grammar visible for first contact with construction operations as flow
-            and idleness.
+            DISCO, COST, WebCYCLONE, or Simphony. It is{" "}
+            <strong className="text-foreground">{PRODUCT_TAGLINE}</strong> that keeps Halpin’s modeling
+            grammar visible for first contact with construction operations as flow and idleness.
           </p>
         </section>
 
@@ -383,7 +230,9 @@ function ManualPage() {
         </section>
 
         <p className="text-center text-xs text-muted-foreground">
-          {PRODUCT_TAGLINE} · Manual v1.4
+          {PRODUCT_TAGLINE}
+          <span className="mx-1.5">·</span>
+          {PRODUCT_DEDICATION} · Manual v1.4.1
         </p>
       </main>
     </div>
