@@ -232,7 +232,7 @@ Full detail: **[NOTATION_STANDARD.md](./NOTATION_STANDARD.md)**.
 3. **Excavator loading** — inline `GEN 5 → Scoop → CON 5 TruckFull → Haul&Return`  
 4. **Tower crane** — multi-demand `|` + **Priority** (contention, no SA)  
 5. **Masonry** — 2 brick stacks + 1 mortar place at face; helpers refill; GEN2/CON2 on **mortar place**; **only SA**  
-6. **Precast factory line** — Clean→Set→Pour→**Steam(in form)**→Strip; crane; steam slots; production after **Strip**
+6. **Formwork + complex SA** — Halpin sensitivity chapter style: **Forms × Carpenters × PourCrew** (productivity & unit cost)
 
 ---
 

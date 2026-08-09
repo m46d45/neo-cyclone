@@ -6,7 +6,7 @@
  *   3 Excavator — GEN/CON inline
  *   4 Tower crane — multi-demand | + Priority (easier contention lesson)
  *   5 Masonry — 3 resources + sensitivity analysis only here
- *   6 Precast forms — longer form cycle (more complex; no SA)
+ *   6 Formwork line — complex SA (forms × carpenters × pour) Halpin Ch. style
  *
  * Source orientation: Halpin & Riggs, Planning and Analysis of Construction
  * Operations (Wiley, 1992) — simplified for first contact.
@@ -209,63 +209,49 @@ Lay: tri 4, 6, 9
   },
   {
     id: "precast-forms",
-    title: "6. Precast line + crane + steam cure",
-    goal: "Halpin-style factory line: form WIP, specialized crews, crane, steam capacity; count after Strip.",
-    source: "Halpin CYCLONE / MicroCYCLONE tradition + precast factory line (forms, multi-crew, crane, cure). Process order: prep→set→pour→steam(in form)→strip.",
+    title: "6. Formwork line + complex sensitivity",
+    goal: "Halpin Ch. sensitivity style: vary forms, carpenters, pour crew — productivity & unit cost.",
+    source: "Halpin & Riggs, Planning and Analysis of Construction Operations — Sensitivity Analysis (forms × crews × units).",
     features: [
-      "line production",
-      "form = mold WIP",
-      "specialized crews",
-      "crane multi-demand",
-      "steam chamber capacity",
-      "production after Strip",
+      "complex sensitivity",
+      "forms × carpenters × pour crew",
+      "formwork cycle",
+      "cost + unit cost",
+      "pairwise SA",
     ],
-    prompt: `# Example 6 — Precast factory LINE (Halpin-style)
-# Aligned with CYCLONE precast-factory teaching (multi-crew, forms, crane, curing):
-#   Process order (panel still in form through steam):
-#     Clean → Set → Pour → EnterSteam → SteamCure → ExitSteam → Strip
-#   • Forms = molds (WIP carriers). Fleet size ≈ panels in process on the line.
-#   • Specialized crews (not one multi-skill crew): Clean / Set / Pour / Strip
-#   • Crane: Set | EnterSteam | ExitSteam | Strip  (shared lifts)
-#   • SteamSlots = chamber capacity (e.g. 4 panels at once)
-#   • Production AFTER Strip (finished panel leaves mold) — not at Pour
-# Literature cousins: Halpin form/precast cycles; factory cases with bridge/gantry
-# crane, form fleet, pour/strip crews, curing phase (e.g. PROSIDYC/CYCLONE precast).
+    prompt: `# Example 6 — Formwork production + COMPLEX SENSITIVITY (Halpin Ch. style)
+# Matches the book emphasis in the Sensitivity Analysis chapter:
+#   vary number of FORMS, number of CREWS (carpenters), and pour units
+#   → compare productivity and unit cost across combinations.
+#
+# Form = mold/WIP carrier (classic formwork cycle, not a steam-factory digression):
+#   Strip → Oil → Set → Pour → Cure
+# Carpenters work strip/oil/set; pour crew places concrete; cure holds the form.
+# Production after Pour (one bay/panel). Then run Sensitivity tab (pairwise if 3 resources).
 
-8 Forms: Clean → Set → Pour → EnterSteam → SteamCure → ExitSteam → Strip
-2 CleanCrew: Clean
-2 SetCrew: Set
-1 PourCrew: Pour
-2 StripCrew: Strip
-1 Crane: Set | EnterSteam | ExitSteam | Strip
-4 SteamSlots: EnterSteam → SteamCure → ExitSteam
+8 Forms: Strip → Oil → Set → Pour → Cure
+3 Carpenters: Strip → Oil → Set
+2 PourCrew: Pour
 
-Counter after: Strip
-production = 1 panel
-
-Priority:
-Strip: 1
-ExitSteam: 2
-EnterSteam: 3
-Set: 4
+Counter after: Pour
+production = 1 bay
 
 Cost:
-Forms: 15
-CleanCrew: 50
-SetCrew: 60
-PourCrew: 70
-StripCrew: 55
-Crane: 120
-SteamSlots: 8
+Forms: 12
+Carpenters: 65
+PourCrew: 80
+
+Sensitivity:
+Forms: 4..12
+Carpenters: 1..5
+PourCrew: 1..3
 
 Durations:
-Clean: normal 15, 3
-Set: tri 25, 35, 50
-Pour: tri 15, 20, 30
-EnterSteam: tri 5, 8, 12
-SteamCure: const 180
-ExitSteam: tri 5, 8, 12
-Strip: tri 20, 30, 45
+Strip: tri 15, 22, 35
+Oil: normal 8, 1.5
+Set: tri 20, 28, 40
+Pour: tri 12, 18, 28
+Cure: const 90
 `,
   },
 
