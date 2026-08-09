@@ -20,7 +20,7 @@ function ManualPage() {
             <BookOpen className="size-4 text-primary" />
             <h1 className="font-display text-base font-semibold">Neo-CYCLONE Manual</h1>
             <Badge variant="secondary" className="border-primary/25 bg-primary/10 text-primary">
-              v1.4.1
+              v1.5
             </Badge>
           </div>
           <Button asChild variant="outline" size="sm">
@@ -53,10 +53,11 @@ function ManualPage() {
           <h3 className="font-display text-base font-semibold text-foreground">1.1 Purpose</h3>
           <div className="mt-2 space-y-3 text-[15px] leading-[1.7]">
             <p>
-              Neo-CYCLONE is <strong className="text-foreground">AI-Assisted Construction Operation
-              Simulation</strong> — an <strong className="text-foreground">educational web app</strong>{" "}
-              for modeling and simulating <strong className="text-foreground">repetitive construction
-              operations</strong> in the spirit of Professor{" "}
+              Neo-CYCLONE is{" "}
+              <strong className="text-foreground">AI-Assisted Construction Operation Simulation</strong>{" "}
+              — an <strong className="text-foreground">educational web app</strong> for modeling and
+              simulating <strong className="text-foreground">repetitive construction operations</strong>{" "}
+              in the spirit of Professor{" "}
               <strong className="text-foreground">Daniel W. Halpin’s CYCLONE</strong>{" "}
               (<em>CYCLic Operations NEtwork</em>).
             </p>
@@ -99,8 +100,7 @@ function ManualPage() {
             <p className="rounded-[var(--radius-md)] border border-primary/25 bg-primary/5 px-3 py-2.5 text-[14px] text-foreground">
               <strong>Product term:</strong> {PRODUCT_TAGLINE}. <strong>Dedication:</strong>{" "}
               {PRODUCT_DEDICATION}. In practice: prompt-first → <strong>Draw Model</strong> → check
-              network → <strong>Simulate</strong>. Examples and Format Prompt are ordinary structured
-              text, not magic. See Chapter 8 for the literature behind this tradition.
+              network → <strong>Simulate</strong>. See Chapter 8 for the literature behind this tradition.
             </p>
           </div>
 
@@ -110,11 +110,11 @@ function ManualPage() {
           <ul className="mt-2 list-disc space-y-1 pl-5 text-xs">
             <li>
               <strong className="text-foreground">Left:</strong> Prompt · Example · Draw Model · Format
-              Prompt reference
+              Prompt
             </li>
             <li>
-              <strong className="text-foreground">Right:</strong> CYCLONE Model (empty until Draw) ·
-              network logic · run parameters
+              <strong className="text-foreground">Right:</strong> CYCLONE Model · network logic · run
+              parameters
             </li>
             <li>
               <strong className="text-foreground">Below:</strong> Results — Simulation · Sensitivity
@@ -137,9 +137,7 @@ function ManualPage() {
               Click <strong className="text-foreground">Draw Model</strong> — inspect cycles, meetings,
               counter.
             </li>
-            <li>
-              Set max cycles (default 100, limit 500) and seed (default 12345).
-            </li>
+            <li>Set max cycles (default 100, limit 500) and seed (default 12345).</li>
             <li>
               Click <strong className="text-foreground">Simulate</strong> — productivity, waste, cost.
             </li>
@@ -208,14 +206,83 @@ function ManualPage() {
             Selected works on <strong className="text-foreground">CYCLONE</strong>,{" "}
             <strong className="text-foreground">MicroCYCLONE</strong>, and applications from{" "}
             <strong className="text-foreground">Daniel W. Halpin</strong>, his students, and
-            collaborators. Educational list — not exhaustive. Full list in{" "}
-            <code className="text-foreground">docs/USER_MANUAL.md</code>.
+            collaborators.
           </p>
+
+          <h3 className="font-display text-sm font-semibold text-foreground">Foundations</h3>
+          <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-xs leading-relaxed">
+            <li>
+              <strong className="text-foreground">Halpin, D. W.</strong> (1973). Ph.D. dissertation,
+              University of Illinois at Urbana–Champaign.
+            </li>
+            <li>
+              <strong className="text-foreground">Halpin, D. W.</strong> (1977). “CYCLONE: Method for
+              Modeling of Job Site Processes.” <em>J. Constr. Div.</em>, ASCE, 103(3), 489–499.
+            </li>
+            <li>
+              <strong className="text-foreground">Halpin, D. W., & Riggs, L. S.</strong> (1992).{" "}
+              <em>Planning and Analysis of Construction Operations</em>. Wiley.
+            </li>
+          </ol>
+
+          <h3 className="font-display mt-4 text-sm font-semibold text-foreground">MicroCYCLONE</h3>
+          <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-xs leading-relaxed" start={4}>
+            <li>
+              <strong className="text-foreground">Lluch, J., & Halpin, D. W.</strong> (1982).{" "}
+              <em>J. Constr. Div.</em>, ASCE, 108(1), 129–145.
+            </li>
+            <li>
+              <strong className="text-foreground">Halpin, D. W.</strong> (1990–1992). MicroCYCLONE
+              User / System manuals. Purdue / Learning Systems.
+            </li>
+          </ol>
+
+          <h3 className="font-display mt-4 text-sm font-semibold text-foreground">DISCO</h3>
+          <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-xs leading-relaxed" start={6}>
+            <li>
+              <strong className="text-foreground">Huang, R.-Y., & Halpin, D. W.</strong> (1993–1995).
+              DISCO papers (ISARC, <em>Microcomputers in Civil Engineering</em>, <em>J. Constr. Eng.
+              Manage.</em>).
+            </li>
+            <li>
+              <strong className="text-foreground">Huang, R.-Y.</strong> (1994). Ph.D., Purdue (advisor:
+              Halpin).
+            </li>
+          </ol>
+
+          <h3 className="font-display mt-4 text-sm font-semibold text-foreground">
+            PROSIDYC · COST · WebCYCLONE
+          </h3>
+          <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-xs leading-relaxed" start={8}>
+            <li>
+              <strong className="text-foreground">Halpin, D. W., & Martinez, L.-H.</strong> (1999).
+              PROSIDYC. <em>WSC</em>.
+            </li>
+            <li>
+              <strong className="text-foreground">Cheng, T.-M., et al.</strong> (2000). COST. <em>17th
+              ISARC</em>.
+            </li>
+            <li>
+              <strong className="text-foreground">Halpin, D. W., Jen, H., & Kim, J.</strong> (2003).
+              WebCYCLONE. <em>WSC</em>.
+            </li>
+          </ol>
+
+          <h3 className="font-display mt-4 text-sm font-semibold text-foreground">
+            Purdue circle & lineage
+          </h3>
+          <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-xs leading-relaxed" start={11}>
+            <li>
+              AbouRizk & Halpin; Hijazi; Lutz; Gonzalez-Quevedo; Abraham; Halpin et al. project-level
+              CYCLONE; AbouRizk et al. (2011).
+            </li>
+            <li>UM-CYCLONE (Ioannou); STROBOSCOPE (Martinez); Simphony / Simphony.NET (AbouRizk et al.).</li>
+          </ol>
+
           <p className="mt-4 rounded-[var(--radius-md)] border border-border bg-muted/20 px-3 py-2.5 text-xs">
-            Neo-CYCLONE does <strong className="text-foreground">not</strong> replace MicroCYCLONE,
-            DISCO, COST, WebCYCLONE, or Simphony. It is{" "}
-            <strong className="text-foreground">{PRODUCT_TAGLINE}</strong> that keeps Halpin’s modeling
-            grammar visible for first contact with construction operations as flow and idleness.
+            Neo-CYCLONE does <strong className="text-foreground">not</strong> replace those systems. It
+            is <strong className="text-foreground">{PRODUCT_TAGLINE}</strong>. Full bibliography:{" "}
+            <code className="text-foreground">docs/USER_MANUAL.md</code> in the repository.
           </p>
         </section>
 
@@ -232,7 +299,7 @@ function ManualPage() {
         <p className="text-center text-xs text-muted-foreground">
           {PRODUCT_TAGLINE}
           <span className="mx-1.5">·</span>
-          {PRODUCT_DEDICATION} · Manual v1.4.1
+          {PRODUCT_DEDICATION} · Manual v1.5
         </p>
       </main>
     </div>
