@@ -1,8 +1,33 @@
 # Neo-CYCLONE
 
-**AI-agent of Daniel W. Halpin's CYCLONE**
+**AI-agent of Daniel W. Halpin's CYCLONE**  
+**AI-Assisted Construction Operation Simulation**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 Web studio for construction operation simulation with Halpin Activity Cycle Diagrams (QUEUE, COMBI, NORMAL, COUNTER), a structured English prompt, and discrete-event results (utilization, production, productivity).
+
+**Live studio:** https://neo-cyclone.vercel.app/  
+**Manual:** https://neo-cyclone.vercel.app/manual  
+**Author:** Muhamad Abduh ([ORCID](https://orcid.org/0000-0001-6926-6665)) · abduh@itb.ac.id
+
+## Citation
+
+If you use Neo-CYCLONE in teaching or research, please cite it using `CITATION.cff` (and the Software Impacts article once published). After the Zenodo deposit, replace the placeholder DOI below.
+
+```bibtex
+@software{abduh_neocyclone_2026,
+  author       = {Abduh, Muhamad},
+  title        = {Neo-CYCLONE},
+  year         = {2026},
+  version      = {1.6.2},
+  publisher    = {Zenodo},
+  url          = {https://github.com/m46d45/neo-cyclone},
+  note         = {AI-Assisted Construction Operation Simulation}
+}
+```
+
+See also [CITATION.cff](./CITATION.cff).
 
 ## Stack
 
@@ -51,5 +76,7 @@ After the repo exists on GitHub:
 See [docs/USER_MANUAL.md](docs/USER_MANUAL.md).
 
 ## License / tribute
+
+**License:** [MIT](./LICENSE) — Copyright (c) 2026 Muhamad Abduh.
 
 Methodology after Professor **Daniel W. Halpin** (Purdue) — CYCLONE / WebCYCLONE. Neo-CYCLONE is an independent modern AI-assisted implementation for education and research.
