@@ -9,7 +9,9 @@ import {
   PRODUCT_TAGLINE,
 } from "@/lib/cyclone/prompt-template";
 
-export const Route = createFileRoute("/manual")({ component: ManualPage });
+export const Route = createFileRoute("/manual")({
+  component: ManualPage,
+});
 
 function ManualPage() {
   return (
@@ -20,7 +22,7 @@ function ManualPage() {
             <BookOpen className="size-4 text-primary" />
             <h1 className="font-display text-base font-semibold">Neo-CYCLONE Manual</h1>
             <Badge variant="secondary" className="border-primary/25 bg-primary/10 text-primary">
-              v1.5
+              v1.6
             </Badge>
           </div>
           <Button asChild variant="outline" size="sm">
@@ -100,7 +102,8 @@ function ManualPage() {
             <p className="rounded-[var(--radius-md)] border border-primary/25 bg-primary/5 px-3 py-2.5 text-[14px] text-foreground">
               <strong>Product term:</strong> {PRODUCT_TAGLINE}. <strong>Dedication:</strong>{" "}
               {PRODUCT_DEDICATION}. In practice: prompt-first → <strong>Draw Model</strong> → check
-              network → <strong>Simulate</strong>. See Chapter 8 for the literature behind this tradition.
+              network → <strong>Simulate</strong> → optional <strong>AI Assistant</strong>. See Chapter
+              9 for the literature behind this tradition.
             </p>
           </div>
 
@@ -118,7 +121,7 @@ function ManualPage() {
             </li>
             <li>
               <strong className="text-foreground">Below:</strong> Results — Simulation · Sensitivity
-              Analysis
+              Analysis · AI Assistant
             </li>
           </ul>
         </section>
@@ -137,11 +140,11 @@ function ManualPage() {
               Click <strong className="text-foreground">Draw Model</strong> — inspect cycles, meetings,
               counter.
             </li>
-            <li>Set max cycles (default 100, limit 500) and seed (default 12345).</li>
+            <li>Set max cycles (default 100, max 500) and seed (default 12345).</li>
             <li>
               Click <strong className="text-foreground">Simulate</strong> — productivity, waste, cost.
             </li>
-            <li>Optional Sensitivity tab and Excel / PNG export.</li>
+            <li>Optional Sensitivity tab, AI Assistant, and Excel / PNG export.</li>
           </ol>
         </section>
 
@@ -185,12 +188,55 @@ function ManualPage() {
           </pre>
         </Section>
 
-        <Section title="Chapter 5–7 — Rules, results, limits">
+        <Section title="Chapter 5–6 — Rules & results">
           <ul className="list-disc space-y-1.5 pl-5 text-xs">
             <li>Home QUEUE per resource; COMBI if ≥2 resources meet; return only to home QUEUE.</li>
             <li>GEN ▽ / CON △ optional and independent; exact Counter after: names.</li>
             <li>Results: production by cycle, steady state, idleness, cost, sensitivity tabs.</li>
-            <li>Max cycles 100 default / 500 max; seed 12345; deploy from GitHub main → Vercel.</li>
+          </ul>
+        </Section>
+
+        <Section title="Chapter 7 — AI Assistant">
+          <p className="mb-2 text-xs leading-relaxed">
+            Educational <strong className="text-foreground">co-pilot</strong> bound to the current
+            Format Prompt, drawn network, and last simulation/sensitivity results—not a black-box
+            simulator.
+          </p>
+          <ul className="list-disc space-y-1.5 pl-5 text-xs">
+            <li>
+              <strong className="text-foreground">Purpose:</strong> explain cycles, report
+              productivity / idleness / bottleneck, propose Format Prompt edits (you Apply → Draw →
+              Simulate).
+            </li>
+            <li>
+              <strong className="text-foreground">Technology:</strong> with{" "}
+              <code className="text-foreground">XAI_API_KEY</code> on Vercel → xAI chat + studio
+              context; without key → local English-first intent helper.
+            </li>
+            <li>
+              <strong className="text-foreground">Can:</strong> model Q&A, fleet counts, last-run
+              metrics, propose prompt changes.
+            </li>
+            <li>
+              <strong className="text-foreground">Cannot:</strong> auto-run simulation after an edit,
+              invent a different operation as “current”, or replace the CYCLONE engine.
+            </li>
+            <li>
+              <strong className="text-foreground">Ask e.g.:</strong> Explain this model · How many
+              resources? · Which resource is the bottleneck? · What was productivity? · Set trucks to
+              8.
+            </li>
+          </ul>
+          <p className="mt-2 rounded-[var(--radius-md)] border border-border bg-muted/20 px-3 py-2 text-[11px] leading-relaxed">
+            Full question list and limits: <code className="text-foreground">docs/USER_MANUAL.md</code>{" "}
+            Chapter 7.
+          </p>
+        </Section>
+
+        <Section title="Chapter 8 — Limits & deploy">
+          <ul className="list-disc space-y-1.5 pl-5 text-xs">
+            <li>Max cycles 100 default / 500 max; seed 12345.</li>
+            <li>Deploy: GitHub main → Vercel. Optional XAI_API_KEY for full AI Assistant mode.</li>
           </ul>
         </Section>
 
@@ -199,7 +245,7 @@ function ManualPage() {
             Literature
           </p>
           <h2 className="font-display mt-1 text-xl font-semibold text-foreground">
-            Chapter 8 — References
+            Chapter 9 — References
           </h2>
           <div className="gold-rule my-3 max-w-xs" />
           <p className="mb-4 text-xs">
@@ -292,14 +338,15 @@ function ManualPage() {
             2. Draw Model → inspect cycles / meetings / counter{"\n"}
             3. Simulate → productivity, waste, cost{"\n"}
             4. Sensitivity → if Sensitivity: block present{"\n"}
-            5. Export → Excel / PNG as needed
+            5. AI Assistant → optional Q&A / propose prompt edits{"\n"}
+            6. Export → Excel / PNG as needed
           </p>
         </section>
 
         <p className="text-center text-xs text-muted-foreground">
           {PRODUCT_TAGLINE}
           <span className="mx-1.5">·</span>
-          {PRODUCT_DEDICATION} · Manual v1.5
+          {PRODUCT_DEDICATION} · Manual v1.6
         </p>
       </main>
     </div>
