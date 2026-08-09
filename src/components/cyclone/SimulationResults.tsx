@@ -443,8 +443,8 @@ export function SimulationResults({
                       y={m.y}
                       r={5}
                       fill="#c41e3a"
-                      stroke="#ffffff"
-                      strokeWidth={1.5}
+                      stroke="#c41e3a"
+                      strokeWidth={0}
                       ifOverflow="extendDomain"
                     />
                   ))}
