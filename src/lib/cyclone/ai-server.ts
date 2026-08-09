@@ -4,41 +4,59 @@ import { buildOperationFromText } from "./general-builder";
 import { stripPromptComments } from "./prompt-template";
 
 export const generateCycloneDsl = createServerFn({ method: "POST" })
-  .inputValidator((data: { prompt: string }) => data)
+  .validator((input: { prompt: string }) => ({
+    prompt: String(input?.prompt ?? "").slice(0, 2000),
+  }))
   .handler(async ({ data }) => {
-    const prompt = (data.prompt ?? "").trim();
-    if (!prompt) {
-      return {
-        ok: false as const,
-        error: "Empty prompt",
-        dsl: "",
-        version: DSL_VERSION,
-      };
-    }
+    return draftDslFromPrompt(data.prompt);
+  });
 
-    const cleaned = stripPromptComments(prompt);
-    const apiKey = process.env.XAI_API_KEY;
-    if (!apiKey) {
-      // Local fallback: structured text → operation → DSL (no LLM)
-      return localDsl(cleaned || prompt);
-    }
+async function draftDslFromPrompt(prompt: string): Promise<{
+  ok: boolean;
+  error: string | null;
+  dsl: string | null;
+  source: "ai" | "none";
+}> {
+  // Comments are notes for humans — strip before AI / local build
+  const cleaned = stripPromptComments(prompt);
+  const apiKey = process.env.XAI_API_KEY;
+  if (!apiKey) {
+    return { ok: false, error: "AI unavailable", dsl: null, source: "none" };
+  }
 
-    const system = `You are Neo-CYCLONE, expert in Halpin CYCLONE simulation using the Neo-CYCLONE notation standard (docs/NOTATION_STANDARD.md).
-Convert the user Format Prompt into YAML-like DSL for a CYCLONE network.
+  const system = `You are Neo-CYCLONE, expert in Halpin CYCLONE simulation using the Neo-CYCLONE notation standard (docs/NOTATION_STANDARD.md).
 
-Output ONLY the DSL (or fenced YAML). Fields:
-  name, resources, tasks, links, production
-Resource cycles: ResourceName: Task → Task → …
-  Counter after: TaskName
-  production = amount unit
+User prompts may contain notes on lines starting with # or // — those are already removed when present; ignore leftover commentary.
+
+Honor per-resource cycles when listed:
+  Resource: Task1 → Task2 → …
+  counts and production unit
   Durations: Task: dist params
   Prompt order: network → Durations → Priority → GEN/CON/branch → Cost (USD/h) → Sensitivity (last)
 
-Rules:
-- One home QUEUE per resource; COMBI when ≥2 resources meet; NORMAL for single resource.
-- GEN/CON optional and independent.
+CORE RULES:
+- Every resource has a home QUEUE; returns to the same QUEUE.
+- COMBI only when ≥2 resources meet at a task; single-resource work is NORMAL.
+- Home QUEUE may feed COMBI or NORMAL. Do not invent earthmoving unless the user describes it.
 - Honor the user's resource cycles, Counter after:, Durations, Cost, Sensitivity exactly.
-- Time unit: minutes.
+- Prefer building the described operation — never substitute a different example.
+
+NOTATION / DSL (canonical Neo-CYCLONE):
+- QUEUE: initial, optional generate (GEN k, k≥2) multiplies each *arrival* only (not initial).
+- COMBI / NORMAL: duration required.
+- COUNTER: production amount.
+- CONSOLIDATE: consolidate n (CON n, n≥2) — buffer n arrivals, release 1 (time 0).
+- GEN and CON are independent; use only when unit logic needs them.
+- Links: optional probability (0–1) for stochastic multi-out. Sum ~1. Do NOT put probability on COMBI multi-out used only for resource return fan-out.
+- Layout hint: forward flow toward COUNTER; arcs into QUEUE are resource returns (diagram shows dashed gold).
+- Priority: COMBI field priority (positive int). Lower = higher priority when shared resources contend (tower crane). Prompt block Priority: Task: n. Default = declaration order.
+- Multi-demand shared resource: one QUEUE feeding several COMBIs (DSL links). Prompt: Resource: TaskA | TaskB | TaskC
+
+Return ONLY YAML Neo-CYCLONE DSL ${DSL_VERSION}. No markdown.
+
+dsl: "${DSL_VERSION}"
+model: { id, name, description, time_unit, production_unit, nodes, links }
+run: { seed, max_time, max_cycles }
 
 QUEUE fields: initial, generate, cost_usd_h
 COMBI/NORMAL: duration, priority
@@ -54,67 +72,55 @@ Duration kinds: constant, uniform, triangular, normal, lognormal, beta (min,max,
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "grok-3",
+        model: "grok-4.5",
+        max_tokens: 2800,
         messages: [
           { role: "system", content: system },
           { role: "user", content: cleaned || prompt },
         ],
-        temperature: 0.2,
       }),
     });
     if (!res.ok) {
-      return localDsl(cleaned || prompt);
+      return { ok: false, error: `xAI API error ${res.status}`, dsl: null, source: "none" };
     }
     const body = (await res.json()) as {
       choices: { message: { content: string } }[];
     };
-    const raw = body.choices[0]?.message?.content ?? "";
-    const text = stripFences(raw);
+    let raw = stripFences(body.choices[0]?.message.content ?? "");
+
     const asDsl = parseDsl(raw);
     if (asDsl.ok) {
       return {
-        ok: true as const,
-        dsl: serializeDsl(asDsl.op),
-        version: DSL_VERSION,
-        source: "ai" as const,
+        ok: true,
+        dsl: serializeDsl(asDsl.model, {
+          seed: asDsl.run?.seed,
+          maxTime: asDsl.run?.maxTime,
+          maxCycles: asDsl.run?.maxCycles,
+        }),
+        error: null,
+        source: "ai",
       };
     }
-    // Try local if AI output not parseable
-    return localDsl(cleaned || prompt);
-  } catch {
-    return localDsl(cleaned || prompt);
-  }
-});
 
-function localDsl(prompt: string) {
-  try {
-    const local = buildOperationFromText(cleanedPromptSafe(prompt));
-    if (!local) {
-      return {
-        ok: false as const,
-        error: "Could not build operation from prompt",
-        dsl: "",
-        version: DSL_VERSION,
-      };
+    const local = buildOperationFromText(cleaned || prompt);
+    if (local) {
+      return { ok: true, dsl: serializeDsl(local), error: null, source: "ai" };
     }
+
     return {
-      ok: true as const,
-      dsl: serializeDsl(local),
-      version: DSL_VERSION,
-      source: "local" as const,
+      ok: false,
+      error: asDsl.errors[0] ?? "Invalid AI DSL",
+      dsl: null,
+      source: "none",
     };
   } catch (e) {
     return {
-      ok: false as const,
-      error: e instanceof Error ? e.message : "local build failed",
-      dsl: "",
-      version: DSL_VERSION,
+      ok: false,
+      error: e instanceof Error ? e.message : "AI request failed",
+      dsl: null,
+      source: "none",
     };
   }
-}
-
-function cleanedPromptSafe(p: string) {
-  return p;
 }
 
 function stripFences(text: string): string {
