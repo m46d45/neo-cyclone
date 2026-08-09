@@ -160,37 +160,49 @@ PlaceConcreteC: normal 8, 1.2
   },
   {
     id: "masonry",
-    title: "5. Masonry crew (sensitivity analysis)",
-    goal: "Only preset with sensitivity: 3 resources, pairwise SA + shared Lay.",
-    source: "Halpin masonry / crew models (simplified).",
-    features: ["sensitivity analysis", "3 resources", "pairwise SA", "COMBI Lay"],
-    prompt: `# Example 5 — Masonry crew (sensitivity analysis)
-# ONLY teaching example that includes Sensitivity: (pairwise for 3 resources).
-# Masons + helpers meet at Lay; scaffold supports the course.
+    title: "5. Masonry (scaffold + SA)",
+    goal: "3 scaffold spaces; brick packs + mortar GEN2/CON2; sensitivity analysis.",
+    source: "Halpin masonry adapted: scaffold capacity, 20-brick packs, 1 mortar : 2 packs.",
+    features: [
+      "sensitivity analysis",
+      "scaffold 3 spaces",
+      "GEN 2 mortar doses",
+      "CON 2 rejoin",
+      "pairwise SA",
+    ],
+    prompt: `# Example 5 — Masonry crew (scaffold + brick packs + mortar)
+# Scaffold has 3 material spaces (shared): typically 2 brick packs + 1 mortar bucket.
+# Brick pack = 20 bricks (production unit). 
+# 1 mortar bucket → GEN 2 doses (covers two packs of 20).
+# Helpers stock onto scaffold (uses a space), then meet masons at Lay.
+# After two dose-lays, CON 2 reunites the mortar-helper cycle (no entity blow-up).
+# ONLY preset with Sensitivity: (pairwise when 3 resources vary).
 
-Masons: Lay → MortarPrep
-Helpers: Lay → SupplyBrick
-Scaffold: Lay → MoveScaffold
-4 masons, 2 helpers, 1 scaffold
+4 Masons: Lay
+2 Brick helpers: FetchBrick → StockBrick → Lay
+1 Mortar helpers: FetchMortar → StockMortar → GEN 2 → Lay → CON 2 Rejoin
+3 Scaffold: StockBrick | StockMortar
 
 Counter after: Lay
-production = 1 course
+production = 20 bricks
 
 Cost:
 Masons: 75
-Helpers: 45
+Brick helpers: 45
+Mortar helpers: 45
 Scaffold: 25
 
 Sensitivity:
 Masons: 2..6
-Helpers: 1..4
-Scaffold: 1..2
+Brick helpers: 1..4
+Scaffold: 2..4
 
 Durations:
+FetchBrick: tri 2, 3, 5
+StockBrick: tri 1, 1.5, 2.5
+FetchMortar: tri 3, 4, 6
+StockMortar: tri 1, 2, 3
 Lay: tri 4, 6, 9
-MortarPrep: normal 3, 0.5
-SupplyBrick: normal 2.5, 0.4
-MoveScaffold: tri 8, 12, 18
 `,
   },
   {
