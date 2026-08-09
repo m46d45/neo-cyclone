@@ -3,31 +3,34 @@
 **AI-agent of Daniel W. Halpin's CYCLONE**  
 **AI-Assisted Construction Operation Simulation**
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21864969.svg)](https://doi.org/10.5281/zenodo.21864969)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 Web studio for construction operation simulation with Halpin Activity Cycle Diagrams (QUEUE, COMBI, NORMAL, COUNTER), a structured English prompt, and discrete-event results (utilization, production, productivity).
 
 **Live studio:** https://neo-cyclone.vercel.app/  
 **Manual:** https://neo-cyclone.vercel.app/manual  
+**Archive (Zenodo):** https://doi.org/10.5281/zenodo.21864969  
 **Author:** Muhamad Abduh ([ORCID](https://orcid.org/0000-0001-6926-6665)) · abduh@itb.ac.id
 
 ## Citation
 
-If you use Neo-CYCLONE in teaching or research, please cite it using `CITATION.cff` (and the Software Impacts article once published). After the Zenodo deposit, replace the placeholder DOI below.
+If you use Neo-CYCLONE in teaching or research, please cite it using the DOI below (and the Software Impacts article once published).
 
 ```bibtex
 @software{abduh_neocyclone_2026,
   author       = {Abduh, Muhamad},
   title        = {Neo-CYCLONE},
   year         = {2026},
-  version      = {1.6.2},
+  version      = {1.6.2.1},
   publisher    = {Zenodo},
-  url          = {https://github.com/m46d45/neo-cyclone},
+  doi          = {10.5281/zenodo.21864969},
+  url          = {https://doi.org/10.5281/zenodo.21864969},
   note         = {AI-Assisted Construction Operation Simulation}
 }
 ```
 
-See also [CITATION.cff](./CITATION.cff).
+See also [CITATION.cff](./CITATION.cff) · Source: https://github.com/m46d45/neo-cyclone
 
 ## Stack
 
