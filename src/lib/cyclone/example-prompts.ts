@@ -128,15 +128,15 @@ Haul&Return: normal 10, 1.5
 # Crane: LiftAtA | LiftAtB | LiftAtC   (one idle pool, three demands)
 # Priority: lower number first when several zones wait at once.
 # 1 steel crew + longer erect → crane free for B/C while steel is busy on deck.
-# Production = steel lifts at Zone A (primary); watch B/C util in the report.
+# Production = EVERY crane lift (A+B+C) — multi-counter; util/idle shows waste.
 
 1 CrewA Steel: LiftAtA → ErectSteelA
 2 CrewB Forms: LiftAtB → SetFormsB
 2 CrewC Concrete: LiftAtC → PlaceConcreteC
 1 Crane: LiftAtA | LiftAtB | LiftAtC
 
-Counter after: LiftAtA
-production = 1 steel lift
+Counter after: LiftAtA, LiftAtB, LiftAtC
+production = 1 lift
 
 Priority:
 LiftAtA: 1

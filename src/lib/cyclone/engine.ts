@@ -229,9 +229,7 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
       ...siblingP.map((o) => o.probability ?? 0),
     );
     const isDetour = (arc.probability ?? 0) < maxP - 1e-9;
-    const completed = primaryCounterId
-      ? (counters.get(primaryCounterId)?.count ?? 0)
-      : cycles;
+    const completed = totalCounterHits();
     // Associate with the next production count (branch usually before COUNTER)
     const cycle = Math.max(1, completed + 1);
     branchEvents.push({
@@ -595,6 +593,17 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     }
   }
 
+  function totalCounterHits(): number {
+    let s = 0;
+    for (const c of counters.values()) s += c.count;
+    return s;
+  }
+  function totalProduction(): number {
+    let s = 0;
+    for (const c of counters.values()) s += c.production;
+    return s;
+  }
+
   function hitCounter(counterId: string, entity: Entity) {
     const c = counters.get(counterId);
     if (!c) {
@@ -602,22 +611,26 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
       return;
     }
     c.count += 1;
-    cycles = Math.max(cycles, c.count);
     c.production += c.amount;
+    cycles = totalCounterHits();
     if (c.firstPassageTime < 0) c.firstPassageTime = time;
     if (c.count > 1) {
       c.cycleTimes.push(time - c.lastCountTime);
     }
     c.lastCountTime = time;
-    record(`COUNTER "${c.label}" = ${c.count} (${c.production} ${model.productionUnit})`);
-    const rate = time > 0 ? c.production / time : 0;
+    record(
+      `COUNTER "${c.label}" = ${c.count} (total ${cycles} · ${totalProduction()} ${model.productionUnit})`,
+    );
+    const totProd = totalProduction();
+    const rate = time > 0 ? totProd / time : 0;
+    // Cycle index = sum of all counter hits (multi-counter teaching)
     productivitySeries.push({
       t: Math.round(time * 100) / 100,
-      cycle: c.count,
-      production: Math.round(c.production * 1000) / 1000,
+      cycle: cycles,
+      production: Math.round(totProd * 1000) / 1000,
       rate: Math.round(rate * 1000) / 1000,
       unitsPerHour:
-        Math.round(toUnitsPerHour(c.production, time, model.timeUnit) * 1000) / 1000,
+        Math.round(toUnitsPerHour(totProd, time, model.timeUnit) * 1000) / 1000,
     });
     routeDownstream(counterId, entity);
   }
@@ -649,17 +662,11 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     const ev = events.shift()!;
     if (ev.time > maxTime) break;
     time = ev.time;
-    if (primaryCounterId) {
-      const pc = counters.get(primaryCounterId);
-      if (pc && pc.count >= maxCycles) break;
-    } else if (cycles >= maxCycles) break;
+    if (totalCounterHits() >= maxCycles) break;
 
     if (ev.kind === "END_ACTIVITY") endActivity(ev);
 
-    if (primaryCounterId) {
-      const pc = counters.get(primaryCounterId);
-      if (pc && pc.count >= maxCycles) break;
-    }
+    if (totalCounterHits() >= maxCycles) break;
   }
 
   const simTime = time;
@@ -747,9 +754,7 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     })
     .filter(Boolean) as BranchStat[];
 
-  const primaryProd = primaryCounterId
-    ? (counters.get(primaryCounterId)?.production ?? 0)
-    : [...counters.values()][0]?.production ?? 0;
+  const primaryProd = totalProduction();
   const cost = buildCostReport(model, simTime, primaryProd);
 
   return {
@@ -757,9 +762,7 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     modelName: model.name,
     seed: config.seed,
     simTime,
-    cyclesCompleted: primaryCounterId
-      ? (counters.get(primaryCounterId)?.count ?? 0)
-      : cycles,
+    cyclesCompleted: totalCounterHits(),
     maxCyclesRequested: maxCycles,
     queueStats,
     activityStats,

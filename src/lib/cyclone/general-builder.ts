@@ -18,6 +18,7 @@ import {
 } from "./functions-prompt";
 import {
   parseCounterPlacement,
+  parseCounterPlacements,
   resolveCounterAfter,
   type CounterPlacement,
 } from "./counter-prompt";
@@ -49,11 +50,10 @@ export type OperationSpec = {
   productionResourceId?: string;
   /** GEN / CON / Branch from Format Prompt §4 (no hand-drawn QUEUE/arcs). */
   functions?: FunctionsPrompt;
-  /**
-   * Where COUNTER sits (one production unit / completed cycle).
-   * Default: after last task of first resource if not specified.
-   */
+  /** Primary / first COUNTER (compat). Prefer `counters` for multi. */
   counter?: CounterPlacement;
+  /** One or more COUNTER placements (multi-demand / multi-product). */
+  counters?: CounterPlacement[];
 };
 
 const DEFAULT_DUR: DurationDist = { kind: "triangular", min: 2, mode: 4, max: 6 };
@@ -260,33 +260,76 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
 
   const prodRes =
     spec.resources.find((r) => r.id === spec.productionResourceId) ?? spec.resources[0]!;
-  const counterId = uniqueId("ctr", used);
-  const counterAmt = spec.counter?.amount ?? spec.productionPerCycle ?? 1;
-  nodes.push({
-    id: counterId,
-    type: "COUNTER",
-    label: "Production",
-    x: 0,
-    y: 0,
-    productionAmount: counterAmt,
-  });
+
+  // Normalize counter list (multi-counter support)
+  const counterList: CounterPlacement[] =
+    spec.counters && spec.counters.length
+      ? spec.counters
+      : [
+          spec.counter ?? {
+            afterLabel: null,
+            amount: spec.productionPerCycle ?? 1,
+            unit: "unit",
+          },
+        ];
+  const counterAmtDefault = counterList[0]?.amount ?? spec.productionPerCycle ?? 1;
+
+  /** afterKey → counter node id */
+  const counterByAfter = new Map<string, string>();
+  let primaryCounterId = "";
+
+  for (let ci = 0; ci < counterList.length; ci++) {
+    const cspec = counterList[ci]!;
+    const amt = cspec.amount ?? counterAmtDefault;
+    const afterLab = cspec.afterLabel;
+    const id = uniqueId(
+      ci === 0 ? "ctr" : `ctr_${slug(afterLab || String(ci))}`,
+      used,
+    );
+    if (ci === 0) primaryCounterId = id;
+    const label =
+      counterList.length === 1
+        ? "Production"
+        : afterLab
+          ? `Prod ${afterLab}`
+          : `Production ${ci + 1}`;
+    nodes.push({
+      id,
+      type: "COUNTER",
+      label,
+      x: 0,
+      y: 0,
+      productionAmount: amt,
+    });
+    if (afterLab) counterByAfter.set(normLabel(afterLab), id);
+  }
+  // Default single counter with null after → last task of production resource
+  if (counterList.length === 1 && !counterList[0]!.afterLabel) {
+    const lastLab = prodRes.itinerary[prodRes.itinerary.length - 1];
+    if (lastLab) counterByAfter.set(normLabel(lastLab), primaryCounterId);
+  }
+
+  const counterId = primaryCounterId;
 
   const stagingByResource = new Map<string, string[]>();
 
-  // Only ONE resource owns the COUNTER insertion point (avoid Lay matching
-  // every resource that shares a COMBI). Prefer production resource if it
-  // contains Counter after:; else first resource that has that task.
-  const counterSpecGlobal = spec.counter ?? { afterLabel: null, amount: 1, unit: "unit" };
-  const countOwnerId: string = (() => {
-    if (!counterSpecGlobal.afterLabel) return prodRes.id;
-    const want = normLabel(counterSpecGlobal.afterLabel);
-    if (prodRes.itinerary.some((lab) => normLabel(lab) === want)) return prodRes.id;
-    for (const r of spec.resources) {
-      if (r.itinerary.some((lab) => normLabel(lab) === want)) return r.id;
-    }
-    return prodRes.id;
-  })();
-
+  /**
+   * Owner resource for a count-at task: prefers a cycle that continues after
+   * the task (crew path), not pure multi-demand server (crane).
+   */
+  function countOwnerForTask(afterKey: string): string {
+    const withTask = spec.resources.filter((r) =>
+      r.itinerary.some((lab) => normLabel(lab) === afterKey),
+    );
+    if (!withTask.length) return prodRes.id;
+    const continuing = withTask.find((r) => {
+      const idx = r.itinerary.findIndex((lab) => normLabel(lab) === afterKey);
+      return idx >= 0 && idx < r.itinerary.length - 1;
+    });
+    if (continuing) return continuing.id;
+    const nonServer = withTask.find((r) => !(r.alsoServes && r.alsoServes.length));
+    return (nonServer ?? withTask[0]!).id;
+  }
 
   for (const r of spec.resources) {
     const home = homeQueue.get(r.id)!;
@@ -297,20 +340,13 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
       label: lab,
     }));
 
-    // COUNTER after a named task — only on the single owner resource cycle
-    // (e.g. after Pave on paver; not on every resource that shares Dump/Lay).
-    let countAtForThis: string | null = null;
-    if (r.id === countOwnerId) {
-      if (counterSpecGlobal.afterLabel) {
-        const want = normLabel(counterSpecGlobal.afterLabel);
-        // Exact match only — "Pave" must not hit "DumpToPaver"
-        const hit = r.itinerary.find((lab) => normLabel(lab) === want);
-        if (hit) countAtForThis = hit;
-      } else {
-        countAtForThis = r.itinerary[r.itinerary.length - 1] ?? null;
-      }
+    const countAtsOnThis: { lab: string; key: string; ctrId: string }[] = [];
+    for (const [afterKey, ctrId] of counterByAfter) {
+      if (countOwnerForTask(afterKey) !== r.id) continue;
+      const hit = r.itinerary.find((lab) => normLabel(lab) === afterKey);
+      if (hit) countAtsOnThis.push({ lab: hit, key: afterKey, ctrId });
     }
-    const countAtKey = countAtForThis ? normLabel(countAtForThis) : null;
+    const countAtKeys = new Set(countAtsOnThis.map((c) => c.key));
 
     // Home QUEUE feeds first step: COMBI / NORMAL / GEN load-zone queue.
     const first = steps[0]!;
@@ -327,19 +363,15 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
     for (let i = 0; i < steps.length - 1; i++) {
       const a = steps[i]!;
       const b = steps[i + 1]!;
-      // Skip sequential A→B only if B is a declared branch arm after A
-      // (keeps Dump→Pave for the other resource when trucks branch after Dump).
       const isBranchArm = fn.branches.some(
         (br) =>
           normLabel(br.afterLabel) === a.key &&
           br.arms.some((arm) => normLabel(arm.toLabel) === b.key),
       );
       if (isBranchArm) continue;
-      // COUNTER sits between count-at task and its successor
-      if (countAtKey && a.key === countAtKey) continue;
+      if (countAtKeys.has(a.key)) continue;
 
       if (b.type === "COMBI" && a.type !== "GEN") {
-        // Need QUEUE predecessor for COMBI (Halpin) unless previous is already QUEUE
         const stagId = uniqueId(`q_${r.id}_${b.key}`, used);
         nodes.push({
           id: stagId,
@@ -353,50 +385,35 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
         addLink(a.id, stagId);
         addLink(stagId, b.id);
       } else {
-        // GEN→COMBI, *→CON, *→NORMAL, *→GEN
         addLink(a.id, b.id);
       }
     }
     stagingByResource.set(r.id, stags);
 
     const last = steps[steps.length - 1]!;
-    const countAfterLab = countAtForThis;
-    const countAfterKey = countAtKey;
-    const countAfterStep = countAfterKey
-      ? steps.find((s) => s.key === countAfterKey)
-      : null;
-
-    // Branch that forks the production return (e.g. after Dump → Return/Breakdown)
-    const branchAfterCount = countAfterKey
-      ? fn.branches.some((br) => normLabel(br.afterLabel) === countAfterKey)
-      : false;
     const branchAfterLast = fn.branches.some(
       (br) => normLabel(br.afterLabel) === last.key,
     );
 
-    if (countAfterStep) {
-      // Insert COUNTER immediately after the count-at task (any resource cycle)
-      addLink(countAfterStep.id, counterId);
-      // Continue path: if count-at is not last, counter → next step
-      const idx = steps.findIndex((s) => s.key === countAfterKey);
+    for (const ca of countAtsOnThis) {
+      const countAfterStep = steps.find((s) => s.key === ca.key);
+      if (!countAfterStep) continue;
+      const branchAfterCount = fn.branches.some(
+        (br) => normLabel(br.afterLabel) === ca.key,
+      );
+      addLink(countAfterStep.id, ca.ctrId);
+      const idx = steps.findIndex((s) => s.key === ca.key);
       if (idx >= 0 && idx < steps.length - 1 && !branchAfterCount) {
-        const next = steps[idx + 1]!;
-        // Avoid double sequential if already linked count→next before (branch skip may have removed it)
-        addLink(counterId, next.id);
+        addLink(ca.ctrId, steps[idx + 1]!.id);
       } else if (!branchAfterCount) {
-        // Count-at is last task: return home after counter
-        addLink(counterId, home);
+        addLink(ca.ctrId, home);
       }
-      // branchAfterCount: counter → Return/Breakdown with p (wired below)
-      // If count-at is mid-path, still need last → home unless last goes through counter chain
       if (idx < steps.length - 1 && last.id !== countAfterStep.id) {
-        // last task still needs return home for this resource
         if (!branchAfterLast) addLink(last.id, home);
       }
-    } else if (r.id !== prodRes.id) {
+    }
+    if (!countAtsOnThis.length) {
       if (!branchAfterLast) addLink(last.id, home);
-    } else if (!branchAfterLast) {
-      addLink(last.id, home);
     }
 
     // Multi-demand: home QUEUE also feeds other COMBIs; return to home after each
@@ -404,7 +421,6 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
       const aid = activityId.get(normLabel(alt));
       if (!aid) continue;
       addLink(home, aid);
-      // Shared resource returns home after serving this demand COMBI
       addLink(aid, home);
     }
   }
@@ -428,20 +444,16 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
     });
   };
 
-  // Exact Counter after: label (any resource) — used for branch fork-from-counter
-  const countAfterExact = spec.counter?.afterLabel
-    ? normLabel(spec.counter.afterLabel)
-    : null;
-
   for (const br of fn.branches) {
     const afterKey = normLabel(br.afterLabel);
     const fromId = activityId.get(afterKey);
     if (!fromId) continue;
 
-    // If Branch after the same task as Counter after:, fork FROM the COUNTER
+    // If Branch after a Counter after: task, fork FROM that COUNTER
     // so production is counted before Return vs Breakdown is sampled.
-    const afterIsCountAt = countAfterExact != null && afterKey === countAfterExact;
-    const forkFrom = afterIsCountAt ? counterId : fromId;
+    const ctrForBranch = counterByAfter.get(afterKey);
+    const afterIsCountAt = ctrForBranch != null;
+    const forkFrom = afterIsCountAt ? ctrForBranch! : fromId;
 
     // Main continuation on a resource cycle that lists After → Next
     // (e.g. DumpToPaver → RefillAsphalt). Detour arms rejoin this next step.
@@ -493,7 +505,8 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
       spec.description ??
       "Per-resource CYCLONE cycles with task durations.",
     timeUnit: spec.timeUnit ?? "min",
-    productionUnit: spec.counter?.unit ?? spec.productionUnit ?? "unit",
+    productionUnit:
+      counterList[0]?.unit ?? spec.counter?.unit ?? spec.productionUnit ?? "unit",
     defaultRuns: 1,
     defaultMaxTime: spec.maxTime ?? 480,
     defaultMaxCycles: spec.maxCycles ?? 100,
@@ -661,33 +674,35 @@ function layoutNodes(
     }
   });
 
-  // COUNTER: just to the right of its real predecessor(s)
-  const ctr = byId.get(counterId)!;
-  const preds = links
-    .filter((l) => l.to === counterId)
-    .map((l) => byId.get(l.from))
-    .filter((n): n is CycloneNode => !!n);
-  if (preds.length) {
-    const maxX = Math.max(...preds.map((n) => n.x));
-    const avgY = preds.reduce((s, n) => s + n.y, 0) / preds.length;
-    ctr.x = maxX + COL * 0.9;
-    ctr.y = avgY;
-  } else {
-    ctr.x = ACT0 + COL * 4;
-    ctr.y = TOP;
+  // COUNTERs (one or many): just to the right of each predecessor
+  for (const n of nodes) {
+    if (n.type !== "COUNTER") continue;
+    const preds = links
+      .filter((l) => l.to === n.id)
+      .map((l) => byId.get(l.from))
+      .filter((x): x is CycloneNode => !!x);
+    if (preds.length) {
+      const maxX = Math.max(...preds.map((p) => p.x));
+      const avgY = preds.reduce((s, p) => s + p.y, 0) / preds.length;
+      n.x = maxX + COL * 0.9;
+      n.y = avgY;
+    } else {
+      n.x = ACT0 + COL * 4;
+      n.y = TOP;
+    }
+    placed.add(n.id);
   }
 
   // Exclusive post-shared tasks already placed on rows; give orphans a row below
   let orphan = 0;
   for (const n of nodes) {
-    if (n.id === counterId) continue;
+    if (n.type === "COUNTER") continue;
     if (!placed.has(n.id) && n.x === 0 && n.y === 0) {
       n.x = ACT0 + (orphan % 4) * COL;
       n.y = TOP + resources.length * ROW + Math.floor(orphan / 4) * ROW;
       orphan++;
     }
   }
-  placed.add(ctr.id);
 
   resolveCollisions(nodes, 170, 125);
 }
@@ -1038,14 +1053,16 @@ export function buildOperationFromText(text: string): CycloneModel | null {
 
   try {
     const functions = parseFunctionsAndBranch(raw);
-    const counter = parseCounterPlacement(raw);
-    if (!counter.amount || counter.amount === 1) {
-      // keep prodAmt from legacy "12 m3" guess if counter parse had no amount
-      if (prodAmt > 1) counter.amount = prodAmt;
+    const counters = parseCounterPlacements(raw);
+    for (const counter of counters) {
+      if (!counter.amount || counter.amount === 1) {
+        if (prodAmt > 1) counter.amount = prodAmt;
+      }
+      if (counter.unit === "unit" && productionUnit !== "cycle" && productionUnit !== "unit") {
+        counter.unit = productionUnit;
+      }
     }
-    if (counter.unit === "unit" && productionUnit !== "cycle" && productionUnit !== "unit") {
-      counter.unit = productionUnit;
-    }
+    const counter = counters[0]!;
     let model = buildFromSpec({
       name,
       description: raw.slice(0, 400),
@@ -1056,6 +1073,7 @@ export function buildOperationFromText(text: string): CycloneModel | null {
       productionResourceId: resources[0]!.id,
       functions,
       counter,
+      counters,
     });
     const { costs, sensitivity } = parseCostAndSensitivity(raw);
     model = applyCostsToModel(model, costs);

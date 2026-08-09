@@ -65,6 +65,7 @@ n Resource1 = <count>, n Resource2 = <count>
 # (golf-flag node). Always name it so it cannot "disappear".
 # Default if omitted: after the LAST task of the FIRST resource cycle.
 Counter after: <TaskName>
+# Multiple: Counter after: LiftAtA, LiftAtB, LiftAtC
 production = <amount> <unit>
 
 # ------------------------------------------------------------

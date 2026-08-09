@@ -127,15 +127,20 @@ Downloads: **Excel** report · chart **PNG** · model **PNG**.
 
 ---
 
-## 4b. Production COUNTER
+## 4b. Production COUNTER (one or many)
 
 | | |
 |--|--|
 | Shape | Golf flag |
-| Prompt | `Counter after: TruckFull` · `production = 1 load` |
+| One counter | `Counter after: Dump` · `production = 12 m3` |
+| **Multiple** | `Counter after: LiftAtA, LiftAtB, LiftAtC` (comma-separated or multiple lines) |
 | Default | Last task of first resource if omitted |
-| Any resource | May name a task on another cycle (e.g. `Pave`) |
 | Exact match | `Pave` does **not** match `DumpToPaver` |
+| Run stop | **Total hits** across all counters ≥ max cycles |
+| Chart cycle | Global production event index (sum of all counters) |
+| Report | Each counter listed; cost uses **sum** of production |
+
+Multi-counter teaches multi-demand (e.g. crane serving three zones): every productive service is counted, not only one zone.
 
 ---
 
