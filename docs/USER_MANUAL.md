@@ -145,7 +145,7 @@ Never draw undirected segments: every arc is a **panah** (arrow).
 - Classic pair: GEN multiplies work units; CON reunites them for one production unit (see Example 3 Excavator loading).
 - **Prefer inline on the resource chain** (source of truth):
   `Trucks: GEN 5 → Scoop → CON 5 TruckFull → Haul&Return`
-- Home QUEUE always exists per resource (`Trucks Idle`). `GEN 5` is the only extra truck QUEUE (load-zone scale change).
+- Home QUEUE (Q-circle) always exists per resource; **GEN** is drawn as an **inverted triangle** (not a Q), dual of CON upright triangle. Home QUEUE always exists per resource (`Trucks Idle`). `GEN 5` is the only extra truck QUEUE (load-zone scale change).
 - Optional `Functions: GEN Name = k` still works; inline is clearer for teaching.  
 - Do **not** put `probability` on COMBI multi-out used only for resource return fan-out.
 

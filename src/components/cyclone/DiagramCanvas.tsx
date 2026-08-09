@@ -57,7 +57,26 @@ function NodeShape({
   let shape: ReactNode;
   const labelY = size + 15;
 
-  if (node.type === "QUEUE") {
+  if (node.type === "QUEUE" && (node.generateCount ?? 0) >= 2) {
+    // GENERATE (GEN k): inverted triangle — dual of CONSOLIDATE (upright triangle).
+    // Not a Q-circle so learners do not confuse load-zone scale with home idle.
+    const m = 6;
+    const path = [
+      `M ${m} ${m}`,
+      `L ${size - m} ${m}`,
+      `L ${half} ${size - m}`,
+      `Z`,
+    ].join(" ");
+    shape = (
+      <path
+        d={path}
+        fill={fill}
+        stroke={stroke}
+        strokeWidth={strokeW}
+        strokeLinejoin="miter"
+      />
+    );
+  } else if (node.type === "QUEUE") {
     const r = half - 5;
     const sx = half + r * 0.35;
     const sy = half + r * 0.35;

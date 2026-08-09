@@ -21,20 +21,22 @@ Use this document when drawing diagrams, writing prompts, writing DSL, or updati
 
 | Element | Shape (diagram) | Role |
 |---------|-----------------|------|
-| **QUEUE** | Circle with lower-right slash (like a **Q**) | Idle resource / waiting pool (home of a resource) |
+| **QUEUE** | Circle with lower-right slash (like a **Q**) | Idle resource / waiting pool (**home** of a resource only) |
+| **GENERATE (GEN)** | **Inverted triangle** (point down) | Function node on a QUEUE: each *arrival* becomes **k** units (unit-scale up). **Not** a Q-circle |
 | **COMBI** | Square with **top-left corner cut** | **Meeting work**: ≥2 resources required (one unit from each predecessor QUEUE). Single-resource work is NORMAL |
 | **NORMAL** | Rectangle | **One-resource work**: starts from a single unit (home QUEUE or previous task). No second resource needed |
 | **COUNTER** | **Golf flag** (pole + triangular flag) | Production counter — records cycles / output |
-| **CONSOLIDATE (CON)** | **Upright triangle** | Function node: gather N units, release 1 (duration 0) |
+| **CONSOLIDATE (CON)** | **Upright triangle** (point up) | Function node: gather **n** units, release 1 (duration 0). Dual of GEN |
 
 ### Labels under the shape
 
 | Node | Subtitle |
 |------|----------|
-| QUEUE | `n = <initial>` and/or **`GEN k`** if generate is set |
+| QUEUE (home) | `n = <initial>` |
+| GENERATE | **`GEN k`** (k ≥ 2) |
 | COMBI / NORMAL | Duration text (e.g. `tri 1.5, 2, 3`) |
 | COUNTER | `+<production amount>` |
-| CONSOLIDATE | **`CON n`** (n = consolidate count) |
+| CONSOLIDATE | **`CON n`** (n ≥ 2) |
 
 ---
 
@@ -86,6 +88,15 @@ Use this document when drawing diagrams, writing prompts, writing DSL, or updati
 ---
 
 ## 5. Function nodes (independent)
+
+**Shape pair (easy to remember):**
+
+| | Shape | Unit scale |
+|--|-------|------------|
+| **GEN** | ▽ inverted triangle | 1 → k (multiply) |
+| **CON** | △ upright triangle | n → 1 (gather) |
+
+## 5b. Function nodes detail (independent)
 
 GEN, CON, and probabilistic branches are **optional** and **independent**. Use only when unit-measurement logic needs them.
 
