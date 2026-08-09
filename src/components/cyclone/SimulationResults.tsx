@@ -660,29 +660,45 @@ export function SimulationResults({
           </p>
           {idleData.length > 0 && (
             <ChartDownloadFrame
-              title="Resource idleness (waste at home)"
+              title="Resource idle vs busy (home QUEUE)"
               filename="chart_resource_idleness"
-              chartClassName="h-56"
+              chartClassName="h-64"
             >
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={idleData} margin={{ top: 18, right: 8, left: 0, bottom: 4 }}>
+                <BarChart
+                  data={idleData}
+                  margin={{ top: 28, right: 8, left: 0, bottom: 8 }}
+                  barCategoryGap="18%"
+                  barGap={4}
+                >
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                   <XAxis dataKey="name" tick={{ fontSize: 10 }} />
                   <YAxis tick={{ fontSize: 10 }} unit="%" domain={[0, 100]} />
                   <Tooltip
-                    formatter={(v, name) => [`${v}%`, name === "idle" ? "Idle" : "Busy"]}
+                    formatter={(v, name) => [
+                      `${v}%`,
+                      name === "idle" ? "Idle %" : "Busy %",
+                    ]}
                     labelFormatter={(l) => String(l)}
                   />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Bar dataKey="idle" fill="#c41e3a" name="Idle %" stackId="a" radius={[0, 0, 0, 0]}>
+                  {/* Side-by-side so both % labels always visible (even 0% / 100%) */}
+                  <Bar dataKey="idle" fill="#c41e3a" name="Idle %" radius={[4, 4, 0, 0]}>
                     <LabelList
                       dataKey="idle"
-                      position="center"
+                      position="top"
                       formatter={(v: number | string) => `${v}%`}
-                      style={{ fontSize: 10, fill: "#fff" }}
+                      style={{ fontSize: 10, fontWeight: 600, fill: "var(--foreground)" }}
                     />
                   </Bar>
-                  <Bar dataKey="busy" fill="#4a7c59" name="Busy %" stackId="a" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="busy" fill="#4a7c59" name="Busy %" radius={[4, 4, 0, 0]}>
+                    <LabelList
+                      dataKey="busy"
+                      position="top"
+                      formatter={(v: number | string) => `${v}%`}
+                      style={{ fontSize: 10, fontWeight: 600, fill: "var(--foreground)" }}
+                    />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </ChartDownloadFrame>
