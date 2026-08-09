@@ -73,6 +73,42 @@ Loader: TaskA
 
 creates a **home QUEUE** (`Trucks Idle`, `Loader Idle`) and work nodes.
 
+### 3.1b Multi-demand pipe `|` (standard Neo-CYCLONE)
+
+**Meaning:** one home QUEUE (one fleet) can start **several different first tasks**, not a sequence.
+
+| Syntax | Meaning |
+|--------|---------|
+| `A → B → C` | **Sequence** — same unit walks the path in order |
+| `A \| B \| C` | **Multi-demand** — idle resource may serve **A or B or C** (whichever is ready; **Priority** breaks ties) |
+
+**Examples (standard):**
+
+```
+# Tower crane — one crane, three lift demands
+1 Crane: LiftAtA | LiftAtB | LiftAtC
+
+# Helpers — one helper pool refills brick stack OR mortar place
+3 Helpers: ReceiveBrick | ReceiveMortar
+```
+
+**Not the same as:**
+
+```
+# Sequence (brick then mortar on the *same* trip)
+Helpers: ReceiveBrick → ReceiveMortar → …
+```
+
+Rules:
+
+1. `|` lists **competing first tasks** from the **same** home QUEUE.  
+2. Use **`Priority:`** when several demands wait (lower number = first).  
+3. Full alternate paths (advanced):  
+   `Helpers: PathA → … | PathB → …` (each side of `|` may be a chain).  
+4. Diagram: one idle Q feeding several COMBIs; return dashed-gold to that home Q.
+
+This is **Neo-CYCLONE standard** (Halpin multi-work / shared resource), documented here and in Format Prompt / NOTATION_STANDARD.
+
 ### 3.2 GEN / CON — prefer **inline on the chain** (source of truth)
 
 ```

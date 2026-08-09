@@ -243,7 +243,15 @@ Lift Forms: 2
 Lift Bucket: 3
 ```
 
-Pipe `|` on a resource line = multi-demand from one home QUEUE (not a sequence).
+Pipe `|` on a resource line = **multi-demand** from one home QUEUE (**not** a sequence).
+
+| Prompt | Meaning |
+|--------|---------|
+| `Crane: LiftAtA \| LiftAtB \| LiftAtC` | One crane idle pool → any ready lift |
+| `Helpers: ReceiveBrick \| ReceiveMortar` | One helper pool → refill brick **or** mortar |
+| `Helpers: ReceiveBrick → ReceiveMortar` | **Sequence** — same helper does brick then mortar |
+
+**Standard Neo-CYCLONE token.** Prefer `|` for shared resources; use `Priority:` for contention.
 
 ## 8. Relation to Halpin
 

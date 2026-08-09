@@ -51,10 +51,17 @@ export const GENERAL_TEMPLATE = `# =============================================
 #    Home QUEUE is created automatically for each resource.
 #    Inline GEN/CON in the chain (preferred):
 #      Trucks: GEN 5 → Scoop → CON 5 TruckFull → Haul&Return
-#    Shared multi-demand: Crane: TaskA | TaskB | TaskC
+#    Sequence:     Resource: Task1 → Task2 → Task3
+#    Multi-demand: Resource: TaskA | TaskB | TaskC
+#      → one home QUEUE may serve A or B or C (not a sequence).
+#      → use Priority: when several demands wait (lower = first).
+#      Examples: Crane: LiftAtA | LiftAtB | LiftAtC
+#                Helpers: ReceiveBrick | ReceiveMortar
 # ------------------------------------------------------------
 Resource1: Task1 → Task2 → Task3 → …
 Resource2: Task1
+# Multi-demand example:
+# 1 Crane: LiftAtA | LiftAtB | LiftAtC
 # GEN/CON example:
 # Trucks: GEN 5 → Scoop → CON 5 TruckFull → Haul&Return
 # Excavator: Scoop
