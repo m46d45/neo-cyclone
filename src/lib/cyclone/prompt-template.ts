@@ -37,6 +37,7 @@ export function stripPromptComments(text: string): string {
  */
 export const GENERAL_TEMPLATE = `# ============================================================
 # FORMAT PROMPT — Neo-CYCLONE
+# AI-Assisted Construction Operation Simulation
 # AI-agent of Daniel W. Halpin's CYCLONE
 # ------------------------------------------------------------
 # # and // = notes only (ignored). Durations in minutes.
@@ -151,4 +152,8 @@ export const DIST_TABLE = `# Quick reference (same order as Format Prompt)
 # Run: max cycles default 100, limit 500 · seed 12345
 # Notes: # …  or  // …`;
 
-export const PRODUCT_TAGLINE = "AI-agent of Daniel W. Halpin's CYCLONE";
+/** Primary product descriptor (header, manual, exports). */
+export const PRODUCT_TAGLINE = "AI-Assisted Construction Operation Simulation";
+
+/** Dedication line — Halpin lineage (footer / manual). */
+export const PRODUCT_DEDICATION = "AI-agent of Daniel W. Halpin's CYCLONE";
