@@ -21,7 +21,7 @@ function ManualPage() {
             <BookOpen className="size-4 text-primary" />
             <h1 className="font-display text-base font-semibold">Neo-CYCLONE Manual</h1>
             <Badge variant="secondary" className="border-primary/25 bg-primary/10 text-primary">
-              v1.6.1
+              v1.6.2
             </Badge>
           </div>
           <Button asChild variant="outline" size="sm">
@@ -180,6 +180,8 @@ function ManualPage() {
             <li><strong className="text-foreground">AI mode</strong> — <code className="text-foreground">XAI_API_KEY</code> on Vercel → xAI chat + studio context</li>
             <li><strong className="text-foreground">Local mode</strong> — no key → English-first intent helper</li>
             <li><strong className="text-foreground">Language</strong> — English-first (international product)</li>
+            <li><strong className="text-foreground">Compact CONTEXT</strong> — browser builds a snapshot (prompt, network summary, last-run metrics); server does not receive the full simulation object graph</li>
+            <li><strong className="text-foreground">Rate limits</strong> — Assistant <strong>30 / hour / IP</strong>; AI DSL draft <strong>20 / hour / IP</strong> (protects shared host & API cost)</li>
           </ul>
           <h3 className="font-display mt-6 text-base font-semibold text-foreground">7.3 What it can do</h3>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-xs">
@@ -193,6 +195,7 @@ function ManualPage() {
             <li>Invent a different operation as “current”</li>
             <li>Replace the CYCLONE engine with black-box AI simulation</li>
             <li>Answer unrelated topics; apply changes without confirmation</li>
+            <li>Bypass rate limits or act as an unlimited free chat API</li>
           </ul>
           <h3 className="font-display mt-6 text-base font-semibold text-foreground">7.5 Recommended questions</h3>
           <p className="mt-2 text-xs font-medium text-foreground">Model</p>
@@ -233,10 +236,33 @@ function ManualPage() {
         <section>
           <h2 className="font-display text-xl font-semibold text-foreground">Chapter 8 — Limits & deploy</h2>
           <div className="gold-rule my-3 max-w-xs" />
-          <ul className="list-disc space-y-1.5 pl-5 text-xs">
-            <li>Max cycles 100 default / 500 max; seed 12345</li>
-            <li>Deploy: GitHub main → Vercel. Optional XAI_API_KEY for full AI mode.</li>
+          <h3 className="font-display mt-4 text-base font-semibold text-foreground">8.1 Simulation</h3>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-xs">
+            <li>Max cycles: default <strong className="text-foreground">100</strong>, hard cap <strong className="text-foreground">500</strong></li>
+            <li>Seed default <strong className="text-foreground">12345</strong> (reproducible classroom runs)</li>
+            <li>Sensitivity: max <strong className="text-foreground">5</strong> resources; ~<strong className="text-foreground">150</strong> combinations (ranges down-sampled)</li>
           </ul>
+          <h3 className="font-display mt-4 text-base font-semibold text-foreground">8.2 Sensitivity performance</h3>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-xs">
+            <li>SA batches run in a <strong className="text-foreground">Web Worker</strong> when available (UI stays responsive)</li>
+            <li>Fallback to main thread if Workers fail — same numbers, possible brief UI pause</li>
+            <li>Single-run Simulate stays on the main thread (fast for teaching cycles)</li>
+          </ul>
+          <h3 className="font-display mt-4 text-base font-semibold text-foreground">8.3 AI Assistant & API</h3>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-xs">
+            <li>Assistant: <strong className="text-foreground">30 requests / hour / IP</strong></li>
+            <li>AI DSL draft: <strong className="text-foreground">20 requests / hour / IP</strong></li>
+            <li>Server receives compact CONTEXT only (not full result objects)</li>
+            <li>Full free-form chat needs <code className="text-foreground">XAI_API_KEY</code>; otherwise local English-first mode</li>
+          </ul>
+          <h3 className="font-display mt-4 text-base font-semibold text-foreground">8.4 Deploy</h3>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-xs">
+            <li>GitHub <code className="text-foreground">main</code> → Vercel auto-deploy</li>
+            <li>Optional <code className="text-foreground">XAI_API_KEY</code> for AI mode</li>
+          </ul>
+          <p className="mt-3 text-[11px] text-muted-foreground">
+            These limits protect shared hosting and API cost. They do not change CYCLONE modeling rules or Halpin-style metrics.
+          </p>
         </section>
 
         <section>
@@ -279,7 +305,7 @@ function ManualPage() {
         </section>
 
         <p className="text-center text-xs text-muted-foreground">
-          {PRODUCT_TAGLINE}<span className="mx-1.5">·</span>{PRODUCT_DEDICATION} · Manual v1.6.1
+          {PRODUCT_TAGLINE}<span className="mx-1.5">·</span>{PRODUCT_DEDICATION} · Manual v1.6.2
         </p>
       </main>
     </div>
