@@ -2,7 +2,7 @@
 
 | | |
 |--|--|
-| **Version** | 1.6.1 |
+| **Version** | 1.6.2 |
 | **Language** | English |
 | **Product** | AI-Assisted Construction Operation Simulation |
 | **Dedication** | AI-agent of Daniel W. Halpin's CYCLONE |
@@ -30,48 +30,27 @@ It is **not** a special-purpose industrial factory controller. It is a **teachin
 
 ### 1.2 Why this exists (dedication)
 
-This product is a **tribute to Professor Daniel W. Halpin**.
+This product is a **tribute to Professor Daniel W. Halpin**. Through his teaching and work, many students first met **flow**, **idleness**, and **CYCLONE** as a simple network language for cyclic construction work.
 
-Through his teaching and work, many students first met:
+Historical line (see Chapter 9): **CYCLONE** (methodology) → **MicroCYCLONE** (early computer tool) → DISCO, PROSIDYC, COST, WebCYCLONE, Simphony / Symphony.Net, and related systems.
 
-| Idea | Meaning in operations |
+Halpin’s foundation is not obsolete in the age of AI — it is the **grammar** that lets us describe an operation clearly enough that a machine can help build a model and run a simulation.
+
+### 1.3 Approach — is this an “AI agent”?
+
+| Term | Meaning in Neo-CYCLONE |
 |------|------------------------|
-| **Flow** | Resources move through tasks in cycles |
-| **Idleness** | Time spent waiting is waste we can study |
-| **CYCLONE** | A simple network language for cyclic construction work |
-
-The historical line includes **CYCLONE** (methodology), **MicroCYCLONE** (early computer tool), then systems such as DISCO, PROSIDYC, COST, WebCYCLONE, Simphony / Symphony.Net, and related tools.
-
-Halpin’s foundation is **not obsolete** in the age of AI. It is the **grammar** that lets us describe an operation clearly enough that a machine can build a model and run a simulation.
-
-### 1.3 What you need
-
-| Need | How Neo-CYCLONE helps |
-|------|------------------------|
-| Describe an operation in plain structure | **Format Prompt** (resource cycles + durations) |
-| See the CYCLONE network | **Draw Model** → diagram + network logic |
-| Measure productivity & waste | **Simulate** → units/hour, utilization, idleness |
-| Compare fleet mixes | **Sensitivity Analysis** (optional Cost block) |
-| Keep Halpin-style reports | Results, Excel export, charts |
-
-You need only a browser (the live app on Vercel). No local install for normal use.
-
-### 1.4 Approach — is this an “AI agent”?
-
-| Layer | What it is | What it is *not* |
-|-------|------------|------------------|
-| **Structured Format Prompt** | The **primary** way to define a model: resource cycles, durations, priority, branch, cost, sensitivity | Free chat that “guesses” a site plan |
-| **Local builder / engine** | Deterministic code: prompt → CYCLONE network → discrete-event simulation | A black-box neural simulator |
+| **Product** | AI-Assisted Construction Operation Simulation |
+| **Dedication line** | AI-agent of Daniel W. Halpin's CYCLONE |
+| **Practice** | Prompt-first → **Draw Model** → check network → **Simulate** |
 | **AI Assistant (Ch. 7)** | Studio-bound co-pilot: explain results, bottleneck, propose prompt edits (Apply required) | Autonomous agent that runs simulations without you |
-| **Product term** | **AI-Assisted Construction Operation Simulation** | Black-box industrial controller |
-| **Dedication** | “AI-agent of Daniel W. Halpin's CYCLONE” | Substitute for Halpin’s methodology |
 
 **In practice:** (1) structured prompt (2) **Draw Model** (3) inspect cycles (4) **Simulate** (5) optional AI Assistant under Results.
 
-### 1.5 Studio layout
+### 1.4 Studio layout
 
-| Area | Role |
-|------|------|
+| Area | Content |
+|------|--------|
 | **Left** | Prompt · Example · Draw Model · Format Prompt |
 | **Right** | CYCLONE Model · network logic · run parameters |
 | **Below** | Results: Simulation · Sensitivity Analysis · **AI Assistant** |
@@ -82,30 +61,24 @@ You need only a browser (the live app on Vercel). No local install for normal us
 
 ## Chapter 2 — How-to
 
-### 2.1 Fast path
 1. Example → e.g. Earthmoving. 2. **Draw Model**. 3. Check QUEUEs / tasks / counter. 4. Max cycles (default 100, max 500), seed 12345. 5. **Simulate**. 6. Optional Excel / PNG. 7. Optional **AI Assistant** questions.
 
-### 2.2 Own operation
 Write Format Prompt (Chapter 4) → Draw → fix → Simulate → optional Cost / Sensitivity → optional AI Assistant.
 
-### 2.3 Iterate before Simulate
-Home QUEUE per resource? Multi-resource → COMBI? `Counter after:` exact? GEN/CON on scaling chain? Branch rejoins?
-
-### 2.4 Sensitivity
-When `Sensitivity:` present → Results → Sensitivity Analysis → pair charts + idleness tab.
+**Iterate before Simulate:** home QUEUE per resource? Multi-resource meetings → COMBI? Exact `Counter after:` names? GEN/CON only when unit logic needs them?
 
 ---
 
-# Part III — Six Examples
+# Part III — Teaching examples
 
-| # | Name | Learn |
-|---|------|-------|
-| 1 | Earthmoving | Fleet, cost, steady state |
-| 2 | Asphalt Paving | Branch probability |
-| 3 | Loading Dump Truck | GEN / CON |
-| 4 | Tower Crane | Multi-demand, Priority, multi-counter |
-| 5 | Masonry | Face stocks; sensitivity |
-| 6 | Precast Plant | Ch.14-style + complex SA |
+## Chapter 3 — Six Examples
+
+1. **Earthmoving** — classic fleet; cost; steady state  
+2. **Asphalt Paving** — branch probability  
+3. **Loading Dump Truck** — GEN / CON  
+4. **Tower Crane** — multi-demand, Priority, multi-counter  
+5. **Masonry** — face stocks; sensitivity intro  
+6. **Precast Plant** — Halpin Ch.14-style + complex SA  
 
 ---
 
@@ -113,52 +86,37 @@ When `Sensitivity:` present → Results → Sensitivity Analysis → pair charts
 
 ## Chapter 4 — Format Prompt
 
-Block order: **Network → Durations → Priority → Branch → Cost → Sensitivity**. Comments `#`/`//` ignored. Time: minutes. Cost: USD/h.
+Block order: **Network → Durations → Priority → Branch → Cost → Sensitivity** (last).  
+`#` / `//` = notes only. Time in **minutes**. Cost in **USD / resource-hour**.
 
-```
-Trucks: Load → Haul → Dump → Return
-Loader: Load
-5 trucks, 1 loader
-Counter after: Dump
-production = 12 m3
-
-Durations:
-Load: tri 1.2, 1.8, 2.5
-Haul: normal 8, 1.2
-
-Cost:
-Trucks: 85
-Loader: 120
-
-Sensitivity:
-Trucks: 2..12
-Loader: 1..3
-```
-
-- Sequence: `→` `->` `-->` `=>`
-- Multi-demand: `A | B | C` + optional Priority (lower = higher)
-- Inline GEN/CON: `Trucks: GEN 5 → Scoop → CON 5 TruckFull → …`
-- Branch: `After X: OutA p=0.9, OutB p=0.1`
+See the Format Prompt panel in the studio for the live template. Sequence arrows: `→` · `->` · `-->` · `=>`. Multi-demand: `A | B | C` + Priority. Inline GEN/CON preferred on the resource chain.
 
 ### Duration distributions (minutes)
 
-| Kind | Syntax | Notes |
-|------|--------|--------|
-| constant | `const 1.2` | fixed |
-| uniform | `unif 2, 5` | min, max |
-| triangular | `tri 1.5, 2, 3` | min, mode, max (expert 3-point) |
-| normal | `normal 8, 1.5` | mean, sd |
-| lognormal | `lognormal 8, 1.5` | mean, sd of duration |
-| **beta** | `beta 1, 5, 2, 5` | **min, max, α, β** (4-param) |
-| **pert** | `pert 4, 6, 10` | **a, m, b** → classic PERT-beta on [a,b] |
-| gamma | `gamma 4, 1.2` | shape, scale |
+| Kind | Parameters |
+|------|------------|
+| `const` | fixed value |
+| `unif` | min, max |
+| `tri` | min, mode, max |
+| `normal` | mean, sd |
+| `lognormal` | mean, sd of duration |
+| `beta` | **min, max, α, β** (4-param) |
+| `pert` | **a, m, b** → classic PERT-beta on [a,b] |
+| `gamma` | shape, scale |
 
-Aliases: `pert` = `beta-pert` = `betapert`. Writing `beta` with only three numbers is also treated as PERT (a, m, b).
+Aliases: `pert` = `beta-pert` = `betapert`. `beta` with three numbers is treated as PERT.
 
 ## Chapter 5 — Modeling rules
-1. Home QUEUE per resource. 2. ≥2 resources → COMBI; one → NORMAL. 3. Return (dashed gold) only to home QUEUE. 4. Forward = solid black. 5. GEN/CON on scaling chain. 6. Grid layout: tasks ordered, then queues, counter at end.
+
+1. Every resource has a home QUEUE.  
+2. ≥2 resources meet → COMBI; one resource → NORMAL.  
+3. Return arcs (dashed gold) only to home QUEUE; forward = solid black.  
+4. GEN ▽ / CON △ optional and independent.  
+5. `Counter after:` exact task name(s).  
+6. Grid layout: ordered tasks, queues; counter near the end.
 
 ## Chapter 6 — Results
+
 Production by cycle · steady state (5%, ≥10 cycles) · idleness · cost · sensitivity · Excel/PNG.
 
 ## Chapter 7 — AI Assistant
@@ -168,7 +126,7 @@ The studio includes an **AI Assistant** panel (below Results after you work with
 ### 7.1 Purpose
 
 | Goal | Meaning |
-|------|---------|
+|------|--------|
 | **Stay grounded** | Answers refer to the *current* Format Prompt, drawn CYCLONE network, and last simulation / sensitivity results |
 | **Teach Halpin ideas** | Flow, home-QUEUE idleness (waste), steady state, unit cost, GEN/CON, priority |
 | **Propose safe edits** | Suggest a full updated Format Prompt; **you** Apply → Draw Model → Simulate |
@@ -185,7 +143,16 @@ The assistant does **not** replace the deterministic CYCLONE engine. Simulation 
 
 **Language policy (international product):** UI, Manual, Format Prompt keywords, and local-mode replies are **English-first**. With AI mode, the model *prefers English* and may follow the user’s language only when it is clearly written in another language.
 
-**Context bound to the studio:** the assistant receives a compact snapshot of prompt, model readiness, cycles, productivity, idleness, and cost—not the whole internet and not a different operation unless you ask to draft a new one.
+**Context bound to the studio:** the browser builds a **compact CONTEXT string** (Format Prompt excerpt, network summary, last-run productivity / idleness / cost, sensitivity summary) and sends only that snapshot to the server—not the full simulation object graph and not the whole internet.
+
+**Rate limits (protects xAI cost and host stability):**
+
+| Endpoint | Limit | Notes |
+|----------|-------|--------|
+| AI Assistant (`chatAssistant`) | **30 requests / hour / client IP** | Applies on the server path |
+| AI DSL draft (`generateCycloneDsl`) | **20 requests / hour / client IP** | Only meaningful when `XAI_API_KEY` is set |
+
+When a limit is hit, the Assistant returns a clear **rate-limited** message (and a short toast in the UI). Limits are enforced in-memory per serverless isolate (best-effort on multi-instance hosts). Classroom use at normal pace is fine; automated spam is not.
 
 ### 7.3 What it can do
 
@@ -194,18 +161,19 @@ The assistant does **not** replace the deterministic CYCLONE engine. Simulation 
 - Interpret **last-run** productivity, steady state, unit cost, and **resource idleness / busy**
 - Identify a likely **bottleneck** (high idle vs high busy) from simulation stats
 - **Propose** Format Prompt edits (fleet size, durations, cost, sensitivity ranges)—only applied after **Apply prompt**
-- Answer teaching questions about CYCLONE concepts *in the context of the open model*
+- Answer teaching questions about CYCLONE concepts in the context of the open model
 
 ### 7.4 What it cannot / must not do
 
-| Out of scope | Why |
+| It must not… | Why |
 |--------------|-----|
-| Claim a simulation already re-ran after an edit | You must **Draw Model** and **Simulate** |
+| Auto-run Simulate after an edit | You control Draw Model and Simulate |
 | Invent a different operation as if it were the current one | Context is the open prompt/network |
 | Replace CYCLONE logic with a black-box “AI simulation” | Engine is deterministic discrete-event code |
 | Answer unrelated topics (general coding, legal, safety certification, etc.) | Studio co-pilot only |
 | Apply prompt changes without your confirmation | Educational control: **Apply** is explicit |
 | Guarantee optimal fleet design without runs | Suggestions are guidance; numbers come from Simulate / Sensitivity |
+| Bypass rate limits or use the Assistant as a free unlimited chat API | Educational quota protects the shared deployment |
 
 ### 7.5 Recommended questions
 
@@ -259,7 +227,40 @@ Use questions like these so answers stay useful and on-topic.
 ---
 
 ## Chapter 8 — Limits & deploy
-Max cycles default 100 / max 500 · seed 12345 · GitHub main → Vercel. Optional `XAI_API_KEY` on Vercel for full AI Assistant mode.
+
+### 8.1 Simulation limits
+
+| Parameter | Default | Hard limit | Notes |
+|-----------|---------|------------|--------|
+| Max cycles | 100 | **500** | Product teaching cap; form clamps higher values |
+| Seed | 12345 | — | Reproducible runs for class comparison |
+| Time unit | minutes | — | Documented in Format Prompt header |
+| Sensitivity resources | — | **5** | Extra ranges ignored with a note |
+| Sensitivity combinations | — | **~150** | Ranges are down-sampled (step increased), not cut mid-axis |
+
+### 8.2 Sensitivity performance
+
+- Sensitivity batches run in a **Web Worker** when the browser supports it, so the studio UI stays responsive during many combination runs.
+- If Workers are unavailable or fail, the same engine falls back to the **main thread** (same numerical results; UI may pause briefly on large SA).
+- Base **Simulate** (single trajectory) always runs on the main thread—it is fast enough for teaching cycles.
+
+### 8.3 AI Assistant & API limits
+
+| Item | Limit / behavior |
+|------|------------------|
+| Assistant requests | **30 / hour / IP** |
+| AI DSL draft requests | **20 / hour / IP** |
+| Payload to server | **Compact CONTEXT** only (not full `SimResult` / model graph) |
+| Full free-form chat | Requires `XAI_API_KEY` on the host |
+| Without API key | **Local mode** (English-first intent helper) still works |
+
+These limits do **not** change CYCLONE modeling rules, production metrics, or Halpin-style interpretation. They only protect shared hosting and API cost.
+
+### 8.4 Deploy
+
+- Source of truth: **GitHub `main`** → **Vercel** auto-deploy.
+- Optional env: `XAI_API_KEY` for AI mode; auth/database vars only if you enable sign-in.
+- Live app: [neo-cyclone.vercel.app](https://neo-cyclone.vercel.app/)
 
 ---
 
@@ -268,54 +269,41 @@ Max cycles default 100 / max 500 · seed 12345 · GitHub main → Vercel. Option
 Selected literature on **CYCLONE**, **MicroCYCLONE**, and applications by **Daniel W. Halpin**, students, and collaborators.
 
 ### 9.1 Foundations
-1. **Halpin, D. W.** (1973). *An Investigation of the Use of Simulation Networks for Modeling Construction Operations*. Ph.D., University of Illinois at Urbana–Champaign.
+
+1. **Halpin, D. W.** (1973). Ph.D. dissertation, University of Illinois at Urbana–Champaign.
 2. **Halpin, D. W.** (1977). “CYCLONE: Method for Modeling of Job Site Processes.” *J. Constr. Div.*, ASCE, 103(3), 489–499.
-3. **Halpin, D. W., & Riggs, L. S.** (1992). *Planning and Analysis of Construction Operations*. Wiley. ISBN 0-471-55510-X.
+3. **Halpin, D. W., & Riggs, L. S.** (1992). *Planning and Analysis of Construction Operations*. Wiley.
 
 ### 9.2 MicroCYCLONE
-4. **Lluch, J., & Halpin, D. W.** (1982). “Construction Operations and Microcomputers.” *J. Constr. Div.*, ASCE, 108(1), 129–145.
-5. **Halpin, D. W.** (1990). *MicroCYCLONE User’s Manual*. Purdue University.
-6. **Halpin, D. W.** (1990). *MicroCYCLONE System Manual*. Purdue University.
-7. **Halpin, D. W.** (1992). *MicroCYCLONE Users Manual for Construction Operations*. Learning Systems / Purdue.
+
+4. **Lluch, J., & Halpin, D. W.** (1982). *J. Constr. Div.*, ASCE, 108(1), 129–145.
+5. **Halpin, D. W.** (1990–1992). MicroCYCLONE User / System manuals. Purdue / Learning Systems.
 
 ### 9.3 DISCO
-8. **Huang, R.-Y., & Halpin, D. W.** (1993). “DISCO.” *10th ISARC*, Houston, 503–510.
-9. **Huang, R.-Y., & Halpin, D. W.** (1994). “Visual Construction Operation Simulation: The DISCO Approach.” *Microcomputers in Civil Engineering*, 9(3), 175–184.
-10. **Huang, R.-Y.** (1994). Ph.D. dissertation, Purdue (advisor: Halpin).
-11. **Huang, R.-Y., & Halpin, D. W.** (1995). *J. Constr. Eng. Manage.*, ASCE, 121(2), 222–229.
-12. **Huang, R.-Y., Grigoriadis, A. M., & Halpin, D. W.** (1994). “Simulation of Cable-Stayed Bridges Using DISCO.” *WSC*, 1130–1136.
+
+6. **Huang, R.-Y., & Halpin, D. W.** (1993–1995). DISCO papers (ISARC, *Microcomputers in Civil Engineering*, *J. Constr. Eng. Manage.*).
+7. **Huang, R.-Y.** (1994). Ph.D., Purdue (advisor: Halpin).
 
 ### 9.4 PROSIDYC · COST · WebCYCLONE
-13. **Halpin, D. W., & Martinez, L.-H.** (1999). “Real World Applications of Construction Process Simulation.” *WSC*, 956–962. (PROSIDYC)
-14. **Cheng, T.-M., Wu, H.-T., & Tseng, Y.-W.** (2000). “COST.” *17th ISARC*, 999–1004.
-15. **Halpin, D. W., Jen, H., & Kim, J.** (2003). “A Construction Process Simulation Web Service.” *WSC*, 1503–1509. (WebCYCLONE)
+
+8. **Halpin, D. W., & Martinez, L.-H.** (1999). PROSIDYC. *WSC*.
+9. **Cheng, T.-M., et al.** (2000). COST. *17th ISARC*.
+10. **Halpin, D. W., Jen, H., & Kim, J.** (2003). WebCYCLONE. *WSC*.
 
 ### 9.5 Purdue / Halpin-circle
-16. **AbouRizk, S. M., & Halpin, D. W.** (1990). *J. Constr. Eng. Manage.*, 116(4), 575–594.
-17. **AbouRizk, S. M., Gonzalez-Quevedo, A., & Halpin, D. W.** (1990). *Microcomputers in Civil Engineering*, 5, 299–306.
-18. **Hijazi, A., AbouRizk, S. M., & Halpin, D. W.** (1992). *J. Constr. Eng. Manage.*, 118(4), 685–700.
-19. **Lutz, J. D., Halpin, D. W., & Wilson, J. R.** (1994). *J. Constr. Eng. Manage.*, 120(4), 753–773.
-20. **Gonzalez-Quevedo, A. A.** (c. 1991). *Sensitivity Analysis of Construction Simulation*. Ph.D., Purdue.
-21. **Halpin, D. W., AbouRizk, S. M., & Hijazi, A. M.** (1989). Microcomputers in Civil Engineering conference, Orlando.
-22. **Abraham, D. M., & Halpin, D. W.** (1998). *Can. J. Civ. Eng.*, 25(3), 490–499.
-23. **Halpin, D. W., Sawhney, A., & AbouRizk, S. M.** (1998). *Can. J. Civ. Eng.*, 25(1), 16–25.
-24. **Halpin, D. W.** (1998). Canadian Construction Research Forum, 33–41.
-25. **AbouRizk, S., Halpin, D., Mohamed, Y., & Hermann, U.** (2011). *J. Constr. Eng. Manage.*, 137(10), 843–852.
+
+11. AbouRizk & Halpin; Hijazi; Lutz; Gonzalez-Quevedo; Abraham; Halpin et al. project-level CYCLONE; AbouRizk et al. (2011).
 
 ### 9.6 Related lineage
-26. **Ioannou, P. G.** (1989). UM-CYCLONE.
-27. **Liu, L. Y., & Ioannou, P. G.** (1992). COOPS line.
-28. **Martinez, J. C.** (1996). STROBOSCOPE.
-29. **Hajjar, D., & AbouRizk, S. M.** (1999). Simphony. *WSC*, 998–1006.
-30. **AbouRizk, S., Hague, S., Ekyalimpa, R., & Newstead, S.** (2016). *Journal of Simulation*, 10(3), 207–215.
+
+12. UM-CYCLONE (Ioannou); STROBOSCOPE (Martinez); Simphony / Simphony.NET (AbouRizk et al.).
 
 ### 9.7 Relation
-Neo-CYCLONE does **not** replace MicroCYCLONE, DISCO, COST, WebCYCLONE, or Simphony. It is **AI-Assisted Construction Operation Simulation** — an educational studio that keeps Halpin’s modeling grammar visible.
+
+Neo-CYCLONE does **not** replace those systems. It is **AI-Assisted Construction Operation Simulation** — a teaching studio in Halpin’s tradition.
 
 ---
 
-**Product:** AI-Assisted Construction Operation Simulation  
-**Dedication:** AI-agent of Daniel W. Halpin's CYCLONE  
-**Method:** structured prompt → CYCLONE network → discrete-event simulation · optional AI Assistant co-pilot
+**Quick path:** 1. Example or Format Prompt → 2. Draw Model → 3. Simulate → 4. Sensitivity (if planned) → 5. AI Assistant (optional) → 6. Export Excel / PNG.
 
-*End of User Manual v1.6.1*
+AI-Assisted Construction Operation Simulation · AI-agent of Daniel W. Halpin's CYCLONE · Manual v1.6.2
