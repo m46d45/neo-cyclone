@@ -142,7 +142,7 @@ Never draw undirected segments: every arc is a **panah** (arrow).
 | **CON n** | Triangle **`CON n`** | `type: CONSOLIDATE`, `consolidate: n` (n ≥ 2) | Collect n units → release 1 (time 0) |
 
 - GEN and CON are **independent** — a model may use one, both, or neither.  
-- Classic pair: GEN multiplies work units; CON reunites them for one production unit (see Example 3 Concrete placing).  
+- Classic pair: GEN multiplies work units; CON reunites them for one production unit (see Example 3 Excavator loading).  
 - Do **not** put `probability` on COMBI multi-out used only for resource return fan-out.
 
 ### 6.4 Priority (shared resources)
@@ -183,7 +183,7 @@ Results → **Branches**: declared vs empirical.
 
 1. **Earthmoving** — cost, sensitivity, steady-state (default classic; **branch p** breakdown is commented in the prompt)  
 2. **Asphalt paving** — paver + trucks  
-3. **Concrete placing** — crane + trucks + **GEN/CON** bucket scale  
+3. **Excavator loading dump trucks** — **GEN 5** scoops / **CON 5** full truck  
 4. **Precast forms** — form cycle  
 5. **Masonry** — 3 resources, pairwise sensitivity  
 6. **Tower crane** — multi-demand `|` + **Priority**
