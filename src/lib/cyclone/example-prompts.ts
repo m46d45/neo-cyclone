@@ -99,13 +99,15 @@ Pave: normal 3.5, 0.6
   {
     id: "concrete-crane",
     title: "3. Concrete placing (crane + GEN/CON)",
-    goal: "Crane–truck pour with GEN (truck → buckets) and CON (buckets → truck free).",
-    source: "Halpin concrete placement; GEN/CON bucket-scale teaching.",
-    features: ["crane cycle", "GEN 4", "CON 4", "cost", "sensitivity"],
+    goal: "GEN multiplies truck load into buckets; crane COMBI pours; CON gathers buckets back to 1 truck unit.",
+    source: "Halpin concrete placement; GEN/CON unit-scale teaching.",
+    features: ["GEN 4", "CON 4", "COMBI ProcessBucket", "cost", "sensitivity"],
     prompt: `# Example 3 — Concrete placing (crane + trucks + GEN/CON)
-# SpotLoad truck → BucketPool (GEN 4): one truck load becomes 4 bucket units.
-# Crane meets buckets at ProcessBucket (COMBI); after 4 pours, CON AssemblePour
-# releases the truck to Leave. (QUEUE only feeds COMBI — Halpin rule.)
+# Unit scale change (Halpin GENERATE / CONSOLIDATE):
+#   GEN BucketPool = 4  → each truck arrival becomes 4 bucket units
+#   Crane + bucket meet at ProcessBucket (COMBI only — 2 resources)
+#   CON AssemblePour = 4 → after 4 bucket pours, 1 truck unit continues to Leave
+# SpotLoad is NORMAL (trucks only). Production counted after AssemblePour (1 pour / load).
 
 Trucks: SpotLoad → BucketPool → ProcessBucket → AssemblePour → Leave
 Crane: ProcessBucket
