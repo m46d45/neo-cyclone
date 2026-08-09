@@ -209,38 +209,44 @@ Lay: tri 4, 6, 9
   },
   {
     id: "precast-forms",
-    title: "6. Precast panel line (multi-crew)",
-    goal: "Line production: form WIP through stations; specialized crews; production after Pour.",
-    source: "Halpin precast/formwork as chained station cycles (line production teaching).",
+    title: "6. Precast line + crane + steam cure",
+    goal: "Forms=WIP; crane lifts; steam chamber capacity; production after ExitSteam.",
+    source: "Halpin precast line: form fleet size, crane multi-demand, limited steam slots.",
     features: [
       "line production",
-      "multi specialized crews",
-      "form WIP carrier",
-      "station queues",
-      "Cure hold",
+      "form fleet = line WIP",
+      "crane multi-demand",
+      "steam cure capacity",
+      "production after cure exit",
     ],
-    prompt: `# Example 6 — Precast panel LINE PRODUCTION (multi-crew)
-# WHY COMPLEX: not one crew — several small cycles chained into a production line.
+    prompt: `# Example 6 — Precast LINE + crane + steam curing capacity
+# LINE PRODUCTION questions this preset teaches:
+#   • How many FORMS (WIP) are in the line? → how many panels can be "in process"
+#   • Steam chamber holds only N panels (SteamSlots) — capacity bottleneck
+#   • Crane serves Set, EnterSteam, ExitSteam (multi-demand + Priority)
+#   • Production is counted only when a panel EXITS steam cure (not at Pour)
 #
-# WIP carrier = Forms (circulate). Each station is its own mini-cycle:
-#   Strip  : Form + StripCrew   (form leaves mold / previous panel)
-#   Clean  : Form + CleanCrew
-#   Set    : Form + SetCrew     (reassemble / place form)
-#   Pour   : Form + PourCrew    (cast panel — production counted here)
-#   Cure   : Form alone         (hold; NORMAL delay — form not free yet)
+# Flow (form = WIP carrier):
+#   Strip → Clean → Set(+crane) → Pour → EnterSteam(+crane+slot)
+#        → SteamCure(hold in chamber) → ExitSteam(+crane) → COUNTER → form free
 #
-# Crews are specialized (not one multi-skilled crew). Shared resources would use
-# multi-demand "|" + Priority; here each station has its own crew for clarity.
-# Final production = panels after Pour; line throughput depends on all stations.
+# 8 forms in line · 4 steam slots · 1 crane
 
-6 Forms: Strip → Clean → Set → Pour → Cure
+8 Forms: Strip → Clean → Set → Pour → EnterSteam → SteamCure → ExitSteam
 2 StripCrew: Strip
 2 CleanCrew: Clean
 2 SetCrew: Set
 1 PourCrew: Pour
+1 Crane: Set | EnterSteam | ExitSteam
+4 SteamSlots: EnterSteam → SteamCure → ExitSteam
 
-Counter after: Pour
+Counter after: ExitSteam
 production = 1 panel
+
+Priority:
+ExitSteam: 1
+EnterSteam: 2
+Set: 3
 
 Cost:
 Forms: 15
@@ -248,15 +254,20 @@ StripCrew: 55
 CleanCrew: 50
 SetCrew: 60
 PourCrew: 70
+Crane: 120
+SteamSlots: 8
 
 Durations:
 Strip: tri 20, 30, 45
 Clean: normal 15, 3
 Set: tri 25, 35, 50
 Pour: tri 15, 20, 30
-Cure: const 120
+EnterSteam: tri 5, 8, 12
+SteamCure: const 180
+ExitSteam: tri 5, 8, 12
 `,
   },
+
 ];
 
 export function getExampleById(id: string): ExamplePrompt | undefined {
