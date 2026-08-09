@@ -232,7 +232,7 @@ Full detail: **[NOTATION_STANDARD.md](./NOTATION_STANDARD.md)**.
 3. **Excavator loading** — inline `GEN 5 → Scoop → CON 5 TruckFull → Haul&Return`  
 4. **Tower crane** — multi-demand `|` + **Priority** (contention, no SA)  
 5. **Masonry** — 2 brick stacks + 1 mortar place at face; helpers refill; GEN2/CON2 on **mortar place**; **only SA**  
-6. **Precast forms** — longer form cycle (more complex; no SA)
+6. **Precast panel line** — multi-crew **line production** (form WIP + station crews; no SA)
 
 ---
 

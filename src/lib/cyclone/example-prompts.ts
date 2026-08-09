@@ -209,24 +209,45 @@ Lay: tri 4, 6, 9
   },
   {
     id: "precast-forms",
-    title: "6. Precast form cycle (forms + crew)",
-    goal: "Longer multi-step form cycle; strip → clean → set → pour → cure (no SA).",
-    source: "Halpin precast / formwork teaching examples (simplified).",
-    features: ["form cycle", "longer durations", "cost"],
-    prompt: `# Example 6 — Precast form cycle
-# Forms circulate; crew strip/clean/set/pour. Cure holds the form.
-# More complex multi-step cycle (no sensitivity — use Example 5 for SA).
+    title: "6. Precast panel line (multi-crew)",
+    goal: "Line production: form WIP through stations; specialized crews; production after Pour.",
+    source: "Halpin precast/formwork as chained station cycles (line production teaching).",
+    features: [
+      "line production",
+      "multi specialized crews",
+      "form WIP carrier",
+      "station queues",
+      "Cure hold",
+    ],
+    prompt: `# Example 6 — Precast panel LINE PRODUCTION (multi-crew)
+# WHY COMPLEX: not one crew — several small cycles chained into a production line.
+#
+# WIP carrier = Forms (circulate). Each station is its own mini-cycle:
+#   Strip  : Form + StripCrew   (form leaves mold / previous panel)
+#   Clean  : Form + CleanCrew
+#   Set    : Form + SetCrew     (reassemble / place form)
+#   Pour   : Form + PourCrew    (cast panel — production counted here)
+#   Cure   : Form alone         (hold; NORMAL delay — form not free yet)
+#
+# Crews are specialized (not one multi-skilled crew). Shared resources would use
+# multi-demand "|" + Priority; here each station has its own crew for clarity.
+# Final production = panels after Pour; line throughput depends on all stations.
 
-Forms: Strip → Clean → Set → Pour → Cure
-Crew: Strip → Clean → Set → Pour
-6 forms, 1 crew
+6 Forms: Strip → Clean → Set → Pour → Cure
+2 StripCrew: Strip
+2 CleanCrew: Clean
+2 SetCrew: Set
+1 PourCrew: Pour
 
 Counter after: Pour
 production = 1 panel
 
 Cost:
 Forms: 15
-Crew: 110
+StripCrew: 55
+CleanCrew: 50
+SetCrew: 60
+PourCrew: 70
 
 Durations:
 Strip: tri 20, 30, 45
