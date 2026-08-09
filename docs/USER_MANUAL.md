@@ -194,7 +194,7 @@ Full detail: **[NOTATION_STANDARD.md](./NOTATION_STANDARD.md)**.
 2. **Asphalt paving** — branch **p** Breakdown → Refill  
 3. **Excavator loading** — inline `GEN 5 → Scoop → CON 5 TruckFull → Haul&Return`  
 4. **Tower crane** — multi-demand `|` + **Priority** (contention, no SA)  
-5. **Masonry** — scaffold 3 spaces; brick packs (20) + mortar GEN2/CON2; **only SA preset** (pairwise)  
+5. **Masonry** — 2 brick stacks + 1 mortar place at face; helpers refill; GEN2/CON2 on **mortar place**; **only SA**  
 6. **Precast forms** — longer form cycle (more complex; no SA)
 
 ---
