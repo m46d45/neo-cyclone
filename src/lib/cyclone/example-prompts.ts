@@ -210,61 +210,62 @@ Lay: tri 4, 6, 9
   {
     id: "precast-forms",
     title: "6. Precast line + crane + steam cure",
-    goal: "Forms=WIP; crane lifts; steam chamber capacity; production after ExitSteam.",
-    source: "Halpin precast line: form fleet size, crane multi-demand, limited steam slots.",
+    goal: "Halpin-style factory line: form WIP, specialized crews, crane, steam capacity; count after Strip.",
+    source: "Halpin CYCLONE / MicroCYCLONE tradition + precast factory line (forms, multi-crew, crane, cure). Process order: prep→set→pour→steam(in form)→strip.",
     features: [
       "line production",
-      "form fleet = line WIP",
+      "form = mold WIP",
+      "specialized crews",
       "crane multi-demand",
-      "steam cure capacity",
-      "production after cure exit",
+      "steam chamber capacity",
+      "production after Strip",
     ],
-    prompt: `# Example 6 — Precast LINE + crane + steam curing capacity
-# LINE PRODUCTION questions this preset teaches:
-#   • How many FORMS (WIP) are in the line? → how many panels can be "in process"
-#   • Steam chamber holds only N panels (SteamSlots) — capacity bottleneck
-#   • Crane serves Set, EnterSteam, ExitSteam (multi-demand + Priority)
-#   • Production is counted only when a panel EXITS steam cure (not at Pour)
-#
-# Flow (form = WIP carrier):
-#   Strip → Clean → Set(+crane) → Pour → EnterSteam(+crane+slot)
-#        → SteamCure(hold in chamber) → ExitSteam(+crane) → COUNTER → form free
-#
-# 8 forms in line · 4 steam slots · 1 crane
+    prompt: `# Example 6 — Precast factory LINE (Halpin-style)
+# Aligned with CYCLONE precast-factory teaching (multi-crew, forms, crane, curing):
+#   Process order (panel still in form through steam):
+#     Clean → Set → Pour → EnterSteam → SteamCure → ExitSteam → Strip
+#   • Forms = molds (WIP carriers). Fleet size ≈ panels in process on the line.
+#   • Specialized crews (not one multi-skill crew): Clean / Set / Pour / Strip
+#   • Crane: Set | EnterSteam | ExitSteam | Strip  (shared lifts)
+#   • SteamSlots = chamber capacity (e.g. 4 panels at once)
+#   • Production AFTER Strip (finished panel leaves mold) — not at Pour
+# Literature cousins: Halpin form/precast cycles; factory cases with bridge/gantry
+# crane, form fleet, pour/strip crews, curing phase (e.g. PROSIDYC/CYCLONE precast).
 
-8 Forms: Strip → Clean → Set → Pour → EnterSteam → SteamCure → ExitSteam
-2 StripCrew: Strip
+8 Forms: Clean → Set → Pour → EnterSteam → SteamCure → ExitSteam → Strip
 2 CleanCrew: Clean
 2 SetCrew: Set
 1 PourCrew: Pour
-1 Crane: Set | EnterSteam | ExitSteam
+2 StripCrew: Strip
+1 Crane: Set | EnterSteam | ExitSteam | Strip
 4 SteamSlots: EnterSteam → SteamCure → ExitSteam
 
-Counter after: ExitSteam
+Counter after: Strip
 production = 1 panel
 
 Priority:
-ExitSteam: 1
-EnterSteam: 2
-Set: 3
+Strip: 1
+ExitSteam: 2
+EnterSteam: 3
+Set: 4
 
 Cost:
 Forms: 15
-StripCrew: 55
 CleanCrew: 50
 SetCrew: 60
 PourCrew: 70
+StripCrew: 55
 Crane: 120
 SteamSlots: 8
 
 Durations:
-Strip: tri 20, 30, 45
 Clean: normal 15, 3
 Set: tri 25, 35, 50
 Pour: tri 15, 20, 30
 EnterSteam: tri 5, 8, 12
 SteamCure: const 180
 ExitSteam: tri 5, 8, 12
+Strip: tri 20, 30, 45
 `,
   },
 
