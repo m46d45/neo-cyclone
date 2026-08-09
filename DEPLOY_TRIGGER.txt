@@ -1,0 +1,4 @@
+Neo-CYCLONE production redeploy trigger
+Timestamp: 2026-08-09T11:34:00+07:00
+Target commit series: blank start, grid layout, USER_MANUAL v1.3
+After this lands on main, Vercel should rebuild if Git integration is enabled.
