@@ -1,6 +1,9 @@
 import { useMemo, useState } from "react";
 import {
+  Bar,
+  BarChart,
   CartesianGrid,
+  LabelList,
   Legend,
   Line,
   LineChart,
@@ -14,6 +17,7 @@ import {
 import type { SensitivityResult, SensitivityRow } from "@/lib/cyclone/types";
 import { formatNum } from "@/lib/utils";
 import { ChartDownloadFrame } from "@/components/cyclone/ChartDownload";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const SERIES_COLORS = [
   "var(--chart-2)",
@@ -335,77 +339,189 @@ export function SensitivitySection({
         </div>
       )}
 
-      <div className="grid gap-3 lg:grid-cols-2">
-        <SensitivityLineChart
-          title={`Productivity (${productionUnit}/h)`}
-          data={prodChart.data}
-          seriesKeys={prodChart.seriesKeys}
-          xName={plan.xName}
-          yLabel={`${productionUnit}/h`}
-          best={bestMarkerFromLabel(rows, plan, active.bestProductivityLabel, "unitsPerHour")}
-        />
-        <SensitivityLineChart
-          title="Unit cost (USD)"
-          data={costChart.data}
-          seriesKeys={costChart.seriesKeys}
-          xName={plan.xName}
-          yLabel="USD / unit"
-          best={bestMarkerFromLabel(rows, plan, active.bestUnitCostLabel, "unitCostUsd")}
-        />
-      </div>
+      <Tabs defaultValue="compare" className="w-full">
+        <TabsList className="flex h-auto w-full flex-wrap gap-1 p-1.5">
+          <TabsTrigger value="compare" className="flex-1 text-xs">
+            Productivity & unit cost
+          </TabsTrigger>
+          <TabsTrigger value="idle" className="flex-1 text-xs">
+            Idleness & utilization
+          </TabsTrigger>
+        </TabsList>
 
-      <div className="overflow-hidden rounded-[var(--radius)] border border-border bg-card">
-        <button
-          type="button"
-          onClick={() => setTableOpen((v) => !v)}
-          className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-xs font-medium text-foreground hover:bg-muted/40"
-        >
-          <span>
-            Detail table ({rows.length} combinations
-            {isPairwise ? ` · ${active.pairLabel}` : ""})
-            {!tableOpen && (
-              <span className="ml-2 font-normal text-muted-foreground">— click to expand</span>
-            )}
-          </span>
-          <span className="tabular-nums text-muted-foreground">{tableOpen ? "Hide ▲" : "Show ▼"}</span>
-        </button>
-        {tableOpen && (
-          <div className="max-h-72 overflow-auto border-t border-border">
-            <table className="w-full min-w-[640px] text-left text-xs">
-              <thead className="sticky top-0 border-b border-border bg-muted/90 text-[10px] uppercase text-muted-foreground backdrop-blur">
-                <tr>
-                  <th className="px-2 py-1.5 font-medium">Combination</th>
-                  <th className="px-2 py-1.5 font-medium">Units / h</th>
-                  <th className="px-2 py-1.5 font-medium">Unit cost (USD)</th>
-                  <th className="px-2 py-1.5 font-medium">Total cost (USD)</th>
-                  <th className="px-2 py-1.5 font-medium">Cycles</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr
-                    key={row.label}
-                    className={
-                      row.label === active.bestProductivityLabel ||
-                      row.label === active.bestUnitCostLabel
-                        ? "border-b border-border/60 bg-primary/5"
-                        : "border-b border-border/60"
-                    }
-                  >
-                    <td className="px-2 py-1.5 font-medium text-foreground">{row.label}</td>
-                    <td className="px-2 py-1.5 tabular-nums">{formatNum(row.unitsPerHour)}</td>
-                    <td className="px-2 py-1.5 tabular-nums">
-                      {row.unitCostUsd != null ? formatNum(row.unitCostUsd) : "—"}
-                    </td>
-                    <td className="px-2 py-1.5 tabular-nums">
-                      {row.totalCostUsd != null ? formatNum(row.totalCostUsd) : "—"}
-                    </td>
-                    <td className="px-2 py-1.5 tabular-nums">{row.cycles}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <TabsContent value="compare" className="mt-3 space-y-3">
+          <div className="grid gap-3 lg:grid-cols-2">
+            <SensitivityLineChart
+              title={`Productivity (${productionUnit}/h)`}
+              data={prodChart.data}
+              seriesKeys={prodChart.seriesKeys}
+              xName={plan.xName}
+              yLabel={`${productionUnit}/h`}
+              best={bestMarkerFromLabel(rows, plan, active.bestProductivityLabel, "unitsPerHour")}
+            />
+            <SensitivityLineChart
+              title="Unit cost (USD)"
+              data={costChart.data}
+              seriesKeys={costChart.seriesKeys}
+              xName={plan.xName}
+              yLabel="USD / unit"
+              best={bestMarkerFromLabel(rows, plan, active.bestUnitCostLabel, "unitCostUsd")}
+            />
           </div>
+
+          <div className="overflow-hidden rounded-[var(--radius)] border border-border bg-card">
+            <button
+              type="button"
+              onClick={() => setTableOpen((v) => !v)}
+              className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-xs font-medium text-foreground hover:bg-muted/40"
+            >
+              <span>
+                Detail table ({rows.length} combinations
+                {isPairwise ? ` · ${active.pairLabel}` : ""})
+                {!tableOpen && (
+                  <span className="ml-2 font-normal text-muted-foreground">— click to expand</span>
+                )}
+              </span>
+              <span className="tabular-nums text-muted-foreground">{tableOpen ? "Hide ▲" : "Show ▼"}</span>
+            </button>
+            {tableOpen && (
+              <div className="max-h-72 overflow-auto border-t border-border">
+                <table className="w-full min-w-[640px] text-left text-xs">
+                  <thead className="sticky top-0 border-b border-border bg-muted/90 text-[10px] uppercase text-muted-foreground backdrop-blur">
+                    <tr>
+                      <th className="px-2 py-1.5 font-medium">Combination</th>
+                      <th className="px-2 py-1.5 font-medium">Units / h</th>
+                      <th className="px-2 py-1.5 font-medium">Unit cost (USD)</th>
+                      <th className="px-2 py-1.5 font-medium">Total cost (USD)</th>
+                      <th className="px-2 py-1.5 font-medium">Cycles</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((row) => (
+                      <tr
+                        key={row.label}
+                        className={
+                          row.label === active.bestProductivityLabel ||
+                          row.label === active.bestUnitCostLabel
+                            ? "border-b border-border/60 bg-primary/5"
+                            : "border-b border-border/60"
+                        }
+                      >
+                        <td className="px-2 py-1.5 font-medium text-foreground">{row.label}</td>
+                        <td className="px-2 py-1.5 tabular-nums">{formatNum(row.unitsPerHour)}</td>
+                        <td className="px-2 py-1.5 tabular-nums">
+                          {row.unitCostUsd != null ? formatNum(row.unitCostUsd) : "—"}
+                        </td>
+                        <td className="px-2 py-1.5 tabular-nums">
+                          {row.totalCostUsd != null ? formatNum(row.totalCostUsd) : "—"}
+                        </td>
+                        <td className="px-2 py-1.5 tabular-nums">{row.cycles}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="idle" className="mt-3 space-y-3">
+          <SensitivityIdlePanel rows={rows} bestLabel={active.bestProductivityLabel} />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+/** Idleness (waste) + activity util for best combo and optional second pick. */
+function SensitivityIdlePanel({
+  rows,
+  bestLabel,
+}: {
+  rows: SensitivityRow[];
+  bestLabel: string | null;
+}) {
+  const best =
+    rows.find((r) => r.label === bestLabel) ??
+    rows.reduce((a, b) => (a.unitsPerHour >= b.unitsPerHour ? a : b), rows[0]!);
+
+  const idleData = Object.keys(best.idleByResource ?? {})
+    .sort()
+    .map((name) => ({
+      name,
+      idle: best.idleByResource[name] ?? 0,
+      busy: best.busyByResource[name] ?? Math.max(0, 100 - (best.idleByResource[name] ?? 0)),
+    }));
+
+  const utilData = Object.entries(best.utilizations ?? {})
+    .map(([name, u]) => ({
+      name,
+      util: Math.round(u * 1000) / 10,
+    }))
+    .sort((a, b) => b.util - a.util)
+    .slice(0, 12);
+
+  if (!idleData.length && !utilData.length) {
+    return (
+      <p className="text-[11px] text-muted-foreground">
+        No idleness data for this sensitivity run. Re-run Simulate after updating.
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <p className="text-[11px] text-muted-foreground">
+        Snapshot for{" "}
+        <strong className="text-foreground">{best.label}</strong>
+        {" "}
+        ({formatNum(best.unitsPerHour)} units/h
+        {best.unitCostUsd != null ? ` · ${formatNum(best.unitCostUsd)} USD/unit` : ""}
+        ). Resource <strong className="text-foreground">idleness</strong> = waste at home QUEUE;
+        activity bars = % time in operation.
+      </p>
+      <div className="grid gap-3 lg:grid-cols-2">
+        {idleData.length > 0 && (
+          <ChartDownloadFrame
+            title="Resource idle vs busy (best productivity combo)"
+            filename="sens_resource_idleness"
+            chartClassName="h-64"
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={idleData} margin={{ top: 28, right: 8, left: 0, bottom: 8 }} barGap={4}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis dataKey="name" tick={{ fontSize: 9 }} interval={0} angle={-20} textAnchor="end" height={56} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} unit="%" />
+                <Tooltip formatter={(v: number, name: string) => [`${v}%`, name === "idle" ? "Idle %" : "Busy %"]} />
+                <Legend wrapperStyle={{ fontSize: 10 }} />
+                <Bar dataKey="idle" fill="#c41e3a" name="Idle %" radius={[4, 4, 0, 0]}>
+                  <LabelList dataKey="idle" position="top" formatter={(v: number | string) => `${v}%`} style={{ fontSize: 9, fontWeight: 600 }} />
+                </Bar>
+                <Bar dataKey="busy" fill="#4a7c59" name="Busy %" radius={[4, 4, 0, 0]}>
+                  <LabelList dataKey="busy" position="top" formatter={(v: number | string) => `${v}%`} style={{ fontSize: 9, fontWeight: 600 }} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartDownloadFrame>
+        )}
+        {utilData.length > 0 && (
+          <ChartDownloadFrame
+            title="% time in operation (activities)"
+            filename="sens_activity_utilization"
+            chartClassName="h-64"
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={utilData} margin={{ top: 28, right: 8, left: 0, bottom: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis dataKey="name" tick={{ fontSize: 9 }} interval={0} angle={-20} textAnchor="end" height={56} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} unit="%" />
+                <Tooltip formatter={(v: number) => [`${v}%`, "% time in operation"]} />
+                <Bar dataKey="util" fill="var(--chart-1)" name="%" radius={[4, 4, 0, 0]}>
+                  <LabelList dataKey="util" position="top" formatter={(v: number | string) => `${v}%`} style={{ fontSize: 9, fontWeight: 600 }} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartDownloadFrame>
         )}
       </div>
     </div>

@@ -117,6 +117,12 @@ function runComboBatch(
     for (const a of result.activityStats) {
       utilizations[a.label] = Math.round(a.utilization * 1000) / 1000;
     }
+    const idleByResource: Record<string, number> = {};
+    const busyByResource: Record<string, number> = {};
+    for (const r of result.resourceIdleStats ?? []) {
+      idleByResource[r.resourceLabel] = r.idlePct;
+      busyByResource[r.resourceLabel] = r.busyPct;
+    }
     rows.push({
       counts: { ...merged },
       label: combo.label,
@@ -126,6 +132,8 @@ function runComboBatch(
       runLength: result.simTime,
       cycles: result.cyclesCompleted,
       utilizations,
+      idleByResource,
+      busyByResource,
     });
   }
   return rows;

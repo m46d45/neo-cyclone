@@ -224,7 +224,12 @@ export interface SensitivityRow {
   totalCostUsd: number | null;
   runLength: number;
   cycles: number;
+  /** Activity % time in operation (0–1). */
   utilizations: Record<string, number>;
+  /** Home-queue resource idleness % (0–100), keyed by resourceLabel. */
+  idleByResource: Record<string, number>;
+  /** Busy % complement of idle (0–100). */
+  busyByResource: Record<string, number>;
 }
 
 export interface SensitivityPairResult {
