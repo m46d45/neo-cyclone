@@ -116,9 +116,9 @@ function SensitivityLineChart({
   const fileBase = title.replace(/[^a-zA-Z0-9]+/g, "_").slice(0, 40) || "sensitivity_chart";
   return (
     <div className="min-w-0 rounded-[var(--radius-sm)] border border-border bg-card p-3">
-      <ChartDownloadFrame title={title} filename={`chart_${fileBase}`} chartClassName="h-60">
+      <ChartDownloadFrame title={title} filename={`chart_${fileBase}`} chartClassName="h-72">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 12, right: 52, left: 4, bottom: 28 }}>
+          <LineChart data={data} margin={{ top: 8, right: 112, left: 8, bottom: 12 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis
               dataKey="x"
@@ -126,10 +126,11 @@ function SensitivityLineChart({
               domain={["dataMin", "dataMax"]}
               allowDecimals={false}
               tick={{ fontSize: 10 }}
+              height={36}
               label={{
                 value: xName,
                 position: "insideBottom",
-                offset: -18,
+                offset: -2,
                 fontSize: 11,
               }}
             />
@@ -152,7 +153,19 @@ function SensitivityLineChart({
                 background: "var(--card)",
               }}
             />
-            <Legend wrapperStyle={{ fontSize: 11 }} />
+            {/* Legend on the right — clear of X-axis name and ticks */}
+            <Legend
+              layout="vertical"
+              align="right"
+              verticalAlign="middle"
+              wrapperStyle={{
+                fontSize: 10,
+                lineHeight: "16px",
+                paddingLeft: 4,
+                maxHeight: 200,
+                overflow: "auto",
+              }}
+            />
             {seriesKeys.map((key, i) => (
               <Line
                 key={key}
