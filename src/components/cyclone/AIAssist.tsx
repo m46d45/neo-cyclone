@@ -9,7 +9,6 @@ import { parseOperationDescription } from "@/lib/cyclone/nl-parser";
 import { parseDsl } from "@/lib/cyclone/dsl";
 import { generateCycloneDsl } from "@/lib/cyclone/ai-server";
 import {
-  DEFAULT_EXAMPLE_PROMPT,
   DIST_TABLE,
   GENERAL_TEMPLATE,
   PRODUCT_TAGLINE,
@@ -52,10 +51,8 @@ export function AIAssist() {
   const markModelReady = useCycloneStore((s) => s.markModelReady);
   const clearResult = useCycloneStore((s) => s.clearResult);
 
-  const [exampleId, setExampleId] = useState(EXAMPLE_PROMPTS[0]?.id ?? "earthmoving");
-  const [input, setInput] = useState(
-    EXAMPLE_PROMPTS.find((e) => e.id === exampleId)?.prompt ?? DEFAULT_EXAMPLE_PROMPT,
-  );
+  const [exampleId, setExampleId] = useState("");
+  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
   const c = t();
@@ -113,8 +110,13 @@ export function AIAssist() {
     }
   }
 
-  /** Switching Example replaces the prompt and redraws the model immediately. */
+  /** Switching Example fills the prompt and draws the CYCLONE model. */
   function loadExample(id: string) {
+    if (!id) {
+      setExampleId("");
+      setInput("");
+      return;
+    }
     const ex = EXAMPLE_PROMPTS.find((x) => x.id === id);
     if (!ex) return;
     setExampleId(id);
@@ -144,6 +146,7 @@ export function AIAssist() {
                 disabled={loading}
                 onChange={(e) => loadExample(e.target.value)}
               >
+                <option value="">— Select example —</option>
                 {EXAMPLE_PROMPTS.map((ex) => (
                   <option key={ex.id} value={ex.id}>
                     {ex.title}
@@ -157,7 +160,7 @@ export function AIAssist() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             rows={22}
-            placeholder={GENERAL_TEMPLATE}
+            placeholder="Please select an Example above, or paste / write your operation prompt here."
             className="min-h-[420px] flex-1 resize-y font-mono text-xs leading-relaxed lg:min-h-[480px]"
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {

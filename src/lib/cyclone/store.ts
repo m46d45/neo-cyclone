@@ -3,7 +3,7 @@ import { runCyclone } from "./engine";
 import { runSensitivity, parseCostAndSensitivity, applyCostsToModel } from "./sensitivity";
 import { parsePriorityBlock, applyPrioritiesToModel } from "./priority";
 import { parseDsl, serializeDsl } from "./dsl";
-import { cloneModel, earthmovingModel, PRESET_MODELS } from "./models/presets"
+import { cloneModel, emptyModel, earthmovingModel, PRESET_MODELS } from "./models/presets"
 import { ensureReadableLayout } from "./auto-layout";
 import {
   DEFAULT_MAX_CYCLES,
@@ -66,16 +66,10 @@ interface CycloneStore {
 }
 
 const initialMaxCycles = DEFAULT_MAX_CYCLES;
-const initialMaxTime = horizonForCycles(initialMaxCycles, earthmovingModel.defaultMaxTime);
-
-const initialDsl = serializeDsl(earthmovingModel, {
-  seed: DEFAULT_SEED,
-  maxTime: initialMaxTime,
-  maxCycles: initialMaxCycles,
-});
+const initialMaxTime = horizonForCycles(initialMaxCycles, emptyModel.defaultMaxTime);
 
 export const useCycloneStore = create<CycloneStore>((set, get) => ({
-  model: cloneModel(earthmovingModel),
+  model: cloneModel(emptyModel),
   result: null,
   sensitivityResult: null,
   selectedNodeId: null,
@@ -85,8 +79,8 @@ export const useCycloneStore = create<CycloneStore>((set, get) => ({
   isRunning: false,
   lastError: null,
 
-  dslText: initialDsl,
-  dslSource: "preset",
+  dslText: "",
+  dslSource: null,
   modelReady: false,
 
   agent: createAgentSession("en"),

@@ -337,3 +337,18 @@ export function getPreset(id: string): CycloneModel | undefined {
 export function cloneModel(model: CycloneModel): CycloneModel {
   return structuredClone(model);
 }
+
+
+/** Blank canvas — no default earthmoving until user picks Example or draws. */
+export const emptyModel: CycloneModel = {
+  id: "empty",
+  name: "No model yet",
+  description: "Select an Example or write a prompt, then Draw Model.",
+  timeUnit: "min",
+  productionUnit: "unit",
+  defaultMaxTime: 480,
+  defaultRuns: 1,
+  defaultMaxCycles: 100,
+  nodes: [],
+  links: [],
+};

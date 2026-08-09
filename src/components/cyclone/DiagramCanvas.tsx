@@ -486,6 +486,18 @@ export function DiagramCanvas() {
     }
   }
 
+  if (!model.nodes.length) {
+    return (
+      <div className="flex h-full min-h-[320px] flex-col items-center justify-center gap-2 rounded-[var(--radius)] border border-dashed border-border bg-card/40 px-6 py-12 text-center">
+        <p className="font-display text-sm font-medium text-foreground">CYCLONE Model</p>
+        <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
+          Select an <strong className="text-foreground">Example</strong> from the list, or write / paste
+          your prompt and click <strong className="text-foreground">Draw Model</strong>.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(
