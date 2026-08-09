@@ -6,7 +6,7 @@
  *   3 Excavator — GEN/CON inline
  *   4 Tower crane — multi-demand | + Priority (easier contention lesson)
  *   5 Masonry — 3 resources + sensitivity analysis only here
- *   6 Formwork line — complex SA (forms × carpenters × pour) Halpin Ch. style
+ *   6 Precast plant Halpin Ch.14 Fig 14.1 + complex SA
  *
  * Source orientation: Halpin & Riggs, Planning and Analysis of Construction
  * Operations (Wiley, 1992) — simplified for first contact.
@@ -209,49 +209,67 @@ Lay: tri 4, 6, 9
   },
   {
     id: "precast-forms",
-    title: "6. Formwork line + complex sensitivity",
-    goal: "Halpin Ch. sensitivity style: vary forms, carpenters, pour crew — productivity & unit cost.",
-    source: "Halpin & Riggs, Planning and Analysis of Construction Operations — Sensitivity Analysis (forms × crews × units).",
+    title: "6. Precast plant (Halpin Ch.14) + SA",
+    goal: "Fig 14.1 precast element plant; Table 14.1 entities; complex system sensitivity.",
+    source: "Halpin & Riggs, Planning and Analysis of Construction Operations, Ch.14 Sensitivity Analysis, Fig 14.1 & Table 14.1.",
     features: [
+      "Halpin Ch.14 Fig 14.1",
+      "Table 14.1 entity paths",
+      "crews multi-demand",
+      "crane multi-demand",
       "complex sensitivity",
-      "forms × carpenters × pour crew",
-      "formwork cycle",
-      "cost + unit cost",
-      "pairwise SA",
     ],
-    prompt: `# Example 6 — Formwork production + COMPLEX SENSITIVITY (Halpin Ch. style)
-# Matches the book emphasis in the Sensitivity Analysis chapter:
-#   vary number of FORMS, number of CREWS (carpenters), and pour units
-#   → compare productivity and unit cost across combinations.
-#
-# Form = mold/WIP carrier (classic formwork cycle, not a steam-factory digression):
-#   Strip → Oil → Set → Pour → Cure
-# Carpenters work strip/oil/set; pour crew places concrete; cure holds the form.
-# Production after Pour (one bay/panel). Then run Sensitivity tab (pairwise if 3 resources).
+    prompt: `# Example 6 — Precast concrete element plant (Halpin Ch.14)
+# Figure 14.1 + Table 14.1 Entity Path Table (names from figure labels).
+# Categories: Set positions, Forms, Batches, Crews, Cure positions, Crane, Trucks, Batch permit.
+# Crews multi-demand: MixAndPour | LoadTunnel | CleanForm
+# Crane multi-demand: SteamCure | UnloadTunnel
+# Production after MoveToStorage. Run Sensitivity tab for system sensitivity (Ch.14).
 
-8 Forms: Strip → Oil → Set → Pour → Cure
-3 Carpenters: Strip → Oil → Set
-2 PourCrew: Pour
+3 SetPositions: MixAndPour → PullForms
+5 Forms: MixAndPour → PullForms → LoadTunnel → SteamCure → UnloadTunnel → CleanForm
+20 Batches: Batch → MixAndPour → PullForms → LoadTunnel → SteamCure → UnloadTunnel → MoveToStorage
+2 Crews: MixAndPour | LoadTunnel | CleanForm
+8 CurePositions: LoadTunnel → SteamCure → UnloadTunnel
+1 Crane: SteamCure | UnloadTunnel
+4 Trucks: UnloadTunnel → MoveToStorage
+1 BatchPermit: Batch
 
-Counter after: Pour
-production = 1 bay
+Counter after: MoveToStorage
+production = 1 panel
+
+Priority:
+MixAndPour: 1
+LoadTunnel: 2
+CleanForm: 3
+UnloadTunnel: 1
+SteamCure: 2
 
 Cost:
-Forms: 12
-Carpenters: 65
-PourCrew: 80
+SetPositions: 0
+Forms: 20
+Batches: 0
+Crews: 75
+CurePositions: 5
+Crane: 140
+Trucks: 55
+BatchPermit: 0
 
 Sensitivity:
-Forms: 4..12
-Carpenters: 1..5
-PourCrew: 1..3
+Forms: 3..8
+Crews: 1..4
+Trucks: 2..6
+CurePositions: 4..10
 
 Durations:
-Strip: tri 15, 22, 35
-Oil: normal 8, 1.5
-Set: tri 20, 28, 40
-Pour: tri 12, 18, 28
-Cure: const 90
+Batch: const 2
+MixAndPour: tri 8, 12, 18
+PullForms: tri 4, 6, 10
+LoadTunnel: tri 5, 8, 12
+SteamCure: const 120
+UnloadTunnel: tri 6, 10, 15
+MoveToStorage: tri 8, 12, 18
+CleanForm: tri 10, 15, 22
 `,
   },
 
