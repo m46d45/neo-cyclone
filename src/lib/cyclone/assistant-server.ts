@@ -27,7 +27,11 @@ const SYSTEM = `You are the Neo-CYCLONE AI Assistant — educational co-pilot fo
 Product: AI-Assisted Construction Operation Simulation.
 LANGUAGE: Reply in the SAME language as the user (Indonesian or English). Keep task/resource names as in CONTEXT.
 RULES:
-1. Ground answers in CONTEXT. 2. For edits, return FULL Format Prompt in proposedPrompt. 3. Do not invent a different operation. 4. COMBI only if >=2 resources. 5. suggestSimulate=true after prompt changes.
+1. Ground answers in CONTEXT (especially last-run idleness for bottleneck questions).
+2. For edits, return FULL Format Prompt in proposedPrompt.
+3. Do not invent a different operation.
+4. COMBI only if >=2 resources.
+5. suggestSimulate=true after prompt changes.
 RESPONSE — ONLY JSON:
 {"reply":"...","proposedPrompt":null,"suggestSimulate":false}`;
 
@@ -178,9 +182,34 @@ function stripFences(text: string): string {
 }
 
 function isId(q: string): boolean {
-  return /\b(yang|dengan|berapa|apakah|tolong|ubah|naikkan|turunkan|jelaskan|simulasi|hasil|produktivitas|truk|saya|bisa|untuk|dari|ini|ada|tidak|sudah|belum|kalau|kira)\b/i.test(
+  return /\b(yang|dengan|berapa|apakah|tolong|ubah|naikkan|turunkan|jelaskan|simulasi|hasil|produktivitas|truk|saya|bisa|untuk|dari|ini|ada|tidak|sudah|belum|kalau|kira|paling|bermasalah|masalah|bottleneck)\b/i.test(
     q,
   );
+}
+
+/** Only fleet counts like "5 trucks, 1 loader" — not costs, durations, m3. */
+function extractFleetCounts(prompt: string): { n: string; name: string }[] {
+  const out: { n: string; name: string }[] = [];
+  const seen = new Set<string>();
+  for (const m of prompt.matchAll(
+    /(\d+)\s+(trucks?|loaders?|cranes?|helpers?|masons?|excavators?|pavers?|crew|crews|forms?|buckets?)\b/gi,
+  )) {
+    const name = m[2]!.trim();
+    const key = name.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ n: m[1]!, name });
+  }
+  for (const m of prompt.matchAll(
+    /\b(trucks?|loaders?|cranes?|helpers?|masons?|excavators?|pavers?|crew|crews)\s*=\s*(\d+)/gi,
+  )) {
+    const name = m[1]!.trim();
+    const key = name.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ n: m[2]!, name });
+  }
+  return out.slice(0, 12);
 }
 
 function localAssistant(
@@ -195,36 +224,94 @@ function localAssistant(
   let proposedPrompt: string | null = null;
   let suggestSimulate = false;
 
-  // counts
-  if (
-    /truck|loader|resource|berapa|how many|count|jumlah|sumber|truk|fleet/.test(q) &&
-    prompt
-  ) {
-    const counts = [...prompt.matchAll(/(\d+)\s+([A-Za-z][A-Za-z0-9 _/-]*)/g)].slice(0, 12);
-    if (counts.length) {
-      reply =
-        (id ? "Jumlah resource di Format Prompt:\n" : "Resource counts in Format Prompt:\n") +
-        counts.map((m) => `• ${m[1]} × ${m[2].trim()}`).join("\n");
+  // Bottleneck FIRST — never treat as fleet-count list
+  const asksBottleneck =
+    /bermasalah|bottleneck|paling (parah|jelek|rendah|tinggi|sibuk|idle)|most (problem|critical|idle|busy)|which resource|resource apa|siapa yang|waste (paling|tertinggi)|utilisasi (rendah|tinggi)/i.test(
+      q,
+    ) || /paling.*resource|resource.*paling/i.test(q);
+
+  if (asksBottleneck) {
+    if (result?.resourceIdleStats?.length) {
+      const sorted = [...result.resourceIdleStats].sort((a, b) => b.idlePct - a.idlePct);
+      const worstIdle = sorted[0]!;
+      const sortedBusy = [...result.resourceIdleStats].sort((a, b) => b.busyPct - a.busyPct);
+      const busiest = sortedBusy[0]!;
+      if (id) {
+        reply =
+          `Dari hasil simulasi terakhir, indikasi waste/idleness:\n` +
+          sorted
+            .map(
+              (r) =>
+                `• **${r.resourceLabel}**: idle ${r.idlePct.toFixed(1)}% · busy ${r.busyPct.toFixed(1)}% (n=${r.n})`,
+            )
+            .join("\n") +
+          `\n\n**Paling banyak menganggur (idle / waste):** ${worstIdle.resourceLabel} (${worstIdle.idlePct.toFixed(1)}% idle).` +
+          `\n**Paling sibuk:** ${busiest.resourceLabel} (${busiest.busyPct.toFixed(1)}% busy).` +
+          `\n\nCatatan: “bermasalah” biasanya = idle tinggi (fleet berlebih / menunggu) atau util sangat timpang.`;
+      } else {
+        reply =
+          `From the last run, home-QUEUE idleness:\n` +
+          sorted
+            .map(
+              (r) =>
+                `• **${r.resourceLabel}**: idle ${r.idlePct.toFixed(1)}% · busy ${r.busyPct.toFixed(1)}% (n=${r.n})`,
+            )
+            .join("\n") +
+          `\n\n**Highest idle (waste):** ${worstIdle.resourceLabel} (${worstIdle.idlePct.toFixed(1)}%).` +
+          `\n**Busiest:** ${busiest.resourceLabel} (${busiest.busyPct.toFixed(1)}% busy).`;
+      }
+      if (result.activityStats?.length) {
+        const acts = [...result.activityStats].sort((a, b) => a.utilization - b.utilization);
+        const low = acts[0]!;
+        reply += id
+          ? `\nAktivitas utilisasi terendah: **${low.label}** (${(low.utilization * 100).toFixed(1)}%).`
+          : `\nLowest activity utilization: **${low.label}** (${(low.utilization * 100).toFixed(1)}%).`;
+      }
+    } else {
+      reply = id
+        ? "Untuk menilai resource paling bermasalah (idle/util), jalankan **Simulate** dulu agar ada data idleness."
+        : "Run **Simulate** first so idleness data exists, then ask again about the bottleneck.";
     }
   }
 
-  // explain
+  // Fleet counts only when explicitly asking how many
+  const asksCount =
+    !asksBottleneck &&
+    (/berapa\s+(jumlah\s+)?(truk|truck|loader|crane|resource|sumber)|how many|jumlah\s+(truk|truck|loader|resource)|fleet size/i.test(
+      q,
+    ) ||
+      (/berapa|how many|jumlah/.test(q) && /truk|truck|loader|crane|resource|fleet/.test(q)));
+
+  if (asksCount && prompt) {
+    const counts = extractFleetCounts(prompt);
+    if (counts.length) {
+      reply +=
+        (reply ? "\n\n" : "") +
+        (id ? "Jumlah resource (fleet) di Format Prompt:\n" : "Fleet counts in Format Prompt:\n") +
+        counts.map((c) => `• ${c.n} × ${c.name}`).join("\n");
+    } else {
+      reply +=
+        (reply ? "\n\n" : "") +
+        (id
+          ? "Tidak menemukan baris jumlah fleet yang jelas (contoh: `5 trucks, 1 loader`)."
+          : "Could not find clear fleet count lines (e.g. `5 trucks, 1 loader`).");
+    }
+  }
+
   if (/jelaskan|explain|ringkas|summary|model (ini|saya)|what is|describe|siklus|cycle/.test(q)) {
     const lines = prompt.trim() ? prompt.trim().split(/\n/).length : 0;
+    const counts = extractFleetCounts(prompt);
     reply +=
       (reply ? "\n\n" : "") +
       (id
         ? `Ringkasan: prompt ${lines ? lines + " baris" : "kosong"}.` +
-          (result
-            ? ` Simulasi terakhir ${result.cyclesCompleted} siklus.`
-            : " Belum disimulasikan.")
+          (counts.length ? " Fleet: " + counts.map((c) => `${c.n} ${c.name}`).join(", ") + "." : "") +
+          (result ? ` Simulasi terakhir ${result.cyclesCompleted} siklus.` : " Belum disimulasikan.")
         : `Summary: prompt ${lines ? lines + " lines" : "empty"}.` +
-          (result
-            ? ` Last run ${result.cyclesCompleted} cycles.`
-            : " Not simulated yet."));
+          (counts.length ? " Fleet: " + counts.map((c) => `${c.n} ${c.name}`).join(", ") + "." : "") +
+          (result ? ` Last run ${result.cyclesCompleted} cycles.` : " Not simulated yet."));
   }
 
-  // productivity
   if (/productiv|produktiv|unit\/hour|units per|steady|hasil|result|kinerja/.test(q) && result) {
     const last = result.productivitySeries[result.productivitySeries.length - 1];
     reply +=
@@ -236,13 +323,14 @@ function localAssistant(
   } else if (/productiv|produktiv|hasil|result|steady/.test(q) && !result) {
     reply +=
       (reply ? "\n\n" : "") +
-      (id
-        ? "Belum ada hasil. Draw Model lalu Simulate dulu."
-        : "No results yet. Draw Model, then Simulate.");
+      (id ? "Belum ada hasil. Draw Model lalu Simulate dulu." : "No results yet. Draw Model, then Simulate.");
   }
 
-  // idle
-  if (/idle|waste|util|antrian|menganggur|sibuk|busy/.test(q) && result?.resourceIdleStats?.length) {
+  if (
+    !asksBottleneck &&
+    /idle|waste|util|antrian|menganggur|sibuk|busy/.test(q) &&
+    result?.resourceIdleStats?.length
+  ) {
     reply +=
       (reply ? "\n\n" : "") +
       (id ? "Idleness (waste di home QUEUE):\n" : "Resource idleness:\n") +
@@ -251,7 +339,6 @@ function localAssistant(
         .join("\n");
   }
 
-  // change count — EN + ID
   const setMatch =
     message.match(
       /(?:set|change|make|naikkan|turunkan|ubah|ganti|atur)\s+(\w+)\s+(?:to|jadi|menjadi|ke|=)?\s*(\d+)/i,
@@ -289,15 +376,15 @@ function localAssistant(
     reply +=
       (reply ? "\n\n" : "") +
       (id
-        ? "Contoh: Jelaskan model ini · Berapa truk? · Hasil produktivitas · Ubah truk jadi 8. Chat bebas penuh butuh XAI_API_KEY di Vercel."
-        : "Examples: Explain model · How many trucks? · Productivity · Set trucks to 8. Full free-form needs XAI_API_KEY on Vercel.");
+        ? "Contoh: Jelaskan model · Berapa truk? · Resource paling bermasalah? · Hasil · Ubah truk jadi 8. Chat penuh: XAI_API_KEY di Vercel."
+        : "Examples: Explain · How many trucks? · Bottleneck resource? · Productivity · Set trucks to 8. Full chat: XAI_API_KEY.");
   }
 
   if (!reply) {
     reply = id
-      ? "Mode lokal (tanpa XAI_API_KEY). Coba: Jelaskan model ini / Berapa resource? / Hasil produktivitas / Ubah truk jadi 8. Atau set XAI_API_KEY di Vercel untuk bahasa natural penuh.\n\n" +
+      ? "Mode lokal. Coba: Jelaskan model / Berapa truk? / Resource paling bermasalah? / Hasil / Ubah truk jadi 8.\n\n" +
         context.slice(0, 800)
-      : "Local mode (no XAI_API_KEY). Try: Explain this model / How many resources? / Productivity / Set trucks to 8. Or set XAI_API_KEY on Vercel.\n\n" +
+      : "Local mode. Try: Explain model / How many trucks? / Bottleneck? / Productivity / Set trucks to 8.\n\n" +
         context.slice(0, 800);
   }
 
