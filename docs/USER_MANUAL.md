@@ -1,130 +1,232 @@
 # Neo-CYCLONE — User Manual
 
-**Version:** 1.2  
-**Language:** English  
-**Tagline:** AI-agent of Daniel W. Halpin's CYCLONE  
-**Live app:** https://neo-cyclone.vercel.app/ (deploys from GitHub `main`)  
-**Canonical notation:** [NOTATION_STANDARD.md](./NOTATION_STANDARD.md)
+| | |
+|--|--|
+| **Version** | 1.3 |
+| **Language** | English |
+| **Tagline** | AI-agent of Daniel W. Halpin's CYCLONE |
+| **Live app** | [neo-cyclone.vercel.app](https://neo-cyclone.vercel.app/) |
+| **Notation reference** | [NOTATION_STANDARD.md](./NOTATION_STANDARD.md) |
 
 ---
 
-## Preface — Why Neo-CYCLONE
+# Part I — Getting oriented
 
-This work is a **tribute to Professor Daniel W. Halpin**.
+## Chapter 1 — Introduction
 
-I studied under Professor Halpin and worked for him. Through him I first met **construction operations** as flow, and **idleness** as something we can model and improve.
+### 1.1 Purpose
 
-| Layer | What it is |
-|-------|------------|
-| **CYCLONE** | Modeling methodology (*CYCLic Operations NEtwork*), 1970s. |
-| **MicroCYCLONE** | Early computer application (Purdue, c. 1990). |
+Neo-CYCLONE is an **educational web app** for modeling and simulating **repetitive construction operations** using the spirit of Professor **Daniel W. Halpin’s CYCLONE** (*CYCLic Operations NEtwork*).
 
-Later: DISCO, PROSIDYC, COST, WebCYCLONE, Symphony.Net, and related systems.
+It is meant for:
 
-**Neo-CYCLONE** is for **education** and **first contact**—not a special-purpose industrial simulator. It connects process design to Lean Construction and Project Production Management. Halpin’s foundation makes AI-assisted operations modeling possible.
+- **First contact** with construction operations as **flow**
+- Seeing **idleness** (waiting) as something we can measure
+- Connecting process design to ideas later used in Lean Construction and Project Production Management
+- Learning classic MicroCYCLONE ideas (QUEUE, COMBI, NORMAL, COUNTER, GEN, CON, probability, sensitivity) without installing old desktop software
 
-Where diagram notation differs slightly from some Halpin print figures, we keep **one consistent Neo-CYCLONE standard** (see §6 and [NOTATION_STANDARD.md](./NOTATION_STANDARD.md)).
+It is **not** a special-purpose industrial factory controller. It is a **teaching studio**.
+
+### 1.2 Why this exists (dedication)
+
+This product is a **tribute to Professor Daniel W. Halpin**.
+
+Through his teaching and work, many students first met:
+
+| Idea | Meaning in operations |
+|------|------------------------|
+| **Flow** | Resources move through tasks in cycles |
+| **Idleness** | Time spent waiting is waste we can study |
+| **CYCLONE** | A simple network language for cyclic construction work |
+
+The historical line includes **CYCLONE** (methodology), **MicroCYCLONE** (early computer tool), then systems such as DISCO, PROSIDYC, COST, WebCYCLONE, Symphony.Net, and related tools.
+
+Halpin’s foundation is **not obsolete** in the age of AI. It is the **grammar** that lets us describe an operation clearly enough that a machine can build a model and run a simulation.
+
+### 1.3 What you need
+
+| Need | How Neo-CYCLONE helps |
+|------|------------------------|
+| Describe an operation in plain structure | **Format Prompt** (resource cycles + durations) |
+| See the CYCLONE network | **Draw Model** → diagram + network logic |
+| Measure productivity & waste | **Simulate** → units/hour, utilization, idleness |
+| Compare fleet mixes | **Sensitivity Analysis** (optional Cost block) |
+| Keep Halpin-style reports | Results, Excel export, charts |
+
+You need only a browser (the live app on Vercel). No local install for normal use.
+
+### 1.4 Approach — is this an “AI agent”?
+
+Be clear about what runs under the hood:
+
+| Layer | What it is | What it is *not* |
+|-------|------------|------------------|
+| **Structured Format Prompt** | The **primary** way to define a model: resource cycles, durations, priority, branch, cost, sensitivity | Free chat that “guesses” a site plan |
+| **Local builder / engine** | Deterministic code: prompt → CYCLONE network → discrete-event simulation | A black-box neural simulator |
+| **Optional AI assist** | Free-text descriptions may be turned into a draft DSL when the text is *not* already structured | A multi-agent autonomous planner that replaces engineering judgment |
+| **Product tagline** | “AI-agent of Daniel W. Halpin's CYCLONE” = **AI-assisted studio** for Halpin-style modeling | A substitute for Halpin’s methodology |
+
+**In practice for learning:**
+
+1. You (or an **Example**) write a **structured prompt**.  
+2. You click **Draw Model** → the app builds QUEUE / COMBI / NORMAL / COUNTER / GEN / CON and links.  
+3. You check the diagram (resource cycles, meetings, returns).  
+4. You click **Simulate** → MicroCYCLONE-style results.  
+
+So: **prompt-first, model-second, simulation-third**. The “agent” helps when text is free-form; **examples and Format Prompt are ordinary structured text**, not magic.
+
+### 1.5 Studio layout (one screen)
+
+| Area | Role |
+|------|------|
+| **Left** | Prompt · **Example** dropdown · **Draw Model** · Format Prompt (reference, collapsed) |
+| **Right** | **CYCLONE Model** (empty until Draw) · network logic · run parameters |
+| **Below** | **Results**: Simulation · Sensitivity Analysis |
+
+On first open:
+
+- Prompt is **empty** (placeholder asks you to select an example or write a prompt).  
+- Diagram is **empty** until **Draw Model**.  
+- Choosing an **Example** only **fills the prompt**; it does **not** draw until you click Draw Model.
 
 ---
 
-## 1. Studio layout
+# Part II — How to use Neo-CYCLONE
 
-| Area | Contents |
-|------|----------|
-| **Left** | Operation prompt (tall) · Example presets · **Draw Model** · Format Prompt (collapsed, **below** the button) |
-| **Right** | CYCLONE Model (zoom / PNG) · Network logic · run params · Simulate |
-| **Below** | **Results** full width: Simulation · Sensitivity Analysis |
+## Chapter 2 — How-to (step by step)
+
+### 2.1 Fast path (recommended for first run)
+
+1. Open the app.  
+2. Open **Example** → choose e.g. **1. Earthmoving**.  
+3. Read the prompt (network + durations + cost).  
+4. Click **Draw Model**.  
+5. Check the diagram: home QUEUEs on the left, tasks left→right, counter near production.  
+6. Set **Max cycles** (default **100**, product limit **500**) and **Seed** (default **12345**).  
+7. Click **Simulate**.  
+8. Read **Results**: production by cycle, steady state, utilization, idleness, cost if present.  
+9. Optional: **Excel** report, chart **PNG**, model **PNG**.
+
+### 2.2 Your own operation (from scratch)
+
+1. Leave Example on **— Select example —** or clear the idea.  
+2. In the prompt box, write a **structured** model (see Chapter 4), or paste from Format Prompt.  
+3. **Draw Model** → inspect / fix prompt → Draw again.  
+4. **Simulate** when the network is right.  
+5. Add **Cost** and **Sensitivity** blocks when you want unit cost and fleet comparisons.
+
+### 2.3 Iterate the model (important)
+
+Do **not** jump to Simulate until the **network logic** matches the story:
+
+| Check | Question |
+|-------|----------|
+| Resource cycles | Does each resource return to a **home QUEUE**? |
+| Meetings | Is every multi-resource task a **COMBI**? |
+| Production | Is **Counter after:** the right task (exact name)? |
+| GEN / CON | Are they **on the material/resource chain** that scales, not on a random helper? |
+| Branches | Do detours **rejoin** the main path? |
+
+Edit the prompt → **Draw Model** again → then Simulate.
+
+### 2.4 Sensitivity Analysis (when the prompt has `Sensitivity:`)
+
+1. Draw and Simulate as usual.  
+2. Open Results → tab **Sensitivity Analysis**.  
+3. If several resources vary: pick a **pair** (pairwise mode).  
+4. Tab **Productivity & unit cost** — line charts + table.  
+5. Tab **Idleness & utilization** — waste snapshot for the best productivity combo.
+
+### 2.5 What you do *not* need to draw by hand
+
+You **never** type QUEUE circles or arrow lists in the prompt.  
+**Resource cycles** imply home QUEUEs, staging, forward arcs, and return arcs.  
+GEN / CON / `p=` / Priority only **annotate** special behavior.
 
 ---
 
-## 2. Workflow
+# Part III — Teaching examples
 
-1. Edit the prompt or pick an **Example** preset (auto-redraws).  
-2. **Draw Model** → diagram + Network logic.  
-3. Refine until the network is right.  
-4. **Max cycles** (default **100**, product limit **500**) · Seed (**12345**) · Max time (auto-raised with cycles).  
-5. **Simulate**.  
-6. Optional: **Report Excel**, chart/diagram **PNG**, sensitivity tab.
+## Chapter 3 — Six Examples
+
+Use **Example** in this order for learning:
+
+| # | Name | What you learn |
+|---|------|----------------|
+| **1** | **Earthmoving** | Classic loader + trucks; cost; steady-state productivity |
+| **2** | **Asphalt Paving** | Branch probability (e.g. breakdown) and detour markers on charts |
+| **3** | **Loading Dump Truck** | Inline **GEN / CON** (excavator scoops → truck full) |
+| **4** | **Tower Crane** | Multi-demand `\|`, **Priority**, multiple counters |
+| **5** | **Masonry** | Face stocks; GEN/CON on mortar place; **sensitivity** intro |
+| **6** | **Precast Plant** | Halpin **Ch.14**-style multi-resource plant + **complex SA** |
+
+Tips:
+
+- Always **Draw Model** after selecting an example.  
+- Read `#` comment lines in the prompt — they are notes only (ignored by the engine).  
+- Compare diagram resource cycles to the Network logic panel under the model.
 
 ---
 
-## 3. Prompt format (structured)
+# Part IV — Format Prompt & modeling rules
 
-Order (top → bottom):
+## Chapter 4 — Format Prompt (structured text)
 
-1. **Network** — resource cycles, counts, **`Counter after:`** + `production =`  
-2. **Durations** — minutes  
-3. **Priority** — optional (lower number = higher priority)  
-4. **Branch** — optional `p=` arcs  
-5. **Cost** — optional USD / resource-hour  
-6. **Sensitivity** — optional; usually **last**  
+### 4.1 Block order (top → bottom)
 
-`#` / `//` = notes only (ignored).
+| Order | Block | Required? |
+|-------|--------|-----------|
+| 1 | **Network** — resource cycles, counts, `Counter after:`, `production =` | Yes |
+| 2 | **Durations** — every named task | Yes |
+| 3 | **Priority** | Optional (shared resource contention) |
+| 4 | **Branch** / optional Functions aliases | Optional |
+| 5 | **Cost** (USD per resource-hour) | Optional |
+| 6 | **Sensitivity** | Optional — usually **last** |
 
-### 3.1 Resource cycles imply topology
+Comments: lines or tails with `#` or `//` are **ignored**.
 
-You do **not** draw QUEUE circles or arrows in the prompt. Each resource line:
+Default time unit: **minutes**. Currency for cost: **USD**.
+
+### 4.2 Resource cycles (network)
 
 ```
-Trucks: TaskA → TaskB → TaskC
-Loader: TaskA
+Trucks: Load → Haul → Dump → Return
+Loader: Load
 5 trucks, 1 loader
+
+Counter after: Dump
+production = 12 m3
 ```
-
-creates a **home QUEUE** (`Trucks Idle`, `Loader Idle`) and work nodes.
-
-### 3.1b Multi-demand pipe `|` (standard Neo-CYCLONE)
-
-**Meaning:** one home QUEUE (one fleet) can start **several different first tasks**, not a sequence.
 
 | Syntax | Meaning |
 |--------|---------|
-| `A → B → C` | **Sequence** — same unit walks the path in order |
-| (arrows) | Unicode `→` or keyboard `->` / `-->` / `=>` — all accepted |
-| `A \| B \| C` | **Multi-demand** — idle resource may serve **A or B or C** (whichever is ready; **Priority** breaks ties) |
+| `A → B → C` | **Sequence** (same unit, in order) |
+| `->` `-->` `=>` `→` | All accepted as arrows |
+| `A \| B \| C` | **Multi-demand** — one home QUEUE may start A **or** B **or** C |
+| `n Trucks = 5` or `5 trucks` | Initial units at home QUEUE |
 
-**Examples (standard):**
+### 4.3 Multi-demand `|` (standard)
 
 ```
-# Tower crane — one crane, three lift demands
 1 Crane: LiftAtA | LiftAtB | LiftAtC
-
-# Helpers — one helper pool refills brick stack OR mortar place
 3 Helpers: ReceiveBrick | ReceiveMortar
 ```
 
-**Not the same as:**
+Use **Priority:** when several demands wait (**lower number = higher priority**, MicroCYCLONE tradition).
 
-```
-# Sequence (brick then mortar on the *same* trip)
-Helpers: ReceiveBrick → ReceiveMortar → …
-```
-
-Rules:
-
-1. `|` lists **competing first tasks** from the **same** home QUEUE.  
-2. Use **`Priority:`** when several demands wait (lower number = first).  
-3. Full alternate paths (advanced):  
-   `Helpers: PathA → … | PathB → …` (each side of `|` may be a chain).  
-4. Diagram: one idle Q feeding several COMBIs; return dashed-gold to that home Q.
-
-This is **Neo-CYCLONE standard** (Halpin multi-work / shared resource), documented here and in Format Prompt / NOTATION_STANDARD.
-
-### 3.2 GEN / CON — prefer **inline on the chain** (source of truth)
+### 4.4 GEN / CON (prefer **inline** on the chain)
 
 ```
 Trucks: GEN 5 → Scoop → CON 5 TruckFull → Haul&Return
 Excavator: Scoop
-4 trucks, 1 excavator
 ```
 
-| Token | Meaning |
-|-------|---------|
-| `GEN 5` | GENERATE load-zone: 1 arrival → 5 units |
-| `CON 5 TruckFull` | CONSOLIDATE name, n = 5 |
-| `TruckFull CON 5` | same |
+| Token | Meaning | Diagram |
+|-------|---------|---------|
+| `GEN 5` or `GEN 5` | 1 arrival → **5** units | Inverted triangle ▽ |
+| `CON 5` or `CON 5 Name` | Gather **5** → release 1 | Upright triangle △ |
 
-**Optional** (legacy alias if the name already appears in the cycle):
+Optional legacy block:
 
 ```
 Functions:
@@ -132,121 +234,147 @@ GEN PartsPool = 4
 CON AssembleKit = 4
 ```
 
-### 3.3 Branch (probability)
+GEN and CON are **independent** and **optional** — use only when production logic needs scaling.
+
+### 4.5 Branch (probability)
 
 ```
 Branch:
 After DumpToPaver: RefillAsphalt p=0.85, Breakdown p=0.15
 ```
 
-Detours rejoin the main next step (e.g. Breakdown → RefillAsphalt), not dump empty.
+Detours should rejoin the main path (e.g. Breakdown → RefillAsphalt).
 
-### 3.4 Distributions
+### 4.6 Durations
 
-const · unif · tri · normal · lognormal · beta · gamma  
+```
+Durations:
+Load: tri 1.2, 1.8, 2.5
+Haul: normal 8, 1.2
+Dump: const 1
+```
 
-Default time unit: **minutes**.
+Distributions: **const · unif · tri · normal · lognormal · beta · gamma**.
 
----
+### 4.7 Cost & sensitivity
 
-## 4. Results
+```
+Cost:
+Trucks: 85
+Loader: 120
 
-| Tab / block | Content |
-|-------------|---------|
-| **Production by Cycle** | Units/hour by cycle; **dark gold** steady-state line (5% / 10-cycle rule); **red dots** = detour branch cycles |
-| **Charts** | Utilization etc. |
-| **Report by Element** | Queues, activities |
-| **Cost** | When Cost block present (USD) |
-| **Branches** | Declared vs empirical p |
-| **Sensitivity** | Fleet mix vs productivity & unit cost (pairwise ≤ 5 resources) |
+Sensitivity:
+Trucks: 2..12
+Loader: 1..3
+```
 
-Downloads: **Excel** report · chart **PNG** · model **PNG**.
+- Cost = USD / resource-hour while the simulation clock runs.  
+- Sensitivity varies counts (step 1 by default).  
+- **1–2** resources: full factorial.  
+- **3–5** resources: **pairwise** (others fixed at baseline).  
+- More than 5: teaching cap (first 5).
 
----
-
-## 4b. Production COUNTER (one or many)
+### 4.8 Production COUNTER
 
 | | |
 |--|--|
 | Shape | Golf flag |
-| One counter | `Counter after: Dump` · `production = 12 m3` |
-| **Multiple** | `Counter after: LiftAtA, LiftAtB, LiftAtC` (comma-separated or multiple lines) |
-| Default | Last task of first resource if omitted |
-| Exact match | `Pave` does **not** match `DumpToPaver` |
-| Run stop | **Total hits** across all counters ≥ max cycles |
-| Chart cycle | Global production event index (sum of all counters) |
-| Report | Each counter listed; cost uses **sum** of production |
-
-Multi-counter teaches multi-demand (e.g. crane serving three zones): every productive service is counted, not only one zone.
+| One | `Counter after: Dump` |
+| Many | `Counter after: LiftAtA, LiftAtB, LiftAtC` |
+| Default | Last task of **first** resource if omitted |
+| Names | **Exact** match (`Pave` ≠ `DumpToPaver`) |
+| Stop rule | Total hits across counters ≥ max cycles |
 
 ---
 
-## 5. Modeling rules (Neo-CYCLONE)
+## Chapter 5 — Modeling rules (Neo-CYCLONE)
 
-1. Every resource has a **home QUEUE** (Q-circle).  
+1. Every resource has a **home QUEUE** (idle pool).  
 2. Task used by **≥2 resources** → **COMBI**; one resource only → **NORMAL**.  
-3. Home may feed COMBI or NORMAL. Staging `Resource @ Task` is still forward (solid black).  
-4. **Return** (dashed gold) only into a **home** QUEUE, not into staging or GEN.  
-5. GEN and CON are optional and independent.
+3. **Return** (dashed gold) only into a **home** QUEUE — not into staging or GEN.  
+4. **Forward** (solid black) = work advances (may be curved).  
+5. Staging `Resource @ Task` is still **forward**.  
+6. GEN/CON sit on the **chain that scales units**, not on an unrelated helper.  
+7. Diagram layout places **tasks on a grid (ordered)**, then **queues**, then **counter at the end** of the flow.
+
+Full shapes and arrow rules: **[NOTATION_STANDARD.md](./NOTATION_STANDARD.md)**.
+
+### 5.1 Notation (summary)
+
+| Element | Drawing |
+|---------|---------|
+| QUEUE | Q-circle (slash) |
+| GEN | Inverted triangle ▽ + `GEN k` |
+| CON | Upright triangle △ + `CON n` |
+| COMBI | Cut-corner square |
+| NORMAL | Rectangle |
+| COUNTER | Golf flag |
+
+| Arrow | Look |
+|-------|------|
+| Forward | Solid black + tip |
+| Return home | Dashed gold + tip |
+| Branch | Label `p=…` |
 
 ---
 
-## 6. Notation standard (summary)
+## Chapter 6 — Results & exports
 
-Full detail: **[NOTATION_STANDARD.md](./NOTATION_STANDARD.md)**.
+### 6.1 Simulation tab
 
-### 6.1 Node shapes
+| Block | Content |
+|-------|---------|
+| **Production by cycle** | Units/hour vs cycle; **dark gold** steady-state (5% rule, **≥10** consecutive cycles); **red** dots = branch detours |
+| **Charts** | Utilization, idleness (busy vs idle %) |
+| **Report by element** | Queues, activities (MicroCYCLONE-style teaching fields) |
+| **Cost** | Per resource, total, unit cost (if Cost block present) |
+| **Branches** | Declared vs empirical probability |
 
-| Element | Drawing | Subtitle |
-|---------|---------|----------|
-| **QUEUE** (home / staging) | Q-circle (slash) | `n = …` |
-| **GENERATE (GEN)** | **Inverted triangle ▽** | **`GEN k`** |
-| **COMBI** | Cut-corner square | duration |
-| **NORMAL** | Rectangle | duration |
-| **COUNTER** | Golf flag | `+production` |
-| **CONSOLIDATE (CON)** | **Upright triangle △** | **`CON n`** |
+Y-axis on units/hour charts **scales to the data** (no empty tall chart when rates are small).
 
-**GEN / CON pair:** ▽ multiplies (1→k) · △ gathers (n→1). GEN is **not** a Q-circle.
+### 6.2 Sensitivity tab
 
-### 6.2 Arrows
+| Sub-tab | Content |
+|---------|---------|
+| **Productivity & unit cost** | Pair charts + best markers + detail table |
+| **Idleness & utilization** | Snapshot for best productivity combination |
 
-| Style | Look | Meaning |
-|-------|------|---------|
-| **Forward** | Solid black + tip (may curve) | Work advances |
-| **Return** | Dashed gold + tip (curved) | Into **home** QUEUE only |
-| **Branch** | `p=…` label | Stochastic multi-out |
+### 6.3 Downloads
 
-### 6.3 Checklist
-
-- [ ] Arrowhead on every arc  
-- [ ] Solid black = forward; dashed gold = return home  
-- [ ] GEN = inverted triangle; CON = upright triangle  
-- [ ] COMBI only where resources meet  
+- **Excel** multi-sheet report  
+- Chart **PNG**  
+- Model diagram **PNG**  
+- Zoom on diagram (+ / − / reset)
 
 ---
 
-## 7. Teaching examples (6 presets)
+## Chapter 7 — Run limits & deploy
 
-1. **Earthmoving** — classic fleet; cost; steady-state  
-2. **Asphalt paving** — branch **p** Breakdown → Refill  
-3. **Excavator loading** — inline `GEN 5 → Scoop → CON 5 TruckFull → Haul&Return`  
-4. **Tower crane** — multi-demand `|` + **Priority** (contention, no SA)  
-5. **Masonry** — 2 brick stacks + 1 mortar place at face; helpers refill; GEN2/CON2 on **mortar place**; **only SA**  
-6. **Precast plant (Halpin Ch.14)** — Fig 14.1 entity paths; crews/crane multi-demand; **complex SA**
+| Parameter | Default / limit |
+|-----------|-----------------|
+| Max cycles | Default **100**, product max **500** |
+| Seed | Default **12345** |
+| Max time | Auto-raised with cycle horizon (minutes) |
+| Time unit in prompt | Minutes |
 
----
-
-## 8. Zoom & export
-
-Diagram and charts: + / − / reset · **PNG**.  
-Report: multi-sheet Excel (Summary, Cost, Activities, Queues, Productivity, Branches, Event log).
+**Deploy:** GitHub `main` → Vercel production ([neo-cyclone.vercel.app](https://neo-cyclone.vercel.app/)).
 
 ---
 
-## 9. Deploy note
+## Quick reference card
 
-GitHub `main` → Vercel production. Preview and production match after push.
+```text
+1. Select Example  OR  write Format Prompt
+2. Draw Model      → inspect cycles / meetings / counter
+3. Simulate        → productivity, waste, cost
+4. Sensitivity     → if Sensitivity: block present
+5. Export          → Excel / PNG as needed
+```
+
+**Tagline:** AI-agent of Daniel W. Halpin's CYCLONE  
+**Method:** structured prompt → CYCLONE network → discrete-event simulation  
+**Spirit:** educational, Halpin-first, clear flow and idleness
 
 ---
 
-*AI-agent of Daniel W. Halpin's CYCLONE*
+*End of User Manual v1.3*
