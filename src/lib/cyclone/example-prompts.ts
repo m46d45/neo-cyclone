@@ -24,7 +24,7 @@ export type ExamplePrompt = {
 export const EXAMPLE_PROMPTS: ExamplePrompt[] = [
   {
     id: "earthmoving",
-    title: "1. Earthmoving fleet (loader + trucks)",
+    title: "1. Earthmoving",
     goal: "Classic fleet — resource cycles, cost, steady-state (no branch, no sensitivity).",
     source: "Halpin earthmoving teaching model (classic).",
     features: ["COMBI Load", "cost", "steady-state"],
@@ -52,7 +52,7 @@ Return: lognormal 7, 1.5
   },
   {
     id: "asphalt-paving",
-    title: "2. Asphalt paving (paver + branch p)",
+    title: "2. Asphalt Paving",
     goal: "Dump+Refill truck cycle; meeting at DumpToPaver; truck breakdown branch p; count after Pave.",
     source: "Halpin asphalt simplified + stochastic return delay (breakdown).",
     features: [
@@ -89,7 +89,7 @@ Pave: normal 3.5, 0.6
   },
   {
     id: "excavator-load",
-    title: "3. Excavator loading dump trucks (GEN/CON)",
+    title: "3. Loading Dump Truck",
     goal: "Inline GEN 5 + CON 5 TruckFull; Haul&Return (no sensitivity).",
     source: "Halpin GENERATE/CONSOLIDATE teaching (excavator fill dump truck).",
     features: ["GEN 5", "CON 5", "COMBI Scoop", "cost"],
@@ -116,7 +116,7 @@ Haul&Return: normal 10, 1.5
   },
   {
     id: "tower-crane",
-    title: "4. Tower crane — 3 zones + priority",
+    title: "4. Tower Crane",
     goal: "One crane serves three different work zones (A/B/C); Priority when demands compete.",
     source: "Halpin multi-work / crane contention (zones made explicit for teaching).",
     features: ["3 locations", "multi-demand |", "Priority P1–P3", "cost"],
@@ -160,7 +160,7 @@ PlaceConcreteC: normal 8, 1.2
   },
   {
     id: "masonry",
-    title: "5. Masonry (face stocks + SA)",
+    title: "5. Masonry",
     goal: "2 brick stacks + 1 mortar place; helpers refill; mortar GEN2/CON2; SA.",
     source: "Halpin masonry face: material positions at mason, not GEN on helpers.",
     features: [
@@ -209,7 +209,7 @@ Lay: tri 4, 6, 9
   },
   {
     id: "precast-forms",
-    title: "6. Precast plant (Halpin Ch.14) + SA",
+    title: "6. Precast Plant",
     goal: "Fig 14.1 precast element plant; Table 14.1 entities; complex system sensitivity.",
     source: "Halpin & Riggs, Planning and Analysis of Construction Operations, Ch.14 Sensitivity Analysis, Fig 14.1 & Table 14.1.",
     features: [
