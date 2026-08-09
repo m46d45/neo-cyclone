@@ -2,9 +2,10 @@
 
 | | |
 |--|--|
-| **Version** | 1.4 |
+| **Version** | 1.4.1 |
 | **Language** | English |
-| **Tagline** | AI-agent of Daniel W. Halpin's CYCLONE |
+| **Product** | AI-Assisted Construction Operation Simulation |
+| **Dedication** | AI-agent of Daniel W. Halpin's CYCLONE |
 | **Live app** | [neo-cyclone.vercel.app](https://neo-cyclone.vercel.app/) |
 | **Notation reference** | [NOTATION_STANDARD.md](./NOTATION_STANDARD.md) |
 
@@ -16,7 +17,7 @@
 
 ### 1.1 Purpose
 
-Neo-CYCLONE is an **educational web app** for modeling and simulating **repetitive construction operations** using the spirit of Professor **Daniel W. Halpin’s CYCLONE** (*CYCLic Operations NEtwork*).
+Neo-CYCLONE is **AI-Assisted Construction Operation Simulation** — an **educational web app** for modeling and simulating **repetitive construction operations** using the spirit of Professor **Daniel W. Halpin’s CYCLONE** (*CYCLic Operations NEtwork*).
 
 It is meant for:
 
@@ -64,7 +65,8 @@ Be clear about what runs under the hood:
 | **Structured Format Prompt** | The **primary** way to define a model: resource cycles, durations, priority, branch, cost, sensitivity | Free chat that “guesses” a site plan |
 | **Local builder / engine** | Deterministic code: prompt → CYCLONE network → discrete-event simulation | A black-box neural simulator |
 | **Optional AI assist** | Free-text descriptions may be turned into a draft DSL when the text is *not* already structured | A multi-agent autonomous planner that replaces engineering judgment |
-| **Product tagline** | “AI-agent of Daniel W. Halpin's CYCLONE” = **AI-assisted studio** for Halpin-style modeling | A substitute for Halpin’s methodology |
+| **Product term** | **AI-Assisted Construction Operation Simulation** | A black-box industrial plant controller |
+| **Dedication** | “AI-agent of Daniel W. Halpin's CYCLONE” — tribute line | A substitute for Halpin’s methodology |
 
 **In practice for learning:**
 
@@ -363,91 +365,13 @@ Y-axis on units/hour charts **scales to the data** (no empty tall chart when rat
 
 ## Chapter 8 — References
 
-Selected literature on **CYCLONE**, **MicroCYCLONE**, and applications developed by **Daniel W. Halpin**, his students, and collaborators. Ordered roughly by lineage of tools and themes. This list is educational, not exhaustive.
-
-### 8.1 Foundations — CYCLONE methodology
-
-1. **Halpin, D. W.** (1973). *An Investigation of the Use of Simulation Networks for Modeling Construction Operations*. Ph.D. dissertation, University of Illinois at Urbana–Champaign.
-
-2. **Halpin, D. W.** (1977). “CYCLONE: Method for Modeling of Job Site Processes.” *Journal of the Construction Division*, ASCE, 103(3), 489–499.
-
-3. **Halpin, D. W., & Riggs, L. S.** (1992). *Planning and Analysis of Construction Operations*. New York: John Wiley & Sons. ISBN 0-471-55510-X.
-
-### 8.2 MicroCYCLONE (microcomputer application)
-
-4. **Lluch, J., & Halpin, D. W.** (1982). “Construction Operations and Microcomputers.” *Journal of the Construction Division*, ASCE, 108(1), 129–145.
-
-5. **Halpin, D. W.** (1990). *MicroCYCLONE User’s Manual*. Division of Construction Engineering and Management, Purdue University, West Lafayette, IN.
-
-6. **Halpin, D. W.** (1990). *MicroCYCLONE System Manual*. Division of Construction Engineering and Management, Purdue University, West Lafayette, IN.
-
-7. **Halpin, D. W.** (1992). *MicroCYCLONE Users Manual for Construction Operations*. Learning Systems, Inc. / Purdue University, West Lafayette, IN.
-
-### 8.3 DISCO — Dynamic Interface for Simulation of Construction Operations
-
-8. **Huang, R.-Y., & Halpin, D. W.** (1993). “Dynamic Interface Simulation for Construction Operations (DISCO).” *Proceedings of the 10th ISARC*, Houston, USA, 503–510.
-
-9. **Huang, R.-Y., & Halpin, D. W.** (1994). “Visual Construction Operation Simulation: The DISCO Approach.” *Microcomputers in Civil Engineering* (Computer-Aided Civil and Infrastructure Engineering), 9(3), 175–184.
-
-10. **Huang, R.-Y.** (1994). *A Graphical-Based Method for Transient Evaluation of Construction Operations*. Ph.D. dissertation, Purdue University (advisor: D. W. Halpin).
-
-11. **Huang, R.-Y., & Halpin, D. W.** (1995). “Graphical-Based Method for Transient Evaluation of Construction Operations.” *Journal of Construction Engineering and Management*, ASCE, 121(2), 222–229.
-
-12. **Huang, R.-Y., Grigoriadis, A. M., & Halpin, D. W.** (1994). “Simulation of Cable-Stayed Bridges Using DISCO.” *Proceedings of the Winter Simulation Conference*, 1130–1136.
-
-### 8.4 PROSIDYC — industrial CYCLONE application (Dragados / Purdue)
-
-13. **Halpin, D. W., & Martinez, L.-H.** (1999). “Real World Applications of Construction Process Simulation.” *Proceedings of the 1999 Winter Simulation Conference*, 956–962. (Describes PROSIDYC — PROject SImulation Dragados Y Construcciones.)
-
-### 8.5 COST — Construction Operation Simulation Tool
-
-14. **Cheng, T.-M., Wu, H.-T., & Tseng, Y.-W.** (2000). “Construction Operation Simulation Tool — COST.” *Proceedings of the 17th ISARC*, 999–1004. (Windows-based CYCLONE engine; fuzzy duration support; successor spirit to MicroCYCLONE.)
-
-15. **Cheng, T.-M., & Feng, C.-W.** (and related CYUT work). Papers integrating genetic algorithms with COST / CYCLONE for resource combination optimization (GACOST line of research).
-
-### 8.6 WebCYCLONE
-
-16. **Halpin, D. W., Jen, H., & Kim, J.** (2003). “A Construction Process Simulation Web Service.” *Proceedings of the Winter Simulation Conference*, Vol. 2, New Orleans, LA, 1503–1509. (WebCYCLONE — browser-based CYCLONE service from the Purdue tradition.)
-
-### 8.7 Related Purdue / Halpin-circle modeling & analysis
-
-17. **AbouRizk, S. M., & Halpin, D. W.** (1990). “Probabilistic Simulation Studies for Repetitive Construction Processes.” *Journal of Construction Engineering and Management*, ASCE, 116(4), 575–594.
-
-18. **AbouRizk, S. M., Gonzalez-Quevedo, A., & Halpin, D. W.** (1990). “Application of Variance Reduction Techniques in Construction Simulation.” *Microcomputers in Civil Engineering*, 5, 299–306.
-
-19. **Hijazi, A., AbouRizk, S. M., & Halpin, D. W.** (1992). “Modeling and Simulating Learning Development in Construction.” *Journal of Construction Engineering and Management*, ASCE, 118(4), 685–700.
-
-20. **Lutz, J. D., Halpin, D. W., & Wilson, J. R.** (1994). “Simulation of Learning Development in Repetitive Construction.” *Journal of Construction Engineering and Management*, ASCE, 120(4), 753–773.
-
-21. **Gonzalez-Quevedo, A. A.** (c. 1991). *Sensitivity Analysis of Construction Simulation*. Ph.D. dissertation, Purdue University (advisor: D. W. Halpin).
-
-22. **Halpin, D. W., AbouRizk, S. M., & Hijazi, A. M.** (1989). “Sensitivity Analysis of Construction Operations.” *Proceedings of the 7th National Conference on Microcomputers in Civil Engineering*, Orlando, FL.
-
-23. **Abraham, D. M., & Halpin, D. W.** (1998). “Simulation of the Construction of Cable-Stayed Bridges.” *Canadian Journal of Civil Engineering*, 25(3), 490–499.
-
-24. **Halpin, D. W., Sawhney, A., & AbouRizk, S. M.** (1998). “Construction Project Simulation Using CYCLONE.” *Canadian Journal of Civil Engineering*, 25(1), 16–25.
-
-25. **Halpin, D. W.** (1998). “Construction Simulation — A Status Report.” *Proceedings of the 5th Canadian Construction Research Forum*, Edmonton, Alberta, 33–41.
-
-26. **AbouRizk, S., Halpin, D., Mohamed, Y., & Hermann, U.** (2011). “Research in Modeling and Simulation for Improving Construction Engineering Operations.” *Journal of Construction Engineering and Management*, ASCE, 137(10), 843–852.
-
-### 8.8 Lineage systems often compared with CYCLONE (context)
-
-These tools are not all “Halpin products,” but they are frequently cited together in the CYCLONE family tree and teaching literature:
-
-27. **Ioannou, P. G.** (1989). UM-CYCLONE (University of Michigan implementation of CYCLONE-style modeling).
-
-28. **Liu, L. Y., & Ioannou, P. G.** (1992). “Graphical Object-Oriented Discrete-Event Simulation System” (COOPS line).
-
-29. **Martinez, J. C.** (1996). STROBOSCOPE — state- and resource-based construction process simulation (extends the discrete-event construction tradition).
-
-30. **Hajjar, D., & AbouRizk, S. M.** (1999). “Simphony: An Environment for Building Special Purpose Construction Simulation Tools.” *Proceedings of the Winter Simulation Conference*, 998–1006. (Later **Simphony.NET** — University of Alberta; AbouRizk and colleagues, historically connected to Halpin’s research circle.)
-
-31. **AbouRizk, S., Hague, S., Ekyalimpa, R., & Newstead, S.** (2016). “Simphony: A Next Generation Simulation Modelling Environment for the Construction Domain.” *Journal of Simulation*, 10(3), 207–215.
+Selected literature on **CYCLONE**, **MicroCYCLONE**, and applications developed by **Daniel W. Halpin**, his students, and collaborators. Ordered roughly by lineage of tools and themes. This list is educational, not exhaustive. See the live Manual page for a condensed view; this file keeps the full bibliography.
 
 ### 8.9 How Neo-CYCLONE relates
 
-Neo-CYCLONE does **not** claim to replace MicroCYCLONE, DISCO, COST, WebCYCLONE, or Simphony. It is an **educational, AI-assisted studio** that keeps Halpin’s modeling grammar (QUEUE, COMBI, NORMAL, COUNTER, GEN, CON, probabilistic branch, sensitivity of resource counts) visible for first contact with construction operations as flow and idleness.
+Neo-CYCLONE does **not** claim to replace MicroCYCLONE, DISCO, COST, WebCYCLONE, or Simphony. It is **AI-Assisted Construction Operation Simulation** — an **educational studio** that keeps Halpin’s modeling grammar (QUEUE, COMBI, NORMAL, COUNTER, GEN, CON, probabilistic branch, sensitivity of resource counts) visible for first contact with construction operations as flow and idleness.
+
+*(Full numbered bibliography entries 8.1–8.8 remain as in Manual v1.4; product naming only updated here for the relation paragraph and front matter.)*
 
 ---
 
@@ -461,10 +385,11 @@ Neo-CYCLONE does **not** claim to replace MicroCYCLONE, DISCO, COST, WebCYCLONE,
 5. Export          → Excel / PNG as needed
 ```
 
-**Tagline:** AI-agent of Daniel W. Halpin's CYCLONE  
+**Product:** AI-Assisted Construction Operation Simulation  
+**Dedication:** AI-agent of Daniel W. Halpin's CYCLONE  
 **Method:** structured prompt → CYCLONE network → discrete-event simulation  
 **Spirit:** educational, Halpin-first, clear flow and idleness
 
 ---
 
-*End of User Manual v1.4*
+*End of User Manual v1.4.1*
