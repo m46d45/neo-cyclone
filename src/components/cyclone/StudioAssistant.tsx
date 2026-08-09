@@ -19,11 +19,11 @@ type UiMsg = {
 };
 
 const QUICK = [
-  "Jelaskan model ini",
-  "Berapa jumlah resource?",
-  "Hasil dan produktivitas",
-  "Idleness / waste",
-  "Ubah truk jadi 8",
+  "Explain this model",
+  "How many resources?",
+  "Which resource is the bottleneck?",
+  "What was productivity?",
+  "Set trucks to 8",
 ];
 
 export function StudioAssistant() {
@@ -46,7 +46,7 @@ export function StudioAssistant() {
       id: "welcome",
       role: "system",
       text:
-        "AI Assistant terikat ke Format Prompt, network, dan hasil simulasi. Bahasa Indonesia atau English OK. Contoh: Jelaskan model ini · Berapa truk? · Ubah truk jadi 8. Usulan prompt hanya setelah klik Apply. / Bound to prompt, network, and last results. Apply required before changes take effect.",
+        "AI Assistant is bound to your Format Prompt, CYCLONE network, and last simulation results. Ask in English (recommended) about productivity, idleness/bottleneck, or request prompt edits (e.g. set trucks to 8). Proposed prompts apply only after you click Apply.",
     },
   ]);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -236,7 +236,7 @@ export function StudioAssistant() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             rows={2}
-            placeholder="Tanya model / hasil, atau minta ubah prompt (ID atau EN)…"
+            placeholder="Ask about the model or results, or request a prompt change…"
             className="min-h-[64px] flex-1 resize-y text-xs"
             disabled={loading}
             onKeyDown={(e) => {
