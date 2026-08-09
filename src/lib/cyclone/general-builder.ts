@@ -592,6 +592,7 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
 /**
  * Inline chain notation (preferred):
  *   GEN 5          → GENERATE queue, k=5  (display "GEN 5")
+ *   CON 5          → CONSOLIDATE "CON 5", n=5  (same style as GEN 5)
  *   CON 5 Name     → CONSOLIDATE Name, n=5
  *   Name CON 5     → same
  * Mutates fn.gens / fn.cons so ensureActivity classifies nodes correctly.
@@ -610,6 +611,17 @@ function expandInlineGenCon(
       const label = `GEN ${k}`;
       if (!fn.gens.some((g) => normLabel(g.label) === normLabel(label))) {
         fn.gens.push({ label, k });
+      }
+      labels.push(label);
+      continue;
+    }
+    // CON 2 / CON2  (same style as GEN 2 — no extra name)
+    m = s.match(/^CON\s*(\d+)\s*$/i);
+    if (m) {
+      const n = Math.max(2, Math.floor(Number(m[1])));
+      const label = `CON ${n}`;
+      if (!fn.cons.some((c) => normLabel(c.label) === normLabel(label))) {
+        fn.cons.push({ label, n });
       }
       labels.push(label);
       continue;

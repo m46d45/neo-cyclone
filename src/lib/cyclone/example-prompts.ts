@@ -173,14 +173,14 @@ PlaceConcreteC: normal 8, 1.2
     prompt: `# Example 5 — Masonry face stocks (2 brick + 1 mortar) + SA
 # At the mason: 2 brick-pack stacks + 1 mortar place (not a generic scaffold).
 # Helpers only refill empty positions (multi-demand). Materials available at ground.
-# GEN 2 / CON 2 apply to the MORTAR PLACE resource (1 bucket → 2 doses → rejoin),
-# not to the helpers. Each Lay uses 1 pack (BrickPos) + 1 mortar dose + mason.
-# production = 20 bricks per pack/lay.
+# GEN 2 / CON 2 on the MORTAR PLACE (1 bucket → 2 doses → CON 2 reunites place).
+# Helpers only refill. BrickPos / MortarPos are face positions (cost 0).
+# Sensitivity varies all fleets/positions. production = 20 bricks per lay.
 
 4 Masons: Lay
 3 Helpers: ReceiveBrick | ReceiveMortar
 2 BrickPos: ReceiveBrick → Lay
-1 MortarPos: ReceiveMortar → GEN 2 → Lay → CON 2 Rejoin
+1 MortarPos: ReceiveMortar → GEN 2 → Lay → CON 2
 
 Counter after: Lay
 production = 20 bricks
@@ -192,13 +192,14 @@ ReceiveBrick: 2
 Cost:
 Masons: 75
 Helpers: 45
-BrickPos: 5
-MortarPos: 5
+BrickPos: 0
+MortarPos: 0
 
 Sensitivity:
 Masons: 2..6
 Helpers: 1..5
 BrickPos: 1..3
+MortarPos: 1..2
 
 Durations:
 ReceiveBrick: tri 2, 3, 5
