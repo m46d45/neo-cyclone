@@ -666,12 +666,12 @@ function expandInlineGenCon(
 
 
 /**
- * Halpin-style multi-resource layout (left → right flow, one row per resource):
- * - Home QUEUEs in a left rail (one row each)
- * - Work nodes in columns by step index (shared COMBI centered on meeting rows)
- * - Staging "R @ Task" sits just left of its COMBI on the resource row
- * - GEN / CON / COUNTER follow the main flow columns
- * - Final collision pass keeps labels readable
+ * Grid-first CYCLONE layout (Halpin-clean):
+ *  1) Place WORK tasks on a center grid, ordered by cycle / graph layer
+ *  2) Place home resource QUEUEs on a left rail, aligned to the tasks they serve
+ *  3) Place staging QUEUEs just left of their task, on the resource’s row
+ *  4) COUNTER at the end of the task band (right) or just below the last task
+ * Links are drawn later by the canvas from these positions.
  */
 function layoutNodes(
   nodes: CycloneNode[],
@@ -679,175 +679,283 @@ function layoutNodes(
   resources: ResourceCycle[],
   homeQueue: Map<string, string>,
   activityId: Map<string, string>,
-  counterId: string,
+  _counterId: string,
   stagingByResource: Map<string, string[]> = new Map(),
 ): void {
   const byId = new Map(nodes.map((n) => [n.id, n]));
-  const ROW = 150;
-  const COL = 175;
-  const LEFT = 64;
-  const ACT0 = 240;
-  const TOP = 72;
-  const STAG_DX = 88;
+  const COL = 168;
+  const ROW = 132;
+  const HOME_X = 56;
+  const TASK0 = 230;
+  const TOP = 64;
+  const STAG_DX = 82;
 
-  // Resource row index
-  const rowOfResource = new Map<string, number>();
-  resources.forEach((r, i) => rowOfResource.set(r.id, i));
+  const isHome = (n: CycloneNode) =>
+    n.type === "QUEUE" && (n.initialUnits ?? 0) > 0 && !/\s@\s/.test(n.label);
+  const isStaging = (n: CycloneNode) =>
+    n.type === "QUEUE" && /\s@\s/.test(n.label) && !(n.generateCount && n.generateCount >= 2);
+  const isWork = (n: CycloneNode) =>
+    n.type === "COMBI" ||
+    n.type === "NORMAL" ||
+    n.type === "CONSOLIDATE" ||
+    n.type === "COUNTER" ||
+    (n.type === "QUEUE" && (n.generateCount ?? 0) >= 2);
 
-  // All labs a resource "owns" (primary itinerary + alsoServes + alsoPaths)
-  const resourceLabs = (r: ResourceCycle): string[] => {
-    const labs = [...r.itinerary];
-    for (const a of r.alsoServes ?? []) labs.push(a);
-    for (const path of r.alsoPaths ?? []) labs.push(...path);
-    return labs;
-  };
-
-  // Which resources touch each activity key
+  // --- Resource ownership of work keys ---
   const useRows = new Map<string, number[]>();
-  const useCount = new Map<string, number>();
-  const colOf = new Map<string, number>();
+  const colHint = new Map<string, number>();
   resources.forEach((r, ri) => {
-    // Primary path: strong column indices
     r.itinerary.forEach((lab, j) => {
       const key = normLabel(lab);
-      useCount.set(key, (useCount.get(key) ?? 0) + 1);
       const rows = useRows.get(key) ?? [];
       if (!rows.includes(ri)) rows.push(ri);
       useRows.set(key, rows);
-      colOf.set(key, Math.max(colOf.get(key) ?? 0, j));
+      colHint.set(key, Math.max(colHint.get(key) ?? 0, j));
     });
-    // Alternate / multi-demand first steps: column 0-ish, still on resource row
     for (const lab of r.alsoServes ?? []) {
       const key = normLabel(lab);
-      useCount.set(key, (useCount.get(key) ?? 0) + 1);
       const rows = useRows.get(key) ?? [];
       if (!rows.includes(ri)) rows.push(ri);
       useRows.set(key, rows);
-      // alsoServes first tasks sit near the start of the row
-      if (!colOf.has(key)) colOf.set(key, 0);
+      if (!colHint.has(key)) colHint.set(key, 0);
     }
-    // Full alternate paths: sequential columns along that path
     for (const path of r.alsoPaths ?? []) {
       path.forEach((lab, j) => {
         const key = normLabel(lab);
-        useCount.set(key, (useCount.get(key) ?? 0) + 1);
         const rows = useRows.get(key) ?? [];
         if (!rows.includes(ri)) rows.push(ri);
         useRows.set(key, rows);
-        colOf.set(key, Math.max(colOf.get(key) ?? 0, j));
+        colHint.set(key, Math.max(colHint.get(key) ?? 0, j));
       });
     }
   });
 
-  // Home QUEUEs — left rail, one clean row each
-  resources.forEach((r, i) => {
+  // Map node id → activity key
+  const keyOfNode = new Map<string, string>();
+  for (const [k, id] of activityId) keyOfNode.set(id, k);
+  for (const n of nodes) {
+    if (keyOfNode.has(n.id)) continue;
+    if (n.type === "CONSOLIDATE" || (n.generateCount ?? 0) >= 2) {
+      keyOfNode.set(n.id, normLabel(n.label));
+    }
+  }
+
+  // --- 1) Ordered task sequence (cycle order on a grid) ---
+  // Spine = longest primary itinerary. Other sequences merge by predecessor.
+  // Multi-demand alsoServes share column 0 (parallel first tasks), stacked by resource row.
+  let spine: string[] = [];
+  for (const r of resources) {
+    if (r.itinerary.length > spine.length) spine = r.itinerary.map(normLabel);
+  }
+  const colOf = new Map<string, number>();
+  const existsKey = (k: string) =>
+    activityId.has(k) ||
+    nodes.some((n) => normLabel(n.label) === k && isWork(n) && n.type !== "COUNTER");
+
+  spine.forEach((k, i) => {
+    if (existsKey(k)) colOf.set(k, i);
+  });
+
+  // Multi-demand first tasks → column 0 (parallel)
+  for (const r of resources) {
+    for (const lab of r.alsoServes ?? []) {
+      const k = normLabel(lab);
+      if (existsKey(k) && !colOf.has(k)) colOf.set(k, 0);
+    }
+  }
+
+  // Merge other primary / alternate paths: place after max known predecessor in path
+  for (const r of resources) {
+    const paths = [r.itinerary.map(normLabel), ...(r.alsoPaths ?? []).map((p) => p.map(normLabel))];
+    for (const path of paths) {
+      let prevCol = -1;
+      for (const k of path) {
+        if (!existsKey(k)) continue;
+        if (colOf.has(k)) {
+          prevCol = Math.max(prevCol, colOf.get(k)!);
+          continue;
+        }
+        colOf.set(k, prevCol + 1);
+        prevCol = colOf.get(k)!;
+      }
+    }
+  }
+
+  // GEN / CON: column from graph neighbors or after related itinerary tokens
+  for (const n of nodes) {
+    if (!(n.type === "CONSOLIDATE" || (n.generateCount ?? 0) >= 2)) continue;
+    const k = normLabel(n.label);
+    if (colOf.has(k)) continue;
+    const preds = links
+      .filter((l) => l.to === n.id)
+      .map((l) => byId.get(l.from))
+      .filter(Boolean) as CycloneNode[];
+    let pc = -1;
+    for (const p of preds) {
+      const pk = keyOfNode.get(p.id) ?? normLabel(p.label);
+      if (colOf.has(pk)) pc = Math.max(pc, colOf.get(pk)!);
+    }
+    colOf.set(k, pc + 1);
+  }
+
+  const maxCol = Math.max(0, ...[...colOf.values()], 0);
+
+  // --- 1b) Place WORK tasks on center grid ---
+  const taskIds: string[] = [];
+  for (const n of nodes) {
+    if (!isWork(n) || n.type === "COUNTER") continue;
+    taskIds.push(n.id);
+    const key = keyOfNode.get(n.id) ?? normLabel(n.label);
+    const col = colOf.get(key) ?? 0;
+    const rows = useRows.get(key) ?? [];
+    // Exclusive task → its resource row; shared COMBI → mean of meeting rows
+    let slot: number;
+    if (rows.length >= 2) {
+      slot = rows.reduce((s, r) => s + r, 0) / rows.length;
+    } else if (rows.length === 1) {
+      slot = rows[0]!;
+    } else {
+      slot = Math.max(0, (resources.length - 1) / 2);
+    }
+    n.x = TASK0 + col * COL;
+    n.y = TOP + slot * ROW;
+  }
+
+  // --- 2) Home resource QUEUEs (left rail) ---
+  resources.forEach((r, ri) => {
     const hid = homeQueue.get(r.id);
     if (!hid) return;
     const q = byId.get(hid);
     if (!q) return;
-    q.x = LEFT;
-    q.y = TOP + i * ROW;
-  });
-
-  // Place work nodes (COMBI / NORMAL / GEN QUEUE / CON)
-  const placed = new Set<string>();
-  for (const n of nodes) {
-    if (n.type === "COUNTER") continue;
-    if ((n.initialUnits ?? 0) > 0 && n.type === "QUEUE") {
-      placed.add(n.id); // homes already placed
-      continue;
-    }
-    // Staging handled later
-    if (/@/.test(n.label) && n.type === "QUEUE" && !(n.generateCount && n.generateCount >= 2)) {
-      continue;
-    }
-
-    // Activity key for known tasks
-    let key: string | null = null;
-    for (const [k, id] of activityId) {
-      if (id === n.id) {
-        key = k;
+    // Align Y to first task this resource serves
+    const firstLabs = [
+      ...r.itinerary,
+      ...(r.alsoServes ?? []),
+      ...((r.alsoPaths ?? []).flat() as string[]),
+    ];
+    let ty = TOP + ri * ROW;
+    for (const lab of firstLabs) {
+      const id = activityId.get(normLabel(lab));
+      const tn = id ? byId.get(id) : undefined;
+      if (tn) {
+        ty = tn.y;
         break;
       }
     }
-    // GEN labeled "GEN 2"
-    if (!key && n.type === "QUEUE" && (n.generateCount ?? 0) >= 2) {
-      key = normLabel(n.label);
-      if (!colOf.has(key)) {
-        // Place GEN after max predecessor column + 1
-        const preds = links.filter((l) => l.to === n.id).map((l) => byId.get(l.from)).filter(Boolean) as CycloneNode[];
-        let pc = 0;
-        for (const p of preds) {
-          const pk = [...activityId.entries()].find(([, id]) => id === p.id)?.[0];
-          if (pk) pc = Math.max(pc, (colOf.get(pk) ?? 0) + 1);
-        }
-        colOf.set(key, pc || 1);
-      }
-    }
-    if (!key && n.type === "CONSOLIDATE") {
-      key = normLabel(n.label);
-      if (!colOf.has(key)) {
-        const preds = links.filter((l) => l.to === n.id).map((l) => byId.get(l.from)).filter(Boolean) as CycloneNode[];
-        let pc = 0;
-        for (const p of preds) {
-          const pk = [...activityId.entries()].find(([, id]) => id === p.id)?.[0];
-          if (pk) pc = Math.max(pc, (colOf.get(pk) ?? 0) + 1);
-          if (p.generateCount) pc = Math.max(pc, (colOf.get(normLabel(p.label)) ?? 0) + 1);
-        }
-        colOf.set(key, pc || 2);
-      }
-    }
-    if (!key) continue;
+    q.x = HOME_X;
+    q.y = ty;
+  });
 
-    const col = colOf.get(key) ?? 0;
-    const rows = useRows.get(key) ?? [];
-    const y =
-      rows.length > 0
-        ? rows.reduce((s, ri) => s + (TOP + ri * ROW), 0) / rows.length
-        : TOP + resources.length * ROW;
-    n.x = ACT0 + col * COL;
-    n.y = y;
-    placed.add(n.id);
+  // Spread homes if stacked on same y
+  const homes = resources
+    .map((r) => byId.get(homeQueue.get(r.id)!))
+    .filter((n): n is CycloneNode => !!n);
+  homes.sort((a, b) => a.y - b.y || a.x - b.x);
+  for (let i = 1; i < homes.length; i++) {
+    if (homes[i]!.y - homes[i - 1]!.y < ROW * 0.75) {
+      homes[i]!.y = homes[i - 1]!.y + ROW * 0.85;
+    }
   }
 
-  // Staging queues: same row as owning resource, just left of COMBI they feed
+  // Realign WORK Y to home rows (grid columns already set)
+  for (const n of nodes) {
+    if (!isWork(n) || n.type === "COUNTER") continue;
+    const key = keyOfNode.get(n.id) ?? normLabel(n.label);
+    const rows = useRows.get(key) ?? [];
+    if (!rows.length) continue;
+    const ys = rows
+      .map((ri) => {
+        const hid = homeQueue.get(resources[ri]!.id);
+        return hid ? byId.get(hid)?.y : undefined;
+      })
+      .filter((y): y is number => y != null);
+    if (!ys.length) continue;
+    n.y = ys.reduce((s, y) => s + y, 0) / ys.length;
+  }
+
+  // --- 3) Staging QUEUEs ---
   resources.forEach((r, ri) => {
-    const rowY = TOP + ri * ROW;
+    const hid = homeQueue.get(r.id);
+    const homeY = hid ? byId.get(hid)?.y ?? TOP + ri * ROW : TOP + ri * ROW;
     for (const sid of stagingByResource.get(r.id) ?? []) {
       const sn = byId.get(sid);
       if (!sn) continue;
       const m = sn.label.match(/@\s*(.+)$/);
       const taskKey = m ? normLabel(m[1]!) : null;
       const combi = taskKey ? byId.get(activityId.get(taskKey)!) : null;
-      if (combi) {
-        sn.x = combi.x - STAG_DX;
-        sn.y = rowY;
-      } else {
-        sn.x = ACT0 - STAG_DX;
-        sn.y = rowY;
-      }
-      placed.add(sn.id);
+      sn.x = combi ? combi.x - STAG_DX : TASK0 - STAG_DX;
+      sn.y = homeY;
     }
   });
-
-  // Any remaining staging-like queues linked into a COMBI
+  // leftover staging still at origin
   for (const n of nodes) {
-    if (placed.has(n.id)) continue;
-    if (n.type !== "QUEUE") continue;
-    const outs = links.filter((l) => l.from === n.id).map((l) => byId.get(l.to)).filter(Boolean) as CycloneNode[];
+    if (!isStaging(n)) continue;
+    if (n.x !== 0 || n.y !== 0) continue;
+    const outs = links
+      .filter((l) => l.from === n.id)
+      .map((l) => byId.get(l.to))
+      .filter(Boolean) as CycloneNode[];
     const combi = outs.find((o) => o.type === "COMBI" || o.type === "NORMAL");
-    if (combi) {
-      // Guess row from label prefix before @
-      const pref = n.label.split("@")[0]?.trim() ?? "";
-      let ri = resources.findIndex((r) => normLabel(r.label) === normLabel(pref));
-      if (ri < 0) ri = resources.length;
-      n.x = combi.x - STAG_DX;
-      n.y = TOP + ri * ROW;
-      placed.add(n.id);
+    if (!combi) continue;
+    const pref = n.label.split("@")[0]?.trim() ?? "";
+    const ri = resources.findIndex((r) => normLabel(r.label) === normLabel(pref));
+    const homeY =
+      ri >= 0 && homeQueue.get(resources[ri]!.id)
+        ? byId.get(homeQueue.get(resources[ri]!.id)!)?.y ?? TOP + Math.max(0, ri) * ROW
+        : combi.y;
+    n.x = combi.x - STAG_DX;
+    n.y = homeY;
+  }
+
+  // --- 4) COUNTER at end of flow (right of predecessor); multi-counter stack if needed ---
+  const counters = nodes.filter((n) => n.type === "COUNTER");
+  const workYs = nodes.filter((n) => isWork(n) && n.type !== "COUNTER").map((n) => n.y);
+  const bandBottom = workYs.length ? Math.max(...workYs) : TOP;
+  const bandMid = workYs.length ? workYs.reduce((s, y) => s + y, 0) / workYs.length : TOP;
+  counters.forEach((n) => {
+    const preds = links
+      .filter((l) => l.to === n.id)
+      .map((l) => byId.get(l.from))
+      .filter((x): x is CycloneNode => !!x);
+    if (preds.length) {
+      n.x = Math.max(...preds.map((p) => p.x)) + COL * 0.9;
+      n.y = preds.reduce((s, p) => s + p.y, 0) / preds.length;
+    } else {
+      n.x = TASK0 + (maxCol + 1) * COL;
+      n.y = bandMid;
+    }
+  });
+  // Separate overlapping counters vertically (bottom of band)
+  counters.sort((a, b) => a.x - b.x || a.y - b.y);
+  for (let i = 1; i < counters.length; i++) {
+    const a = counters[i - 1]!;
+    const b = counters[i]!;
+    if (Math.abs(a.x - b.x) < COL * 0.5 && Math.abs(a.y - b.y) < ROW * 0.7) {
+      b.y = Math.max(b.y, a.y + ROW * 0.7);
     }
   }
 
-  // COUNTERs: right of predecessor, same Y
+  // --- 5) Orphans (never positioned) ---
+  for (const n of nodes) {
+    if (n.x !== 0 || n.y !== 0) continue;
+    const preds = links.filter((l) => l.to === n.id).map((l) => byId.get(l.from)).filter(Boolean) as CycloneNode[];
+    const succs = links.filter((l) => l.from === n.id).map((l) => byId.get(l.to)).filter(Boolean) as CycloneNode[];
+    const refs = [...preds, ...succs];
+    if (refs.length) {
+      n.x = refs.reduce((s, p) => s + p.x, 0) / refs.length;
+      n.y = refs.reduce((s, p) => s + p.y, 0) / refs.length;
+    } else {
+      n.x = TASK0;
+      n.y = bandBottom + ROW;
+    }
+  }
+
+  // --- 6) Soft collision (prefer vertical; pin homes x; re-pin counters) ---
+  resolveCollisions(nodes, 145, 100);
+  for (const n of nodes) {
+    if (isHome(n)) n.x = HOME_X;
+  }
+  // Counters must stay to the RIGHT of their predecessor (never drift left)
   for (const n of nodes) {
     if (n.type !== "COUNTER") continue;
     const preds = links
@@ -855,76 +963,42 @@ function layoutNodes(
       .map((l) => byId.get(l.from))
       .filter((x): x is CycloneNode => !!x);
     if (preds.length) {
-      n.x = Math.max(...preds.map((p) => p.x)) + COL * 0.85;
+      n.x = Math.max(n.x, Math.max(...preds.map((p) => p.x)) + COL * 0.85);
       n.y = preds.reduce((s, p) => s + p.y, 0) / preds.length;
-    } else {
-      n.x = ACT0 + COL * 5;
-      n.y = TOP;
     }
-    placed.add(n.id);
   }
-
-  // Orphans (GEN not in activityId, etc.)
-  let orphan = 0;
-  for (const n of nodes) {
-    if (placed.has(n.id)) continue;
-    // Try place by graph neighbors
-    const preds = links.filter((l) => l.to === n.id).map((l) => byId.get(l.from)).filter(Boolean) as CycloneNode[];
-    const succs = links.filter((l) => l.from === n.id).map((l) => byId.get(l.to)).filter(Boolean) as CycloneNode[];
-    if (preds.length || succs.length) {
-      const refs = [...preds, ...succs];
-      n.x = refs.reduce((s, p) => s + p.x, 0) / refs.length + (preds.length && !succs.length ? COL * 0.5 : 0);
-      n.y = refs.reduce((s, p) => s + p.y, 0) / refs.length;
-    } else {
-      n.x = ACT0 + (orphan % 3) * COL;
-      n.y = TOP + resources.length * ROW + Math.floor(orphan / 3) * ROW;
-      orphan++;
-    }
-    placed.add(n.id);
-  }
-
-  // Snap columns: group nodes that should share x (same work step)
-  // Soft align shared COMBIs already averaged
-
-  // Prefer monotonic L→R along each resource primary itinerary
-  resources.forEach((r, ri) => {
-    const rowY = TOP + ri * ROW;
-    let prevX = LEFT;
-    const chain = [...r.itinerary];
-    for (const path of r.alsoPaths ?? []) {
-      // don't interleave; primary first
-    }
-    for (const lab of chain) {
-      const id = activityId.get(normLabel(lab));
-      const n = id ? byId.get(id) : undefined;
-      if (!n) continue;
-      if (n.x < prevX + COL * 0.55) {
-        n.x = prevX + COL * 0.55;
+  // Re-snap staging left of combi after collision
+  resources.forEach((r) => {
+    const hid = homeQueue.get(r.id);
+    const homeY = hid ? byId.get(hid)?.y : undefined;
+    for (const sid of stagingByResource.get(r.id) ?? []) {
+      const sn = byId.get(sid);
+      if (!sn) continue;
+      const m = sn.label.match(/@\s*(.+)$/);
+      const taskKey = m ? normLabel(m[1]!) : null;
+      const combi = taskKey ? byId.get(activityId.get(taskKey)!) : null;
+      if (combi) {
+        sn.x = Math.min(sn.x, combi.x - STAG_DX);
+        if (homeY != null) sn.y = homeY;
       }
-      // Pull exclusive (non-shared) nodes onto their resource row
-      if ((useCount.get(normLabel(lab)) ?? 1) === 1) {
-        n.y = rowY;
-      }
-      prevX = n.x;
     }
   });
 
-  resolveCollisions(nodes, 155, 118);
-
-  // Normalize to canvas padding
+  // Padding
   let minX = Infinity;
   let minY = Infinity;
   for (const n of nodes) {
     minX = Math.min(minX, n.x);
     minY = Math.min(minY, n.y);
   }
-  const ox = minX < 40 ? 40 - minX : 0;
-  const oy = minY < 40 ? 40 - minY : 0;
+  const ox = minX < 36 ? 36 - minX : 0;
+  const oy = minY < 36 ? 36 - minY : 0;
   for (const n of nodes) {
     n.x = Math.round(n.x + ox);
     n.y = Math.round(n.y + oy);
   }
 }
+
 
 function resolveCollisions(nodes: CycloneNode[], minDx: number, minDy: number): void {
   for (let pass = 0; pass < 12; pass++) {
