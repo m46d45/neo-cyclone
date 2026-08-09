@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2, Layers } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -52,8 +52,16 @@ export function AIAssist() {
   const clearResult = useCycloneStore((s) => s.clearResult);
 
   const [exampleId, setExampleId] = useState("");
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(() => agent.brief || "");
   const [loading, setLoading] = useState(false);
+
+  // Keep prompt box in sync when AI Assistant applies a proposed prompt
+  useEffect(() => {
+    if (agent.brief !== input && agent.brief) {
+      setInput(agent.brief);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only external brief updates
+  }, [agent.brief]);
 
   const c = t();
 
@@ -115,12 +123,14 @@ export function AIAssist() {
     if (!id) {
       setExampleId("");
       setInput("");
+      setBrief("");
       return;
     }
     const ex = EXAMPLE_PROMPTS.find((x) => x.id === id);
     if (!ex) return;
     setExampleId(id);
     setInput(ex.prompt);
+    setBrief(ex.prompt);
     // Do not draw yet — wait for Draw Model
   }
 
@@ -156,7 +166,10 @@ export function AIAssist() {
           <Textarea
             id="op-prompt"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {
+              setInput(e.target.value);
+              setBrief(e.target.value);
+            }}
             rows={22}
             placeholder="Please select an Example above, or paste / write your operation prompt here."
             className="min-h-[420px] flex-1 resize-y font-mono text-xs leading-relaxed lg:min-h-[480px]"
