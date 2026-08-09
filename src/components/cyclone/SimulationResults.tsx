@@ -180,6 +180,30 @@ export function SimulationResults({
     return [...byCycle.values()].sort((a, b) => a.cycle - b.cycle);
   })();
 
+
+  /** Y-axis max from data (not a tall empty chart when rate << 1). */
+  const yMaxUph = (() => {
+    let m = 0;
+    for (const p of series) {
+      if (typeof p.unitsPerHour === "number" && p.unitsPerHour > m) m = p.unitsPerHour;
+      if (multiCounter && p.byCounter) {
+        for (const v of Object.values(p.byCounter)) {
+          if (typeof v === "number" && v > m) m = v;
+        }
+      }
+    }
+    if (ss && ss.level > m) m = ss.level;
+    if (m <= 0) return 1;
+    const pad = m * 1.12;
+    // Nice ceiling
+    if (pad < 0.2) return Math.ceil(pad * 100) / 100;
+    if (pad < 1) return Math.ceil(pad * 20) / 20;
+    if (pad < 5) return Math.ceil(pad * 4) / 4;
+    if (pad < 20) return Math.ceil(pad * 2) / 2;
+    return Math.ceil(pad);
+  })();
+  const yAllowDecimals = yMaxUph < 5;
+
   return (
     <div className="space-y-4">
       <section className="space-y-2">
@@ -486,11 +510,11 @@ export function SimulationResults({
                     }}
                   />
                   <YAxis
-                    domain={[0, "auto"]}
-                    allowDecimals={false}
+                    domain={[0, yMaxUph]}
+                    allowDecimals={yAllowDecimals}
                     tick={{ fontSize: 11 }}
-                    width={52}
-                    tickCount={10}
+                    width={56}
+                    tickCount={yAllowDecimals ? 6 : 8}
                     label={{
                       value: `${model.productionUnit}/h`,
                       angle: -90,
