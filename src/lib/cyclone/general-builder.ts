@@ -134,14 +134,21 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
 
   const fn = spec.functions ?? { gens: [], cons: [], branches: [] };
 
-  // GEN labels not listed in any cycle are load-zone queues: prepend to the
-  // first resource itinerary (e.g. GEN TruckIdle before Scoop → …).
+  // Expand inline GEN/CON tokens in each resource chain (chain = source of truth).
+  for (const r of spec.resources) {
+    const expanded = expandInlineGenCon(r.itinerary, fn);
+    r.itinerary = expanded.labels;
+  }
+  // Functions: GEN Name = k not appearing in any chain → prepend as named GEN step
+  // (legacy). Prefer inline "GEN 5 → …" in the cycle.
   for (const g of fn.gens) {
     const gk = normLabel(g.label);
     const used = spec.resources.some((r) =>
       r.itinerary.some((lab) => normLabel(lab) === gk),
     );
     if (used) continue;
+    // If label looks like pure GEN token already handled, skip
+    if (/^gen\d+$/i.test(gk)) continue;
     const host = spec.resources[0];
     if (!host) continue;
     host.itinerary = [g.label.trim(), ...host.itinerary];
@@ -493,6 +500,70 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
     nodes,
     links,
   };
+}
+
+
+/**
+ * Inline chain notation (preferred):
+ *   GEN 5          → GENERATE queue, k=5  (display "GEN 5")
+ *   CON 5 Name     → CONSOLIDATE Name, n=5
+ *   Name CON 5     → same
+ * Mutates fn.gens / fn.cons so ensureActivity classifies nodes correctly.
+ */
+function expandInlineGenCon(
+  itinerary: string[],
+  fn: { gens: { label: string; k: number }[]; cons: { label: string; n: number }[] },
+): { labels: string[] } {
+  const labels: string[] = [];
+  for (const raw of itinerary) {
+    const s = raw.trim();
+    // GEN 5 / GEN5
+    let m = s.match(/^GEN\s*(\d+)\s*$/i);
+    if (m) {
+      const k = Math.max(2, Math.floor(Number(m[1])));
+      const label = `GEN ${k}`;
+      if (!fn.gens.some((g) => normLabel(g.label) === normLabel(label))) {
+        fn.gens.push({ label, k });
+      }
+      labels.push(label);
+      continue;
+    }
+    // CON 5 TruckFull / CON5 TruckFull
+    m = s.match(/^CON\s*(\d+)\s+(.+)$/i);
+    if (m) {
+      const n = Math.max(2, Math.floor(Number(m[1])));
+      const label = m[2]!.trim();
+      if (!fn.cons.some((c) => normLabel(c.label) === normLabel(label))) {
+        fn.cons.push({ label, n });
+      }
+      labels.push(label);
+      continue;
+    }
+    // TruckFull CON 5
+    m = s.match(/^(.+?)\s+CON\s*(\d+)\s*$/i);
+    if (m) {
+      const label = m[1]!.trim();
+      const n = Math.max(2, Math.floor(Number(m[2])));
+      if (!fn.cons.some((c) => normLabel(c.label) === normLabel(label))) {
+        fn.cons.push({ label, n });
+      }
+      labels.push(label);
+      continue;
+    }
+    // Name GEN 5 → treat as GEN queue named Name
+    m = s.match(/^(.+?)\s+GEN\s*(\d+)\s*$/i);
+    if (m) {
+      const label = m[1]!.trim();
+      const k = Math.max(2, Math.floor(Number(m[2])));
+      if (!fn.gens.some((g) => normLabel(g.label) === normLabel(label))) {
+        fn.gens.push({ label, k });
+      }
+      labels.push(label);
+      continue;
+    }
+    labels.push(s);
+  }
+  return { labels };
 }
 
 

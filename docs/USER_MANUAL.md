@@ -142,7 +142,11 @@ Never draw undirected segments: every arc is a **panah** (arrow).
 | **CON n** | Triangle **`CON n`** | `type: CONSOLIDATE`, `consolidate: n` (n ≥ 2) | Collect n units → release 1 (time 0) |
 
 - GEN and CON are **independent** — a model may use one, both, or neither.  
-- Classic pair: GEN multiplies work units; CON reunites them for one production unit (see Example 3 Excavator loading).  
+- Classic pair: GEN multiplies work units; CON reunites them for one production unit (see Example 3 Excavator loading).
+- **Prefer inline on the resource chain** (source of truth):
+  `Trucks: GEN 5 → Scoop → CON 5 TruckFull → Haul&Return`
+- Home QUEUE always exists per resource (`Trucks Idle`). `GEN 5` is the only extra truck QUEUE (load-zone scale change).
+- Optional `Functions: GEN Name = k` still works; inline is clearer for teaching.  
 - Do **not** put `probability` on COMBI multi-out used only for resource return fan-out.
 
 ### 6.4 Priority (shared resources)

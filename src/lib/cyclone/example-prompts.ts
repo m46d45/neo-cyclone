@@ -103,20 +103,18 @@ Pave: normal 3.5, 0.6
     source: "Halpin GENERATE/CONSOLIDATE teaching (excavator fill dump truck).",
     features: ["GEN 5", "CON 5", "COMBI Scoop", "cost", "sensitivity"],
     prompt: `# Example 3 — Excavator loading dump trucks (GEN / CON)
-# 1 truck at load → GEN TruckIdle = 5 scoop-units → excavator Scoop ×5
-# → CON TruckFull = 5 → 1 full truck → Haul&Return → idle
-# Production after TruckFull.
+# Chain is the source of truth (inline GEN/CON — not a separate topology):
+#   GEN 5     = load-zone GENERATE queue (1 truck arrival → 5 scoop-units)
+#   Scoop     = excavator + scoop-unit meet (COMBI)
+#   CON 5 …   = CONSOLIDATE (5 scoops → 1 full truck)
+# Home QUEUE "Trucks Idle" always exists (fleet). GEN is the only extra truck QUEUE.
 
-Trucks: Scoop → TruckFull → Haul&Return
+Trucks: GEN 5 → Scoop → CON 5 TruckFull → Haul&Return
 Excavator: Scoop
 4 trucks, 1 excavator
 
 Counter after: TruckFull
 production = 1 load
-
-Functions:
-GEN TruckIdle = 5
-CON TruckFull = 5
 
 Cost:
 Trucks: 85

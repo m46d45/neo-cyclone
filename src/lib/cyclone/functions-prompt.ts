@@ -1,8 +1,15 @@
 /**
- * Prompt syntax for GEN / CON / Branch without drawing QUEUE or arcs by hand.
+ * Prompt syntax for GEN / CON / Branch.
  *
- * Resource cycles still name the steps; these blocks annotate special nodes/arcs.
- * The builder maps names → QUEUE (GEN), CONSOLIDATE (CON), or link probability (p).
+ * Preferred (chain is source of truth — inline on the resource cycle):
+ *   Trucks: GEN 5 → Scoop → CON 5 TruckFull → Haul&Return
+ *   Excavator: Scoop
+ *
+ * Optional Functions: block (same meaning, names the GEN/CON nodes):
+ *   GEN TruckIdle = 5
+ *   CON TruckFull = 5
+ *
+ * Branch stays in Branch: / After Task: A p=…, B p=…
  */
 
 export type GenSpec = { label: string; k: number };

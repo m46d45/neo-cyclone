@@ -89,6 +89,21 @@ Use this document when drawing diagrams, writing prompts, writing DSL, or updati
 
 GEN, CON, and probabilistic branches are **optional** and **independent**. Use only when unit-measurement logic needs them.
 
+### Prompt form — chain first (preferred)
+
+```
+Trucks: GEN 5 → Scoop → CON 5 TruckFull → Haul&Return
+Excavator: Scoop
+```
+
+| Token in chain | Meaning |
+|----------------|---------|
+| `GEN 5` | GENERATE queue, k=5 (1 arrival → 5 units) |
+| `CON 5 Name` | CONSOLIDATE Name, n=5 |
+| `Name CON 5` | same |
+
+Home QUEUE (`Trucks Idle`) is automatic. Do not invent a second idle; GEN is the load-zone scale node.
+
 ### Prompt form (no hand-drawn QUEUE)
 
 In Format Prompt §4, name the step in the resource cycle, then:
