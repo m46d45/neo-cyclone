@@ -42,17 +42,22 @@ export const GENERAL_TEMPLATE = `# =============================================
 # # and // = notes only (ignored). Durations in minutes.
 # You do NOT draw QUEUE circles or arrows here.
 # Resource cycles imply home QUEUE + forward/return arcs.
-# GEN / CON / p only annotate special nodes/arcs by task name.
+# GEN / CON prefer INLINE on the resource chain (source of truth).
+# Home QUEUE is automatic per resource; GEN is an extra load-zone QUEUE.
 # ============================================================
 
 # ------------------------------------------------------------
 # 1. NETWORK — resource cycles (required)
 #    Home QUEUE is created automatically for each resource.
+#    Inline GEN/CON in the chain (preferred):
+#      Trucks: GEN 5 → Scoop → CON 5 TruckFull → Haul&Return
 #    Shared multi-demand: Crane: TaskA | TaskB | TaskC
 # ------------------------------------------------------------
 Resource1: Task1 → Task2 → Task3 → …
 Resource2: Task1
-Resource3: TaskA → TaskB
+# GEN/CON example:
+# Trucks: GEN 5 → Scoop → CON 5 TruckFull → Haul&Return
+# Excavator: Scoop
 
 n Resource1 = <count>, n Resource2 = <count>
 
@@ -80,33 +85,14 @@ Task1: 1
 TaskA: 2
 
 # ------------------------------------------------------------
-# 4. FUNCTIONS & BRANCHES — optional (Halpin GEN / CON / p)
-#    Still no hand-drawn Q or arrows: name steps in the network
-#    above, then annotate them here.
-#
-#    GEN k  → that name becomes a QUEUE with GENERATE k
-#             (each *arrival* → k units; put it in the cycle)
-#    CON n  → that name becomes a CONSOLIDATE node (buffer n → 1)
-#    Branch → after a task, probabilistic successors (diagram p=…)
-#
-#    Example network using GEN+CON:
-#      Crew: Setup → Prepare → PartsPool → Process → Assemble → Return
-#    Functions:
-#      GEN PartsPool = 4
+# 4. BRANCH + optional Functions alias (Halpin p / legacy GEN-CON names)
+#    Prefer GEN/CON **inline** in §1. Functions: only if you name pools:
+#      GEN PartsPool = 4   (PartsPool must appear in a cycle)
 #      CON Assemble = 4
-#
-#    Example branch:
-#      Crew: Inspect → Pass
-#    Branch:
-#      After Inspect: Pass p=0.9, Rework p=0.1
-#      (Rework gets a duration; app links rework back toward the cycle)
+#    Branch → after a task, probabilistic successors (diagram p=…)
 # ------------------------------------------------------------
-Functions:
-GEN PartsPool = 4
-CON Assemble = 4
-
-Branch:
-After Inspect: Pass p=0.9, Rework p=0.1
+# Branch:
+# After Inspect: Pass p=0.9, Rework p=0.1
 
 # ------------------------------------------------------------
 # 5. COST — optional (USD per resource-hour)
@@ -138,9 +124,9 @@ export const DIST_TABLE = `# Quick reference (same order as Format Prompt)
   Priority:
   Task: 1
 
-# 4 GEN / CON / Branch (optional) — by name, not by drawing Q/arcs
-  Functions:
-  GEN <PoolName> = k     → QUEUE with GEN k on that step name
+# 4 GEN / CON / Branch — prefer inline in the cycle
+  Trucks: GEN 5 → Scoop → CON 5 TruckFull → …
+  (optional) Functions: GEN <Name> = k  if Name is already a step
   CON <NodeName> = n     → CONSOLIDATE n on that step name
   Branch:
   After <Task>: OutA p=0.9, OutB p=0.1
