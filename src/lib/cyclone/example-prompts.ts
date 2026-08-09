@@ -161,55 +161,48 @@ PlaceConcreteC: normal 8, 1.2
   {
     id: "masonry",
     title: "5. Masonry (scaffold + SA)",
-    goal: "3 scaffold spaces; brick packs + mortar GEN2/CON2; sensitivity analysis.",
-    source: "Halpin masonry adapted: scaffold capacity, 20-brick packs, 1 mortar : 2 packs.",
+    goal: "Helpers place brick then mortar on 3-space scaffold; GEN2 lays; sensitivity.",
+    source: "Halpin masonry: brick & mortar available; scaffold capacity; 1 mortar = 2 packs.",
     features: [
       "sensitivity analysis",
       "scaffold 3 spaces",
-      "Priority mortar>brick",
-      "GEN 2 mortar doses",
-      "CON 2 rejoin",
+      "ServeBrick then ServeMortar",
+      "GEN 2 / CON 2",
       "pairwise SA",
     ],
-    prompt: `# Example 5 — Masonry crew (scaffold + brick packs + mortar)
-# Scaffold has 3 material spaces (shared): typically 2 brick packs + 1 mortar bucket.
-# Brick pack = 20 bricks (production unit). 
-# 1 mortar bucket → GEN 2 doses (covers two packs of 20).
-# Helpers stock onto scaffold (uses a space), then meet masons at Lay.
-# After two dose-lays, CON 2 reunites the mortar-helper cycle (no entity blow-up).
-# Scaffold multi-demand: StockBrick | StockMortar — when both wait, PRIORITY decides.
-# Prefer mortar first (P1): 1 bucket unlocks GEN 2 doses = 2 packs of laying work.
-# Brick packs (P2) fill remaining spaces (typically 2 packs + 1 mortar = 3 spaces).
-# ONLY preset with Sensitivity: (pairwise when 3 resources vary).
+    prompt: `# Example 5 — Masonry (scaffold + brick/mortar + SA)
+# Bricks & mortar assumed available at ground (no long fetch) — one place task each:
+#   ServeBrick, ServeMortar on the scaffold.
+# Each helper: ServeBrick → ServeMortar → GEN 2 → Lay → CON 2 Rejoin
+#   = put 1 pack, put 1 bucket, bucket becomes 2 doses, two lays (20 bricks each), rejoin.
+# Scaffold: 3 spaces (multi-demand ServeBrick | ServeMortar).
+# Typical picture: packs + mortar sharing the 3 spaces.
+# Priority when scaffold is contended: mortar P1 (unlocks 2 lays), brick P2.
 
 4 Masons: Lay
-2 Brick helpers: FetchBrick → StockBrick → Lay
-1 Mortar helpers: FetchMortar → StockMortar → GEN 2 → Lay → CON 2 Rejoin
-3 Scaffold: StockBrick | StockMortar
+3 Helpers: ServeBrick → ServeMortar → GEN 2 → Lay → CON 2 Rejoin
+3 Scaffold: ServeBrick | ServeMortar
 
 Counter after: Lay
 production = 20 bricks
 
 Priority:
-StockMortar: 1
-StockBrick: 2
+ServeMortar: 1
+ServeBrick: 2
 
 Cost:
 Masons: 75
-Brick helpers: 45
-Mortar helpers: 45
+Helpers: 45
 Scaffold: 25
 
 Sensitivity:
 Masons: 2..6
-Brick helpers: 1..4
+Helpers: 1..5
 Scaffold: 2..4
 
 Durations:
-FetchBrick: tri 2, 3, 5
-StockBrick: tri 1, 1.5, 2.5
-FetchMortar: tri 3, 4, 6
-StockMortar: tri 1, 2, 3
+ServeBrick: tri 2, 3, 5
+ServeMortar: tri 3, 4, 6
 Lay: tri 4, 6, 9
 `,
   },

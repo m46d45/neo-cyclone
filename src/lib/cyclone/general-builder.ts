@@ -35,6 +35,12 @@ export type ResourceCycle = {
    * Engine/priority decide which COMBI wins when the resource is free.
    */
   alsoServes?: string[];
+  /**
+   * Full alternate paths for multi-demand (pipe with arrows):
+   *   Helpers: ServeBrick → Lay | ServeMortar → GEN 2 → Lay → CON 2 Rejoin
+   * alsoServes = first task of each path; alsoPaths = full paths (excluding primary).
+   */
+  alsoPaths?: string[][];
 };
 
 export type OperationSpec = {
@@ -138,17 +144,25 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
   for (const r of spec.resources) {
     const expanded = expandInlineGenCon(r.itinerary, fn);
     r.itinerary = expanded.labels;
+    if (r.alsoPaths?.length) {
+      r.alsoPaths = r.alsoPaths.map((path) => expandInlineGenCon(path, fn).labels);
+      r.alsoServes = r.alsoPaths.map((p) => p[0]!).filter(Boolean);
+    }
   }
   // Functions: GEN Name = k not appearing in any chain → prepend as named GEN step
   // (legacy). Prefer inline "GEN 5 → …" in the cycle.
   for (const g of fn.gens) {
     const gk = normLabel(g.label);
-    const used = spec.resources.some((r) =>
-      r.itinerary.some((lab) => normLabel(lab) === gk),
+    const used = spec.resources.some(
+      (r) =>
+        r.itinerary.some((lab) => normLabel(lab) === gk) ||
+        (r.alsoPaths ?? []).some((path) =>
+          path.some((lab) => normLabel(lab) === gk),
+        ),
     );
     if (used) continue;
-    // If label looks like pure GEN token already handled, skip
-    if (/^gen\d+$/i.test(gk)) continue;
+    // Inline "GEN 5" tokens are already on a chain — never prepend to another resource
+    if (/^gen\s*\d+$/i.test(gk) || /^gen\d+$/i.test(gk)) continue;
     const host = spec.resources[0];
     if (!host) continue;
     host.itinerary = [g.label.trim(), ...host.itinerary];
@@ -169,6 +183,9 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
   for (const r of spec.resources) {
     for (const lab of r.itinerary) touch(lab, r.id);
     for (const lab of r.alsoServes ?? []) touch(lab, r.id);
+    for (const path of r.alsoPaths ?? []) {
+      for (const lab of path) touch(lab, r.id);
+    }
   }
   const isMeetingTask = (key: string) => (resourceTouch.get(key)?.size ?? 0) >= 2;
 
@@ -239,6 +256,9 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
   for (const r of spec.resources) {
     for (const lab of r.itinerary) ensureActivity(lab);
     for (const lab of r.alsoServes ?? []) ensureActivity(lab);
+    for (const path of r.alsoPaths ?? []) {
+      for (const lab of path) ensureActivity(lab);
+    }
   }
 
   // QUEUE (GEN) may only feed COMBI — promote following NORMAL → COMBI
@@ -416,12 +436,65 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
       if (!branchAfterLast) addLink(last.id, home);
     }
 
-    // Multi-demand: home QUEUE also feeds other COMBIs; return to home after each
-    for (const alt of r.alsoServes ?? []) {
-      const aid = activityId.get(normLabel(alt));
-      if (!aid) continue;
-      addLink(home, aid);
-      addLink(aid, home);
+    // Multi-demand alternate paths (full) or simple alsoServes (home↔COMBI only)
+    if (r.alsoPaths && r.alsoPaths.length) {
+      for (const path of r.alsoPaths) {
+        if (!path.length) continue;
+        const altSteps = path.map((lab) => ({
+          key: normLabel(lab),
+          id: activityId.get(normLabel(lab))!,
+          type: activityType.get(normLabel(lab))!,
+          label: lab,
+        }));
+        const firstAlt = altSteps[0]!;
+        addLink(home, firstAlt.id);
+        for (let i = 0; i < altSteps.length - 1; i++) {
+          const a = altSteps[i]!;
+          const b = altSteps[i + 1]!;
+          if (countAtKeys.has(a.key)) continue;
+          if (b.type === "COMBI" && a.type !== "GEN") {
+            const stagId = uniqueId(`q_${r.id}_alt_${b.key}`, used);
+            nodes.push({
+              id: stagId,
+              type: "QUEUE",
+              label: `${r.label} @ ${b.label}`,
+              x: 0,
+              y: 0,
+              initialUnits: 0,
+            });
+            addLink(a.id, stagId);
+            addLink(stagId, b.id);
+          } else {
+            addLink(a.id, b.id);
+          }
+        }
+        // Counters on this alternate path
+        for (const ca of countAtsOnThis) {
+          const step = altSteps.find((s) => s.key === ca.key);
+          if (!step) continue;
+          // already wired if primary also had same task — only link if missing
+          addLink(step.id, ca.ctrId);
+          const idx = altSteps.findIndex((s) => s.key === ca.key);
+          if (idx >= 0 && idx < altSteps.length - 1) {
+            addLink(ca.ctrId, altSteps[idx + 1]!.id);
+          } else {
+            addLink(ca.ctrId, home);
+          }
+        }
+        const lastAlt = altSteps[altSteps.length - 1]!;
+        const lastIsCount = countAtKeys.has(lastAlt.key);
+        if (!lastIsCount) {
+          // if last is CON or work, return home
+          addLink(lastAlt.id, home);
+        }
+      }
+    } else {
+      for (const alt of r.alsoServes ?? []) {
+        const aid = activityId.get(normLabel(alt));
+        if (!aid) continue;
+        addLink(home, aid);
+        addLink(aid, home);
+      }
     }
   }
 
@@ -819,25 +892,42 @@ export function parseExplicitResourceCycles(text: string): {
 
     section = "cycle";
 
-    let itinerary: string[];
-    if (/→|->|=>|—/.test(rhs) || /\(.*\d/.test(rhs)) {
-      const parsed = parseStepsWithInlineDurations(rhs);
-      itinerary = parsed.labels;
-      Object.assign(inlineDurations, parsed.durations);
-    } else {
-      itinerary = splitSteps(rhs);
-    }
-    if (!itinerary.length) continue;
-
-    // Pipe multi-demand: Crane: Lift Steel | Lift Forms | Lift Bucket
+    let itinerary: string[] = [];
     let alsoServes: string[] = [];
-    if (/\|/.test(rhs) && !/→|->|=>|—/.test(rhs)) {
+    let alsoPaths: string[][] = [];
+
+    // Pipe multi-demand — with or without full alternate paths:
+    //   Crane: LiftA | LiftB | LiftC
+    //   Helpers: ServeBrick → Lay | ServeMortar → GEN 2 → Lay → CON 2 Rejoin
+    if (/\|/.test(rhs)) {
       const parts = rhs.split("|").map((s) => s.trim()).filter(Boolean);
       if (parts.length > 1) {
-        itinerary = [parts[0]!];
-        alsoServes = parts.slice(1);
+        const paths: string[][] = [];
+        for (const part of parts) {
+          if (/→|->|=>|—/.test(part) || /\(.*\d/.test(part)) {
+            const parsed = parseStepsWithInlineDurations(part);
+            Object.assign(inlineDurations, parsed.durations);
+            paths.push(parsed.labels);
+          } else {
+            paths.push(splitSteps(part));
+          }
+        }
+        itinerary = paths[0] ?? [];
+        alsoPaths = paths.slice(1).filter((p) => p.length > 0);
+        alsoServes = alsoPaths.map((p) => p[0]!).filter(Boolean);
       }
     }
+
+    if (!itinerary.length) {
+      if (/→|->|=>|—/.test(rhs) || /\(.*\d/.test(rhs)) {
+        const parsed = parseStepsWithInlineDurations(rhs);
+        itinerary = parsed.labels;
+        Object.assign(inlineDurations, parsed.durations);
+      } else {
+        itinerary = splitSteps(rhs);
+      }
+    }
+    if (!itinerary.length) continue;
 
     const id = slug(label);
     if (seen.has(id)) {
@@ -853,6 +943,7 @@ export function parseExplicitResourceCycles(text: string): {
       count,
       itinerary,
       alsoServes,
+      alsoPaths: alsoPaths.length ? alsoPaths : undefined,
     });
   }
 
