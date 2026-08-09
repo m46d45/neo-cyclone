@@ -166,6 +166,7 @@ PlaceConcreteC: normal 8, 1.2
     features: [
       "sensitivity analysis",
       "scaffold 3 spaces",
+      "Priority mortar>brick",
       "GEN 2 mortar doses",
       "CON 2 rejoin",
       "pairwise SA",
@@ -176,6 +177,9 @@ PlaceConcreteC: normal 8, 1.2
 # 1 mortar bucket → GEN 2 doses (covers two packs of 20).
 # Helpers stock onto scaffold (uses a space), then meet masons at Lay.
 # After two dose-lays, CON 2 reunites the mortar-helper cycle (no entity blow-up).
+# Scaffold multi-demand: StockBrick | StockMortar — when both wait, PRIORITY decides.
+# Prefer mortar first (P1): 1 bucket unlocks GEN 2 doses = 2 packs of laying work.
+# Brick packs (P2) fill remaining spaces (typically 2 packs + 1 mortar = 3 spaces).
 # ONLY preset with Sensitivity: (pairwise when 3 resources vary).
 
 4 Masons: Lay
@@ -185,6 +189,10 @@ PlaceConcreteC: normal 8, 1.2
 
 Counter after: Lay
 production = 20 bricks
+
+Priority:
+StockMortar: 1
+StockBrick: 2
 
 Cost:
 Masons: 75
