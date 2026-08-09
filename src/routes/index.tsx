@@ -57,15 +57,15 @@ function StudioPage() {
 
       <main className="mx-auto max-w-[1400px] px-4 py-4 sm:px-6 sm:py-6">
         {/* Top: Prompt | Model */}
-        <div className="grid gap-4 lg:grid-cols-12">
-          <section className="min-w-0 lg:col-span-5">
+        <div className="grid items-stretch gap-4 lg:grid-cols-12">
+          <section className="flex min-w-0 flex-col lg:col-span-5">
             <AIAssist />
           </section>
 
           <section className="min-w-0 space-y-3 lg:col-span-7">
             <div>
               <h2 className="mb-2 font-display text-sm font-semibold">CYCLONE Model</h2>
-              <div className="h-[min(48vh,440px)] min-h-[260px] w-full min-w-0">
+              <div className="h-[min(52vh,480px)] min-h-[280px] w-full min-w-0">
                 <DiagramCanvas />
               </div>
             </div>

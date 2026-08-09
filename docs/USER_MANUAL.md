@@ -1,10 +1,10 @@
 # Neo-CYCLONE — User Manual
 
-**Version:** 1.1  
+**Version:** 1.2  
 **Language:** English  
 **Tagline:** AI-agent of Daniel W. Halpin's CYCLONE  
 **Live app:** https://neo-cyclone.vercel.app/ (deploys from GitHub `main`)  
-**Canonical notation:** [NOTATION_STANDARD.md](./NOTATION_STANDARD.md) — use this as the ongoing reference for shapes, arrows, GEN, CON, and branches.
+**Canonical notation:** [NOTATION_STANDARD.md](./NOTATION_STANDARD.md)
 
 ---
 
@@ -23,7 +23,7 @@ Later: DISCO, PROSIDYC, COST, WebCYCLONE, Symphony.Net, and related systems.
 
 **Neo-CYCLONE** is for **education** and **first contact**—not a special-purpose industrial simulator. It connects process design to Lean Construction and Project Production Management. Halpin’s foundation makes AI-assisted operations modeling possible.
 
-Where our **diagram notation** differs slightly from some Halpin print figures, we keep **one consistent Neo-CYCLONE standard** (see §6 and [NOTATION_STANDARD.md](./NOTATION_STANDARD.md)).
+Where diagram notation differs slightly from some Halpin print figures, we keep **one consistent Neo-CYCLONE standard** (see §6 and [NOTATION_STANDARD.md](./NOTATION_STANDARD.md)).
 
 ---
 
@@ -31,86 +31,125 @@ Where our **diagram notation** differs slightly from some Halpin print figures, 
 
 | Area | Contents |
 |------|----------|
-| **Left** | Format Prompt · operation text · Example presets · **Draw Model** |
+| **Left** | Operation prompt (tall) · Example presets · **Draw Model** · Format Prompt (collapsed, **below** the button) |
 | **Right** | CYCLONE Model (zoom / PNG) · Network logic · run params · Simulate |
-| **Below** | **Results** full width: Simulation tab · Sensitivity Analysis tab |
+| **Below** | **Results** full width: Simulation · Sensitivity Analysis |
 
 ---
 
 ## 2. Workflow
 
-1. Prompt or **Example** preset.  
+1. Edit the prompt or pick an **Example** preset (auto-redraws).  
 2. **Draw Model** → diagram + Network logic.  
 3. Refine until the network is right.  
-4. **Max cycles** (default **100**, product limit **500**) · Seed (**12345**) · Max time (auto-raised with cycles so charts can fill).  
+4. **Max cycles** (default **100**, product limit **500**) · Seed (**12345**) · Max time (auto-raised with cycles).  
 5. **Simulate**.  
-6. Optional: **Report Excel**, diagram/chart **PNG**, sensitivity tab.
+6. Optional: **Report Excel**, chart/diagram **PNG**, sensitivity tab.
 
 ---
 
 ## 3. Prompt format (structured)
 
-Order in **Format Prompt** (top → bottom):
+Order (top → bottom):
 
-1. **Network** — resource cycles, counts, **`Counter after:`** + `production =` (required for clear counting)  
-2. **Durations** — minutes (required)  
-3. **Priority** — optional; lower number = higher priority  
-4. **Functions & Branch** — optional GEN / CON / p (by **name**, not hand-drawn Q/arcs)  
-5. **Cost** — optional; rates in **USD**/resource-hour (`Cost:`)  
+1. **Network** — resource cycles, counts, **`Counter after:`** + `production =`  
+2. **Durations** — minutes  
+3. **Priority** — optional (lower number = higher priority)  
+4. **Branch** — optional `p=` arcs  
+5. **Cost** — optional USD / resource-hour  
 6. **Sensitivity** — optional; usually **last**  
 
 `#` / `//` = notes only (ignored).
 
-**Important:** the Format Prompt never lists QUEUE shapes or arrows. Resource cycles imply home queues and forward/return arcs. To place GEN, CON, or probability:
+### 3.1 Resource cycles imply topology
+
+You do **not** draw QUEUE circles or arrows in the prompt. Each resource line:
+
+```
+Trucks: TaskA → TaskB → TaskC
+Loader: TaskA
+5 trucks, 1 loader
+```
+
+creates a **home QUEUE** (`Trucks Idle`, `Loader Idle`) and work nodes.
+
+### 3.2 GEN / CON — prefer **inline on the chain** (source of truth)
+
+```
+Trucks: GEN 5 → Scoop → CON 5 TruckFull → Haul&Return
+Excavator: Scoop
+4 trucks, 1 excavator
+```
+
+| Token | Meaning |
+|-------|---------|
+| `GEN 5` | GENERATE load-zone: 1 arrival → 5 units |
+| `CON 5 TruckFull` | CONSOLIDATE name, n = 5 |
+| `TruckFull CON 5` | same |
+
+**Optional** (legacy alias if the name already appears in the cycle):
 
 ```
 Functions:
 GEN PartsPool = 4
 CON AssembleKit = 4
-
-Branch:
-After Inspect: Pass p=0.9, Rework p=0.1
 ```
 
-Put `PartsPool` / `AssembleKit` / `Inspect` in the network cycle; the app creates the correct node types and `p=` arcs.
+### 3.3 Branch (probability)
 
-### Distributions
+```
+Branch:
+After DumpToPaver: RefillAsphalt p=0.85, Breakdown p=0.15
+```
 
-const · unif · tri · normal · lognormal · beta · gamma
+Detours rejoin the main next step (e.g. Breakdown → RefillAsphalt), not dump empty.
+
+### 3.4 Distributions
+
+const · unif · tri · normal · lognormal · beta · gamma  
+
+Default time unit: **minutes**.
 
 ---
 
 ## 4. Results
 
-- Process report: run length, cycles, units/cycle, production, units/hour, avg cycle  
-- Cost report (USD) when `cost_usd_h` / Cost block present  
-- Report by Element · Production by Cycle · Charts · **Branches** (if p-arcs)  
-- **Download Report Excel** (.xls, multi-sheet)  
-- Sensitivity tab: productivity & unit cost vs fleet mix (pairwise when 3–5 resources)
+| Tab / block | Content |
+|-------------|---------|
+| **Production by Cycle** | Units/hour by cycle; **dark gold** steady-state line (5% / 10-cycle rule); **red dots** = detour branch cycles |
+| **Charts** | Utilization etc. |
+| **Report by Element** | Queues, activities |
+| **Cost** | When Cost block present (USD) |
+| **Branches** | Declared vs empirical p |
+| **Sensitivity** | Fleet mix vs productivity & unit cost (pairwise ≤ 5 resources) |
+
+Downloads: **Excel** report · chart **PNG** · model **PNG**.
 
 ---
 
-## 4b. Production COUNTER (important)
+## 4b. Production COUNTER
 
 | | |
 |--|--|
-| **What** | Golf-flag node — counts **one production unit / completed cycle** |
-| **Prompt** | `Counter after: Dump` then `production = 12 m3` |
-| **Default** | If omitted: after the **last task of the first resource** cycle |
-| **Any cycle** | `Counter after:` may name a task on **any** resource (e.g. `Pave` on the paver cycle) |
-| **Earthmoving** | Prefer `Counter after: Dump` (not after Return) |
-| **Asphalt** | Prefer `Counter after: Pave` (production = mix placed, not merely dumped) |
-| **With branch p** | Count first, then branch return (e.g. Dump → Counter → Return / Breakdown) |
-
-Never leave this implicit in teaching materials — name `Counter after:` in the prompt.
-
-## 5. Modeling rule (Halpin core)
-
-Home QUEUE → work → return. COMBI for shared first tasks; NORMAL later. QUEUE only feeds COMBI. Concurrent COMBI allowed.
+| Shape | Golf flag |
+| Prompt | `Counter after: TruckFull` · `production = 1 load` |
+| Default | Last task of first resource if omitted |
+| Any resource | May name a task on another cycle (e.g. `Pave`) |
+| Exact match | `Pave` does **not** match `DumpToPaver` |
 
 ---
 
-## 6. Neo-CYCLONE notation standard (summary)
+## 5. Modeling rules (Neo-CYCLONE)
+
+1. Every resource has a **home QUEUE** (Q-circle).  
+2. Task used by **≥2 resources** → **COMBI**; one resource only → **NORMAL**.  
+3. Home may feed COMBI or NORMAL. Staging `Resource @ Task` is still forward (solid black).  
+4. **Return** (dashed gold) only into a **home** QUEUE, not into staging or GEN.  
+5. GEN and CON are optional and independent.
+
+---
+
+## 6. Notation standard (summary)
 
 Full detail: **[NOTATION_STANDARD.md](./NOTATION_STANDARD.md)**.
 
@@ -118,92 +157,53 @@ Full detail: **[NOTATION_STANDARD.md](./NOTATION_STANDARD.md)**.
 
 | Element | Drawing | Subtitle |
 |---------|---------|----------|
-| **QUEUE** | Q-circle (slash) | `n = …` · optional **`GEN k`** |
+| **QUEUE** (home / staging) | Q-circle (slash) | `n = …` |
+| **GENERATE (GEN)** | **Inverted triangle ▽** | **`GEN k`** |
 | **COMBI** | Cut-corner square | duration |
 | **NORMAL** | Rectangle | duration |
 | **COUNTER** | Golf flag | `+production` |
-| **CONSOLIDATE** | Upright triangle | **`CON n`** |
+| **CONSOLIDATE (CON)** | **Upright triangle △** | **`CON n`** |
 
-### 6.2 Arrows — always with direction tip
+**GEN / CON pair:** ▽ multiplies (1→k) · △ gathers (n→1). GEN is **not** a Q-circle.
+
+### 6.2 Arrows
 
 | Style | Look | Meaning |
 |-------|------|---------|
-| **Forward** | **Solid black + black arrowhead** | Work flow toward production (toward COUNTER) |
-| **Return** | **Dashed gold + gold arrowhead** (curved) | Resource home / cycle close — **target is a QUEUE** |
-| **Branch** | Forward path + brown **`p=…`** label | Stochastic multi-out |
+| **Forward** | Solid black + tip (may curve) | Work advances |
+| **Return** | Dashed gold + tip (curved) | Into **home** QUEUE only |
+| **Branch** | `p=…` label | Stochastic multi-out |
 
-Never draw undirected segments: every arc is a **panah** (arrow).
+### 6.3 Checklist
 
-### 6.3 GEN and CON (how we write them)
-
-| Function | Diagram | DSL | Engine rule |
-|----------|---------|-----|-------------|
-| **GEN k** | On QUEUE: label **`GEN k`** | `generate: k` (k ≥ 2) | Each *arrival* → k units; **not** applied to initial |
-| **CON n** | Triangle **`CON n`** | `type: CONSOLIDATE`, `consolidate: n` (n ≥ 2) | Collect n units → release 1 (time 0) |
-
-- GEN and CON are **independent** — a model may use one, both, or neither.  
-- Classic pair: GEN multiplies work units; CON reunites them for one production unit (see Example 3 Excavator loading).
-- **Prefer inline on the resource chain** (source of truth):
-  `Trucks: GEN 5 → Scoop → CON 5 TruckFull → Haul&Return`
-- Home QUEUE (Q-circle) always exists per resource; **GEN** is drawn as an **inverted triangle** (not a Q), dual of CON upright triangle. Home QUEUE always exists per resource (`Trucks Idle`). `GEN 5` is the only extra truck QUEUE (load-zone scale change).
-- Optional `Functions: GEN Name = k` still works; inline is clearer for teaching.  
-- Do **not** put `probability` on COMBI multi-out used only for resource return fan-out.
-
-### 6.4 Priority (shared resources)
-
-| | |
-|--|--|
-| Prompt | `Priority:` then `Task: 1` (lower = higher priority) |
-| DSL | COMBI `priority: n` |
-| Default | Model order if omitted |
-| Diagram | **P1**, **P2**, … |
-| Multi-demand | `Crane: Lift A \| Lift B \| Lift C` (pipe, not sequence) |
-
-MicroCYCLONE used **smaller node numbers** first; Neo-CYCLONE makes that explicit in the prompt.
-
-### 6.5 Probabilistic branch
-
-```yaml
-- from: c_inspect
-  to: ctr
-  probability: 0.9
-- from: c_inspect
-  to: n_rework
-  probability: 0.1
-```
-
-Results → **Branches**: declared vs empirical.
-
-### 6.6 Consistency checklist
-
-- [ ] Visible **arrowhead** on every arc  
-- [ ] Solid black = forward; dashed gold into QUEUE = return  
-- [ ] GEN only on QUEUE; CON only CONSOLIDATE  
-- [ ] Resource cycles readable end-to-end  
+- [ ] Arrowhead on every arc  
+- [ ] Solid black = forward; dashed gold = return home  
+- [ ] GEN = inverted triangle; CON = upright triangle  
+- [ ] COMBI only where resources meet  
 
 ---
 
 ## 7. Teaching examples (6 presets)
 
-1. **Earthmoving** — cost, sensitivity, steady-state (default classic; **branch p** breakdown is commented in the prompt)  
-2. **Asphalt paving** — paver + trucks  
-3. **Excavator loading dump trucks** — **GEN 5** scoops / **CON 5** full truck  
+1. **Earthmoving** — classic fleet; cost, sensitivity, steady-state (no branch)  
+2. **Asphalt paving** — Dump + Refill; **branch p** Breakdown → then Refill  
+3. **Excavator loading** — `GEN 5 → Scoop → CON 5 TruckFull → Haul&Return`  
 4. **Precast forms** — form cycle  
 5. **Masonry** — 3 resources, pairwise sensitivity  
-6. **Tower crane** — multi-demand `|` + **Priority**
+6. **Tower crane** — multi-demand `\|` + **Priority**
 
-Features are spread across cases (not every feature in every preset).
+---
 
 ## 8. Zoom & export
 
 Diagram and charts: + / − / reset · **PNG**.  
-Report: multi-sheet Excel download (Summary, Cost, Activities, Queues, Productivity, Branches, Event log).
+Report: multi-sheet Excel (Summary, Cost, Activities, Queues, Productivity, Branches, Event log).
 
 ---
 
 ## 9. Deploy note
 
-GitHub `main` → Vercel production. Grok Build preview may differ until changes are **pushed**.
+GitHub `main` → Vercel production. Preview and production match after push.
 
 ---
 

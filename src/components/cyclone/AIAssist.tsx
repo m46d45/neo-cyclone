@@ -125,34 +125,13 @@ export function AIAssist() {
   }
 
   return (
-    <Card className="border-primary/20 shadow-sm">
+    <Card className="flex h-full min-h-[520px] flex-col border-primary/20 shadow-sm">
       <CardHeader className="pb-2">
         <CardTitle className="font-display text-base">{c.title}</CardTitle>
         <CardDescription className="text-xs leading-snug">{PRODUCT_TAGLINE}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <details className="rounded-[var(--radius-sm)] border border-border bg-muted/30 text-[11px]">
-          <summary className="cursor-pointer px-2.5 py-1.5 font-medium text-foreground">
-            {c.formatPrompt}
-          </summary>
-          <div className="space-y-2.5 border-t border-border px-2.5 py-2 text-muted-foreground">
-            <pre className="whitespace-pre-wrap font-mono text-[10px] text-foreground/90">
-              {GENERAL_TEMPLATE}
-            </pre>
-            <pre className="whitespace-pre-wrap font-mono text-[10px] text-foreground/90">
-              {DIST_TABLE}
-            </pre>
-            <p className="text-[10px] leading-relaxed">
-              <code className="text-foreground">#</code> /{" "}
-              <code className="text-foreground">//</code> = notes (not commands).{" "}
-              <a href="/manual" className="text-primary hover:underline">
-                Manual
-              </a>
-            </p>
-          </div>
-        </details>
-
-        <div>
+      <CardContent className="flex flex-1 flex-col space-y-3">
+        <div className="flex min-h-0 flex-1 flex-col">
           <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
             <label className="text-[11px] font-medium text-foreground" htmlFor="op-prompt">
               {c.promptLabel}
@@ -177,9 +156,9 @@ export function AIAssist() {
             id="op-prompt"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            rows={12}
+            rows={22}
             placeholder={GENERAL_TEMPLATE}
-            className="min-h-[220px] font-mono text-xs leading-relaxed"
+            className="min-h-[420px] flex-1 resize-y font-mono text-xs leading-relaxed lg:min-h-[480px]"
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                 e.preventDefault();
@@ -199,6 +178,32 @@ export function AIAssist() {
           {loading ? c.drawing : c.drawModel}
         </Button>
         <p className="text-center text-[10px] text-muted-foreground">{c.drawHint}</p>
+
+        {/* Format Prompt reference — below Draw Model so the prompt box can match model height */}
+        <details className="rounded-[var(--radius-sm)] border border-border bg-muted/30 text-[11px]">
+          <summary className="cursor-pointer px-2.5 py-1.5 font-medium text-foreground">
+            {c.formatPrompt}
+          </summary>
+          <div className="space-y-2.5 border-t border-border px-2.5 py-2 text-muted-foreground">
+            <pre className="whitespace-pre-wrap font-mono text-[10px] text-foreground/90">
+              {GENERAL_TEMPLATE}
+            </pre>
+            <pre className="whitespace-pre-wrap font-mono text-[10px] text-foreground/90">
+              {DIST_TABLE}
+            </pre>
+            <p className="text-[10px] leading-relaxed">
+              <code className="text-foreground">#</code> /{" "}
+              <code className="text-foreground">//</code> = notes (not commands). Full reference:{" "}
+              <a href="/manual" className="text-primary hover:underline">
+                Manual
+              </a>
+              {" · "}
+              <a href="/manual#notation" className="text-primary hover:underline">
+                Notation
+              </a>
+            </p>
+          </div>
+        </details>
       </CardContent>
     </Card>
   );
