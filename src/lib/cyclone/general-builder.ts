@@ -666,12 +666,12 @@ function expandInlineGenCon(
 
 
 /**
- * Multi-resource layout (general):
- * - one horizontal row per resource (home QUEUE + exclusive tasks)
- * - shared COMBI: common x, y averaged across meeting resources
- * - staging QUEUE ("R @ Task") sits on the row, mid-column before COMBI
- * - COUNTER sits just right of its predecessor (not floating far away)
- * - collision pass separates remaining overlaps
+ * Halpin-style multi-resource layout (left → right flow, one row per resource):
+ * - Home QUEUEs in a left rail (one row each)
+ * - Work nodes in columns by step index (shared COMBI centered on meeting rows)
+ * - Staging "R @ Task" sits just left of its COMBI on the resource row
+ * - GEN / CON / COUNTER follow the main flow columns
+ * - Final collision pass keeps labels readable
  */
 function layoutNodes(
   nodes: CycloneNode[],
@@ -683,83 +683,171 @@ function layoutNodes(
   stagingByResource: Map<string, string[]> = new Map(),
 ): void {
   const byId = new Map(nodes.map((n) => [n.id, n]));
-  const ROW = 170;
-  const COL = 200;
-  const LEFT = 70;
-  const ACT0 = 260;
-  const TOP = 80;
+  const ROW = 150;
+  const COL = 175;
+  const LEFT = 64;
+  const ACT0 = 240;
+  const TOP = 72;
+  const STAG_DX = 88;
 
-  const useCount = new Map<string, number>();
+  // Resource row index
+  const rowOfResource = new Map<string, number>();
+  resources.forEach((r, i) => rowOfResource.set(r.id, i));
+
+  // All labs a resource "owns" (primary itinerary + alsoServes + alsoPaths)
+  const resourceLabs = (r: ResourceCycle): string[] => {
+    const labs = [...r.itinerary];
+    for (const a of r.alsoServes ?? []) labs.push(a);
+    for (const path of r.alsoPaths ?? []) labs.push(...path);
+    return labs;
+  };
+
+  // Which resources touch each activity key
   const useRows = new Map<string, number[]>();
+  const useCount = new Map<string, number>();
+  const colOf = new Map<string, number>();
   resources.forEach((r, ri) => {
-    for (const lab of r.itinerary) {
+    // Primary path: strong column indices
+    r.itinerary.forEach((lab, j) => {
       const key = normLabel(lab);
       useCount.set(key, (useCount.get(key) ?? 0) + 1);
       const rows = useRows.get(key) ?? [];
-      rows.push(ri);
+      if (!rows.includes(ri)) rows.push(ri);
       useRows.set(key, rows);
+      colOf.set(key, Math.max(colOf.get(key) ?? 0, j));
+    });
+    // Alternate / multi-demand first steps: column 0-ish, still on resource row
+    for (const lab of r.alsoServes ?? []) {
+      const key = normLabel(lab);
+      useCount.set(key, (useCount.get(key) ?? 0) + 1);
+      const rows = useRows.get(key) ?? [];
+      if (!rows.includes(ri)) rows.push(ri);
+      useRows.set(key, rows);
+      // alsoServes first tasks sit near the start of the row
+      if (!colOf.has(key)) colOf.set(key, 0);
+    }
+    // Full alternate paths: sequential columns along that path
+    for (const path of r.alsoPaths ?? []) {
+      path.forEach((lab, j) => {
+        const key = normLabel(lab);
+        useCount.set(key, (useCount.get(key) ?? 0) + 1);
+        const rows = useRows.get(key) ?? [];
+        if (!rows.includes(ri)) rows.push(ri);
+        useRows.set(key, rows);
+        colOf.set(key, Math.max(colOf.get(key) ?? 0, j));
+      });
     }
   });
 
+  // Home QUEUEs — left rail, one clean row each
   resources.forEach((r, i) => {
-    const q = byId.get(homeQueue.get(r.id)!)!;
+    const hid = homeQueue.get(r.id);
+    if (!hid) return;
+    const q = byId.get(hid);
+    if (!q) return;
     q.x = LEFT;
     q.y = TOP + i * ROW;
   });
 
-  // Column index per activity key (max index across resources that use it)
-  const colOf = new Map<string, number>();
-  resources.forEach((r) => {
-    r.itinerary.forEach((lab, j) => {
-      const key = normLabel(lab);
-      colOf.set(key, Math.max(colOf.get(key) ?? 0, j));
-    });
-  });
-
+  // Place work nodes (COMBI / NORMAL / GEN QUEUE / CON)
   const placed = new Set<string>();
-  resources.forEach((r, ri) => {
-    const rowY = TOP + ri * ROW;
-    r.itinerary.forEach((lab, j) => {
-      const key = normLabel(lab);
-      const n = byId.get(activityId.get(key)!)!;
-      const shared = (useCount.get(key) ?? 1) > 1;
-      const x = ACT0 + j * COL;
-      if (!placed.has(n.id)) {
-        n.x = x;
-        n.y = rowY;
-        placed.add(n.id);
-      } else if (shared) {
-        const rows = useRows.get(key) ?? [ri];
-        n.y = rows.reduce((s, idx) => s + (TOP + idx * ROW), 0) / rows.length;
-        // Keep shared node at earliest column where it appears
-        n.x = Math.min(n.x, x);
-      }
-    });
-  });
+  for (const n of nodes) {
+    if (n.type === "COUNTER") continue;
+    if ((n.initialUnits ?? 0) > 0 && n.type === "QUEUE") {
+      placed.add(n.id); // homes already placed
+      continue;
+    }
+    // Staging handled later
+    if (/@/.test(n.label) && n.type === "QUEUE" && !(n.generateCount && n.generateCount >= 2)) {
+      continue;
+    }
 
-  // Staging queues: on the resource row, halfway before the COMBI they feed
+    // Activity key for known tasks
+    let key: string | null = null;
+    for (const [k, id] of activityId) {
+      if (id === n.id) {
+        key = k;
+        break;
+      }
+    }
+    // GEN labeled "GEN 2"
+    if (!key && n.type === "QUEUE" && (n.generateCount ?? 0) >= 2) {
+      key = normLabel(n.label);
+      if (!colOf.has(key)) {
+        // Place GEN after max predecessor column + 1
+        const preds = links.filter((l) => l.to === n.id).map((l) => byId.get(l.from)).filter(Boolean) as CycloneNode[];
+        let pc = 0;
+        for (const p of preds) {
+          const pk = [...activityId.entries()].find(([, id]) => id === p.id)?.[0];
+          if (pk) pc = Math.max(pc, (colOf.get(pk) ?? 0) + 1);
+        }
+        colOf.set(key, pc || 1);
+      }
+    }
+    if (!key && n.type === "CONSOLIDATE") {
+      key = normLabel(n.label);
+      if (!colOf.has(key)) {
+        const preds = links.filter((l) => l.to === n.id).map((l) => byId.get(l.from)).filter(Boolean) as CycloneNode[];
+        let pc = 0;
+        for (const p of preds) {
+          const pk = [...activityId.entries()].find(([, id]) => id === p.id)?.[0];
+          if (pk) pc = Math.max(pc, (colOf.get(pk) ?? 0) + 1);
+          if (p.generateCount) pc = Math.max(pc, (colOf.get(normLabel(p.label)) ?? 0) + 1);
+        }
+        colOf.set(key, pc || 2);
+      }
+    }
+    if (!key) continue;
+
+    const col = colOf.get(key) ?? 0;
+    const rows = useRows.get(key) ?? [];
+    const y =
+      rows.length > 0
+        ? rows.reduce((s, ri) => s + (TOP + ri * ROW), 0) / rows.length
+        : TOP + resources.length * ROW;
+    n.x = ACT0 + col * COL;
+    n.y = y;
+    placed.add(n.id);
+  }
+
+  // Staging queues: same row as owning resource, just left of COMBI they feed
   resources.forEach((r, ri) => {
     const rowY = TOP + ri * ROW;
-    const stags = stagingByResource.get(r.id) ?? [];
-    for (const sid of stags) {
+    for (const sid of stagingByResource.get(r.id) ?? []) {
       const sn = byId.get(sid);
       if (!sn) continue;
-      // Label form: "Trucks @ DumpToPaver"
       const m = sn.label.match(/@\s*(.+)$/);
       const taskKey = m ? normLabel(m[1]!) : null;
       const combi = taskKey ? byId.get(activityId.get(taskKey)!) : null;
       if (combi) {
-        sn.x = combi.x - COL * 0.48;
+        sn.x = combi.x - STAG_DX;
         sn.y = rowY;
       } else {
-        sn.x = ACT0 + COL * 0.5;
+        sn.x = ACT0 - STAG_DX;
         sn.y = rowY;
       }
       placed.add(sn.id);
     }
   });
 
-  // COUNTERs (one or many): just to the right of each predecessor
+  // Any remaining staging-like queues linked into a COMBI
+  for (const n of nodes) {
+    if (placed.has(n.id)) continue;
+    if (n.type !== "QUEUE") continue;
+    const outs = links.filter((l) => l.from === n.id).map((l) => byId.get(l.to)).filter(Boolean) as CycloneNode[];
+    const combi = outs.find((o) => o.type === "COMBI" || o.type === "NORMAL");
+    if (combi) {
+      // Guess row from label prefix before @
+      const pref = n.label.split("@")[0]?.trim() ?? "";
+      let ri = resources.findIndex((r) => normLabel(r.label) === normLabel(pref));
+      if (ri < 0) ri = resources.length;
+      n.x = combi.x - STAG_DX;
+      n.y = TOP + ri * ROW;
+      placed.add(n.id);
+    }
+  }
+
+  // COUNTERs: right of predecessor, same Y
   for (const n of nodes) {
     if (n.type !== "COUNTER") continue;
     const preds = links
@@ -767,29 +855,75 @@ function layoutNodes(
       .map((l) => byId.get(l.from))
       .filter((x): x is CycloneNode => !!x);
     if (preds.length) {
-      const maxX = Math.max(...preds.map((p) => p.x));
-      const avgY = preds.reduce((s, p) => s + p.y, 0) / preds.length;
-      n.x = maxX + COL * 0.9;
-      n.y = avgY;
+      n.x = Math.max(...preds.map((p) => p.x)) + COL * 0.85;
+      n.y = preds.reduce((s, p) => s + p.y, 0) / preds.length;
     } else {
-      n.x = ACT0 + COL * 4;
+      n.x = ACT0 + COL * 5;
       n.y = TOP;
     }
     placed.add(n.id);
   }
 
-  // Exclusive post-shared tasks already placed on rows; give orphans a row below
+  // Orphans (GEN not in activityId, etc.)
   let orphan = 0;
   for (const n of nodes) {
-    if (n.type === "COUNTER") continue;
-    if (!placed.has(n.id) && n.x === 0 && n.y === 0) {
-      n.x = ACT0 + (orphan % 4) * COL;
-      n.y = TOP + resources.length * ROW + Math.floor(orphan / 4) * ROW;
+    if (placed.has(n.id)) continue;
+    // Try place by graph neighbors
+    const preds = links.filter((l) => l.to === n.id).map((l) => byId.get(l.from)).filter(Boolean) as CycloneNode[];
+    const succs = links.filter((l) => l.from === n.id).map((l) => byId.get(l.to)).filter(Boolean) as CycloneNode[];
+    if (preds.length || succs.length) {
+      const refs = [...preds, ...succs];
+      n.x = refs.reduce((s, p) => s + p.x, 0) / refs.length + (preds.length && !succs.length ? COL * 0.5 : 0);
+      n.y = refs.reduce((s, p) => s + p.y, 0) / refs.length;
+    } else {
+      n.x = ACT0 + (orphan % 3) * COL;
+      n.y = TOP + resources.length * ROW + Math.floor(orphan / 3) * ROW;
       orphan++;
     }
+    placed.add(n.id);
   }
 
-  resolveCollisions(nodes, 170, 125);
+  // Snap columns: group nodes that should share x (same work step)
+  // Soft align shared COMBIs already averaged
+
+  // Prefer monotonic L→R along each resource primary itinerary
+  resources.forEach((r, ri) => {
+    const rowY = TOP + ri * ROW;
+    let prevX = LEFT;
+    const chain = [...r.itinerary];
+    for (const path of r.alsoPaths ?? []) {
+      // don't interleave; primary first
+    }
+    for (const lab of chain) {
+      const id = activityId.get(normLabel(lab));
+      const n = id ? byId.get(id) : undefined;
+      if (!n) continue;
+      if (n.x < prevX + COL * 0.55) {
+        n.x = prevX + COL * 0.55;
+      }
+      // Pull exclusive (non-shared) nodes onto their resource row
+      if ((useCount.get(normLabel(lab)) ?? 1) === 1) {
+        n.y = rowY;
+      }
+      prevX = n.x;
+    }
+  });
+
+  resolveCollisions(nodes, 155, 118);
+
+  // Normalize to canvas padding
+  let minX = Infinity;
+  let minY = Infinity;
+  for (const n of nodes) {
+    minX = Math.min(minX, n.x);
+    minY = Math.min(minY, n.y);
+  }
+  const ox = minX < 40 ? 40 - minX : 0;
+  const oy = minY < 40 ? 40 - minY : 0;
+  for (const n of nodes) {
+    n.x = Math.round(n.x + ox);
+    n.y = Math.round(n.y + oy);
+  }
 }
 
 function resolveCollisions(nodes: CycloneNode[], minDx: number, minDy: number): void {
