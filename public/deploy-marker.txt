@@ -1,0 +1,4 @@
+neo-cyclone deploy marker
+product: AI-Assisted Construction Operation Simulation
+dedication: AI-agent of Daniel W. Halpin's CYCLONE
+utc: 2026-08-09T07:45:00Z
