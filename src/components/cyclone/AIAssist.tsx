@@ -110,7 +110,7 @@ export function AIAssist() {
     }
   }
 
-  /** Switching Example fills the prompt and draws the CYCLONE model. */
+  /** Example only fills the prompt — user must click Draw Model. */
   function loadExample(id: string) {
     if (!id) {
       setExampleId("");
@@ -121,9 +121,7 @@ export function AIAssist() {
     if (!ex) return;
     setExampleId(id);
     setInput(ex.prompt);
-    void runBuild(ex.prompt, { quiet: true }).then((ok) => {
-      if (ok) toast.success(`Loaded: ${ex.title}`);
-    });
+    // Do not draw yet — wait for Draw Model
   }
 
   return (
