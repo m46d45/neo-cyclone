@@ -3,7 +3,7 @@
  * Six construction-operation presets — features distributed across cases:
  *   1 Earthmoving (+ truck breakdown branch p)
  *   2 Asphalt paving
- *   3 Concrete placing (+ GEN/CON bucket scale)
+ *   3 Excavator + dump trucks (GEN/CON scoop scale)
  *   4 Precast forms
  *   5 Masonry (pairwise sensitivity)
  *   6 Tower crane (priority / multi-demand)
@@ -97,41 +97,44 @@ Pave: normal 3.5, 0.6
 `,
   },
   {
-    id: "concrete-crane",
-    title: "3. Concrete placing (crane + GEN/CON)",
-    goal: "GEN multiplies truck load into buckets; crane COMBI pours; CON gathers buckets back to 1 truck unit.",
-    source: "Halpin concrete placement; GEN/CON unit-scale teaching.",
-    features: ["GEN 4", "CON 4", "COMBI ProcessBucket", "cost", "sensitivity"],
-    prompt: `# Example 3 — Concrete placing (crane + trucks + GEN/CON)
-# Unit scale change (Halpin GENERATE / CONSOLIDATE):
-#   GEN BucketPool = 4  → each truck arrival becomes 4 bucket units
-#   Crane + bucket meet at ProcessBucket (COMBI only — 2 resources)
-#   CON AssemblePour = 4 → after 4 bucket pours, 1 truck unit continues to Leave
-# SpotLoad is NORMAL (trucks only). Production counted after AssemblePour (1 pour / load).
+    id: "excavator-load",
+    title: "3. Excavator loading dump trucks (GEN/CON)",
+    goal: "Classic GEN/CON: 1 empty truck = 5 excavator scoops; CON releases 1 full truck to haul.",
+    source: "Halpin GENERATE/CONSOLIDATE teaching (excavator fill dump truck).",
+    features: ["GEN 5", "CON 5", "COMBI Scoop", "cost", "sensitivity"],
+    prompt: `# Example 3 — Excavator loading dump trucks (GEN / CON)
+# Clearest GEN/CON lesson (unit scale):
+#   Empty truck arrives at load zone → GEN ScoopSlots = 5
+#     (1 truck "slot" becomes 5 scoop-units the excavator must complete)
+#   Excavator meets each scoop-unit at Scoop (COMBI)
+#   CON TruckFull = 5 → after 5 scoops, 1 full truck continues to Haul → Dump → Return
+# Production = 1 full truck load, counted after TruckFull (CON).
 
-Trucks: SpotLoad → BucketPool → ProcessBucket → AssemblePour → Leave
-Crane: ProcessBucket
-3 trucks, 1 crane
+Trucks: SpotAtLoad → ScoopSlots → Scoop → TruckFull → Haul → Dump → Return
+Excavator: Scoop
+4 trucks, 1 excavator
 
-Counter after: AssemblePour
-production = 1 pour
+Counter after: TruckFull
+production = 1 load
 
 Functions:
-GEN BucketPool = 4
-CON AssemblePour = 4
+GEN ScoopSlots = 5
+CON TruckFull = 5
 
 Cost:
-Trucks: 90
-Crane: 200
+Trucks: 85
+Excavator: 150
 
 Sensitivity:
-Trucks: 2..8
-Crane: 1..2
+Trucks: 2..10
+Excavator: 1..2
 
 Durations:
-SpotLoad: tri 1, 1.5, 2.5
-ProcessBucket: tri 1.2, 2, 3
-Leave: normal 14, 2
+SpotAtLoad: tri 0.5, 1, 1.5
+Scoop: tri 0.4, 0.7, 1.2
+Haul: normal 10, 1.5
+Dump: const 1.0
+Return: lognormal 9, 1.5
 `,
   },
   {
