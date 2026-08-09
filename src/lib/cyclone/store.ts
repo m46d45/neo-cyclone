@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { runCyclone } from "./engine";
-import { runSensitivity, parseCostAndSensitivity, applyCostsToModel } from "./sensitivity";
+import { parseCostAndSensitivity, applyCostsToModel } from "./sensitivity";
+import { runSensitivityAsync } from "./sensitivity-async";
 import { parsePriorityBlock, applyPrioritiesToModel } from "./priority";
 import { parseDsl, serializeDsl } from "./dsl";
 import { cloneModel, emptyModel, earthmovingModel, PRESET_MODELS } from "./models/presets"
@@ -164,20 +165,27 @@ export const useCycloneStore = create<CycloneStore>((set, get) => ({
     }
     set({ isRunning: true, lastError: null, sensitivityResult: null });
     try {
+      // Base run stays on main thread (fast for a single trajectory).
       const result = runCyclone(model, { seed, maxTime, maxCycles });
-      let sensitivityResult: SensitivityResult | null = null;
+      set({ result });
       if (sensPlan.length > 0) {
-        try {
-          sensitivityResult = runSensitivity(
-            model,
-            { seed, maxTime, maxCycles },
-            sensPlan,
-          );
-        } catch {
-          // optional teaching feature — do not fail the base run
-        }
+        // Sensitivity off main thread when Workers are available.
+        const modelSnap = model;
+        const cfg = { seed, maxTime, maxCycles };
+        const plan = sensPlan;
+        void runSensitivityAsync(modelSnap, cfg, plan)
+          .then((sensitivityResult) => {
+            // Ignore stale completions if another run started.
+            if (get().result !== result) return;
+            set({ sensitivityResult, isRunning: false });
+          })
+          .catch(() => {
+            if (get().result !== result) return;
+            set({ isRunning: false });
+          });
+      } else {
+        set({ isRunning: false });
       }
-      set({ result, sensitivityResult, isRunning: false });
     } catch (e) {
       set({
         isRunning: false,
@@ -230,63 +238,63 @@ export const useCycloneStore = create<CycloneStore>((set, get) => ({
     return true;
   },
 
-  setAgentLang: () => {
-    // English-only product
-  },
-
-  setAgentPhase: (phase, note) => {
-    const prev = get().agent.phase;
-    set((s) => ({ agent: { ...s.agent, phase } }));
-    if (note) get().agentLog(note, phase);
-    else if (prev !== phase) get().agentLog(`→ ${phase}`, phase);
-  },
-
-  agentPush: (msg) =>
+  setAgentLang: (lang) =>
     set((s) => ({
-      agent: {
-        ...s.agent,
-        messages: [
-          ...s.agent.messages,
-          { id: msg.id ?? uid("m"), at: Date.now(), role: msg.role, text: msg.text },
-        ],
-      },
+      agent: { ...s.agent, lang },
     })),
 
-  agentLog: (text, phase) => {
-    const entry: ChangelogEntry = {
-      id: uid("c"),
+  setAgentPhase: (phase, note) => {
+    set((s) => ({
+      agent: { ...s.agent, phase },
+    }));
+    if (note) get().agentLog(note, phase);
+  },
+
+  agentPush: (msg) => {
+    const entry: ChatMessage = {
+      id: msg.id ?? uid("m"),
+      role: msg.role,
+      text: msg.text,
       at: Date.now(),
-      phase: phase ?? get().agent.phase,
-      text,
     };
     set((s) => ({
-      agent: { ...s.agent, changelog: [entry, ...s.agent.changelog].slice(0, 40) },
+      agent: { ...s.agent, messages: [...s.agent.messages, entry] },
     }));
   },
 
-  setStructureLocked: (v) => set((s) => ({ agent: { ...s.agent, structureLocked: v } })),
-  setParamsDone: (v) => set((s) => ({ agent: { ...s.agent, paramsDone: v } })),
-  setBrief: (brief) => set((s) => ({ agent: { ...s.agent, brief } })),
+  agentLog: (text, phase) => {
+    const entry: ChangelogEntry = {
+      id: uid("log"),
+      text,
+      at: Date.now(),
+      phase: phase ?? get().agent.phase,
+    };
+    set((s) => ({
+      agent: { ...s.agent, changelog: [...s.agent.changelog, entry] },
+    }));
+  },
+
+  setStructureLocked: (v) =>
+    set((s) => ({
+      agent: { ...s.agent, structureLocked: v },
+    })),
+
+  setParamsDone: (v) =>
+    set((s) => ({
+      agent: { ...s.agent, paramsDone: v },
+    })),
+
+  setBrief: (brief) =>
+    set((s) => ({
+      agent: { ...s.agent, brief },
+    })),
 
   simulateNow: () => {
-    if (!get().modelReady) {
-      return { ok: false, error: "Draw the model first" };
-    }
-    const { model, dslText } = get();
-    const parsed = parseDsl(dslText);
-    if (parsed.ok) {
-      set({
-        model: ensureReadableLayout(cloneModel(parsed.model)),
-        modelReady: true,
-      });
-    } else if (!model.nodes.length) {
-      return { ok: false, error: "No model" };
+    const { modelReady, model } = get();
+    if (!modelReady || !model.nodes.length) {
+      return { ok: false, error: "Draw Model first" };
     }
     get().run();
-    if (get().lastError) return { ok: false, error: get().lastError ?? "Run failed" };
-    get().agentLog("Simulate", "ready");
     return { ok: true };
   },
 }));
-
-export { PHASE_ORDER, DEFAULT_SEED };

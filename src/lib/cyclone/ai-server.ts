@@ -1,13 +1,31 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { parseDsl, serializeDsl, DSL_VERSION } from "./dsl";
 import { buildOperationFromText } from "./general-builder";
 import { stripPromptComments } from "./prompt-template";
+import { checkAiRateLimit, clientKeyFromHeaders } from "./ai-rate-limit";
 
 export const generateCycloneDsl = createServerFn({ method: "POST" })
   .validator((input: { prompt: string }) => ({
     prompt: String(input?.prompt ?? "").slice(0, 2000),
   }))
   .handler(async ({ data }) => {
+    let clientKey = "anon";
+    try {
+      const req = getRequest();
+      clientKey = clientKeyFromHeaders(req?.headers ?? null);
+    } catch {
+      clientKey = "anon";
+    }
+    const rl = checkAiRateLimit(`dsl:${clientKey}`, { max: 20, windowMs: 60 * 60 * 1000 });
+    if (!rl.allowed) {
+      return {
+        ok: false,
+        error: `Rate limit reached (20 AI drafts / hour). Retry in ~${rl.retryAfterSec}s.`,
+        dsl: null,
+        source: "none" as const,
+      };
+    }
     return draftDslFromPrompt(data.prompt);
   });
 
