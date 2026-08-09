@@ -185,14 +185,12 @@ Full detail: **[NOTATION_STANDARD.md](./NOTATION_STANDARD.md)**.
 
 ## 7. Teaching examples (6 presets)
 
-Staged so sensitivity appears only when students are ready:
-
-1. **Earthmoving** — classic fleet; cost; steady-state (**no** sensitivity)  
-2. **Asphalt paving** — branch **p** Breakdown → Refill (**no** sensitivity)  
-3. **Excavator loading** — inline `GEN 5 → Scoop → CON 5 TruckFull → Haul&Return` (**no** sensitivity)  
-4. **Precast forms** — **introduce sensitivity** (2 resources: Forms × Crew)  
-5. **Masonry** — **3 resources**, pairwise sensitivity  
-6. **Tower crane** — multi-demand `|` + **Priority**
+1. **Earthmoving** — classic fleet; cost; steady-state  
+2. **Asphalt paving** — branch **p** Breakdown → Refill  
+3. **Excavator loading** — inline `GEN 5 → Scoop → CON 5 TruckFull → Haul&Return`  
+4. **Tower crane** — multi-demand `|` + **Priority** (contention, no SA)  
+5. **Masonry** — **only preset with Sensitivity** (3 resources, pairwise)  
+6. **Precast forms** — longer form cycle (more complex; no SA)
 
 ---
 
