@@ -118,9 +118,7 @@ function ManualPage() {
           <pre className="overflow-x-auto rounded-[var(--radius-md)] border border-primary/20 bg-card p-3 font-mono text-[11px] text-foreground">{GENERAL_TEMPLATE}</pre>
           <ul className="mt-3 list-disc space-y-1 pl-5 text-xs">
             <li>
-              Sequence: → · <code className="text-foreground">-></code> ·{" "}
-              <code className="text-foreground">--></code> ·{" "}
-              <code className="text-foreground">=></code>
+              Sequence arrows: → · {"->"} · {"-->"} · {"=>"}
             </li>
             <li>Multi-demand: <code className="text-foreground">A | B | C</code> + Priority (lower = higher)</li>
             <li>Inline GEN/CON on the resource chain</li>
