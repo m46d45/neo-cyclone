@@ -7,6 +7,7 @@ import { DiagramCanvas } from "@/components/cyclone/DiagramCanvas";
 import { ModelSimulateBar } from "@/components/cyclone/ModelSimulateBar";
 import { NetworkLogic } from "@/components/cyclone/NetworkLogic";
 import { ResultsPanel } from "@/components/cyclone/ResultsPanel";
+import { StudioAssistant } from "@/components/cyclone/StudioAssistant";
 import { LogoMark } from "@/components/cyclone/LogoMark";
 import { PRODUCT_DEDICATION, PRODUCT_TAGLINE } from "@/lib/cyclone/prompt-template";
 import { Button } from "@/components/ui/button";
@@ -77,6 +78,11 @@ function StudioPage() {
         {/* Full-width Results under both columns */}
         <div className="mt-4 min-w-0">
           <ResultsPanel />
+        </div>
+
+        {/* AI Assistant — bound to current prompt, model, and last results */}
+        <div className="mt-4 min-w-0">
+          <StudioAssistant />
         </div>
 
         <footer className="mt-10 border-t border-border pt-6 text-center text-xs text-muted-foreground">
