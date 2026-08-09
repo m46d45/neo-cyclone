@@ -79,7 +79,8 @@ production = <amount> <unit>
 
 # ------------------------------------------------------------
 # 2. DURATIONS — every named task (required)
-#    dist: const | unif | tri | normal | lognormal | beta | gamma
+#    dist: const | unif | tri | normal | lognormal | beta | pert | gamma
+#    beta min,max,α,β  |  pert a,m,b (optimistic, mode, pessimistic → PERT-beta)
 # ------------------------------------------------------------
 Durations:
 Task1: <dist> <params…>
@@ -128,7 +129,8 @@ export const DIST_TABLE = `# Quick reference (same order as Format Prompt)
 #    Counter after: <Task>   ← where production is counted (default: last task of 1st resource)
 #    production = <amount> <unit>
 # 2 Durations (minutes)
-  const · unif · tri · normal · lognormal · beta · gamma
+  const · unif · tri · normal · lognormal · beta · pert · gamma
+  # beta min,max,α,β   |   pert a,m,b (optimistic, mode, pessimistic)
 
 # 3 Priority (optional)
   Priority:
