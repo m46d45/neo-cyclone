@@ -1,12 +1,12 @@
 /**
  * Teaching examples for Neo-CYCLONE (Halpin / MicroCYCLONE tradition).
- * Six construction-operation presets — features distributed across cases:
- *   1 Earthmoving (+ truck breakdown branch p)
- *   2 Asphalt paving
- *   3 Excavator + dump trucks (GEN/CON scoop scale)
- *   4 Precast forms
- *   5 Masonry (pairwise sensitivity)
- *   6 Tower crane (priority / multi-demand)
+ * Six construction-operation presets — features staged for teaching:
+ *   1 Earthmoving — classic cycles, cost, steady-state (no sensitivity)
+ *   2 Asphalt — branch p breakdown (no sensitivity)
+ *   3 Excavator — GEN/CON inline (no sensitivity)
+ *   4 Precast forms — introduce sensitivity (2 resources)
+ *   5 Masonry — 3 resources, pairwise sensitivity
+ *   6 Tower crane — multi-demand | + Priority
  *
  * Source orientation: Halpin & Riggs, Planning and Analysis of Construction
  * Operations (Wiley, 1992) — simplified for first contact.
@@ -25,12 +25,12 @@ export const EXAMPLE_PROMPTS: ExamplePrompt[] = [
   {
     id: "earthmoving",
     title: "1. Earthmoving fleet (loader + trucks)",
-    goal: "Classic deterministic fleet — cost, sensitivity, steady-state (no branch).",
+    goal: "Classic fleet — resource cycles, cost, steady-state (no branch, no sensitivity).",
     source: "Halpin earthmoving teaching model (classic).",
-    features: ["COMBI Load", "cost", "sensitivity", "steady-state"],
+    features: ["COMBI Load", "cost", "steady-state"],
     prompt: `# Example 1 — Earthmoving fleet (classic)
-# Pure classic cycle: no breakdown / no probabilistic branch.
-# Focus: resource cycles, cost, sensitivity, steady-state productivity.
+# Pure classic cycle: no breakdown, no sensitivity analysis yet.
+# Focus: resource cycles, cost report, steady-state productivity.
 
 Trucks: Load → Haul → Dump → Return
 Loader: Load
@@ -42,10 +42,6 @@ production = 12 m3
 Cost:
 Trucks: 85
 Loader: 120
-
-Sensitivity:
-Trucks: 2..12
-Loader: 1..2
 
 Durations:
 Load: tri 1.5, 2, 3
@@ -64,12 +60,11 @@ Return: lognormal 7, 1.5
       "branch p",
       "Counter after Pave",
       "cost",
-      "sensitivity",
     ],
     prompt: `# Example 2 — Asphalt paving (simplified + breakdown)
 # Trucks: DumpToPaver → RefillAsphalt (normal), or Breakdown then RefillAsphalt.
-# Breakdown is a detour delay — then refill — then dump again (never dump right after breakdown).
-# Paver: DumpToPaver → Pave. Production after Pave.
+# Breakdown is a detour delay — then refill — then dump again.
+# Production after Pave. No sensitivity yet (see Example 4).
 
 Trucks: DumpToPaver → RefillAsphalt
 Paver: DumpToPaver → Pave
@@ -85,10 +80,6 @@ Cost:
 Trucks: 95
 Paver: 180
 
-Sensitivity:
-Trucks: 2..10
-Paver: 1..2
-
 Durations:
 DumpToPaver: tri 0.8, 1.2, 1.8
 RefillAsphalt: tri 8, 12, 18
@@ -99,15 +90,13 @@ Pave: normal 3.5, 0.6
   {
     id: "excavator-load",
     title: "3. Excavator loading dump trucks (GEN/CON)",
-    goal: "GEN TruckIdle=5 scoops per truck; CON TruckFull=5; then Haul&Return.",
+    goal: "Inline GEN 5 + CON 5 TruckFull; Haul&Return (no sensitivity).",
     source: "Halpin GENERATE/CONSOLIDATE teaching (excavator fill dump truck).",
-    features: ["GEN 5", "CON 5", "COMBI Scoop", "cost", "sensitivity"],
+    features: ["GEN 5", "CON 5", "COMBI Scoop", "cost"],
     prompt: `# Example 3 — Excavator loading dump trucks (GEN / CON)
-# Chain is the source of truth (inline GEN/CON — not a separate topology):
-#   GEN 5     = load-zone GENERATE queue (1 truck arrival → 5 scoop-units)
-#   Scoop     = excavator + scoop-unit meet (COMBI)
-#   CON 5 …   = CONSOLIDATE (5 scoops → 1 full truck)
-# Home QUEUE "Trucks Idle" always exists (fleet). GEN is the only extra truck QUEUE.
+# Chain is the source of truth (inline GEN/CON):
+#   GEN 5 → Scoop → CON 5 TruckFull → Haul&Return
+# Home QUEUE "Trucks Idle" + GEN load-zone. No sensitivity yet (see Example 4).
 
 Trucks: GEN 5 → Scoop → CON 5 TruckFull → Haul&Return
 Excavator: Scoop
@@ -120,10 +109,6 @@ Cost:
 Trucks: 85
 Excavator: 150
 
-Sensitivity:
-Trucks: 2..10
-Excavator: 1..2
-
 Durations:
 Scoop: tri 0.4, 0.7, 1.2
 Haul&Return: normal 10, 1.5
@@ -131,12 +116,13 @@ Haul&Return: normal 10, 1.5
   },
   {
     id: "precast-forms",
-    title: "4. Precast form cycle (forms + crew)",
-    goal: "Form as resource cycle: strip → clean → set → pour → cure hold.",
+    title: "4. Precast forms (intro sensitivity, 2 resources)",
+    goal: "First sensitivity lesson: vary Forms and Crew (2 resources only).",
     source: "Halpin precast / formwork teaching examples (simplified).",
-    features: ["form queue", "crew COMBI", "longer cycle times"],
-    prompt: `# Example 4 — Precast form cycle
-# Forms circulate; crew performs strip/clean/set/pour. Cure is a delay on the form.
+    features: ["2 resources", "sensitivity intro", "form cycle", "cost"],
+    prompt: `# Example 4 — Precast form cycle + sensitivity (2 resources)
+# Forms circulate; crew strip/clean/set/pour. Cure holds the form.
+# FIRST sensitivity lesson: only two resources (Forms, Crew) — read the Sensitivity tab.
 
 Forms: Strip → Clean → Set → Pour → Cure
 Crew: Strip → Clean → Set → Pour
@@ -163,8 +149,8 @@ Cure: const 120
   },
   {
     id: "masonry",
-    title: "5. Masonry crew (masons + helpers + scaffold)",
-    goal: "Three resources; pairwise sensitivity; shared lay-block task.",
+    title: "5. Masonry crew (3 resources + pairwise SA)",
+    goal: "Three resources; pairwise sensitivity after Example 4 two-resource SA.",
     source: "Halpin masonry / crew models (simplified).",
     features: ["3 resources", "pairwise sensitivity", "COMBI Lay"],
     prompt: `# Example 5 — Masonry crew
