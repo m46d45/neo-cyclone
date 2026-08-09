@@ -311,8 +311,7 @@ export function SimulationResults({
           <p className="text-[11px] text-muted-foreground">
             <strong className="text-foreground">Units per hour</strong> by cycle. Steady state is
             declared when consecutive changes stay under <strong className="text-foreground">5%</strong>{" "}
-            for at least {SS_MIN_STREAK} consecutive cycles (5% rule; teaching heuristic). The red dashed line is the
-            steady-state productivity level.
+            for at least {SS_MIN_STREAK} consecutive cycles (5% rule; teaching heuristic). The dark gold dashed line is the steady-state productivity level.
             {detourEvents.length > 0 && (
               <>
                 {" "}
@@ -340,9 +339,9 @@ export function SimulationResults({
             </div>
           )}
           {ss && (
-            <div className="rounded-[var(--radius-sm)] border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs">
+            <div className="rounded-[var(--radius-sm)] border border-[#8b6914]/40 bg-[#8b6914]/10 px-3 py-2 text-xs">
               <span className="font-medium text-foreground">Steady-state productivity: </span>
-              <span className="font-display text-base font-semibold tabular-nums text-destructive">
+              <span className="font-display text-base font-semibold tabular-nums text-[#8b6914]">
                 {formatNum(ss.level)}
               </span>{" "}
               <span className="text-muted-foreground">{model.productionUnit}/h</span>
@@ -410,13 +409,13 @@ export function SimulationResults({
                   {ss && (
                     <ReferenceLine
                       y={ss.level}
-                      stroke="#c41e3a"
+                      stroke="#8b6914"
                       strokeDasharray="6 4"
                       strokeWidth={1.75}
                       label={{
                         value: `${formatNum(ss.level)} /h`,
                         position: "right",
-                        fill: "#c41e3a",
+                        fill: "#8b6914",
                         fontSize: 11,
                         fontWeight: 600,
                       }}
@@ -425,13 +424,13 @@ export function SimulationResults({
                   {ss && (
                     <ReferenceLine
                       x={ss.startCycle}
-                      stroke="#c41e3a"
+                      stroke="#8b6914"
                       strokeDasharray="3 3"
-                      strokeOpacity={0.45}
+                      strokeOpacity={0.55}
                       label={{
                         value: "SS start",
                         position: "insideTopLeft",
-                        fill: "#c41e3a",
+                        fill: "#8b6914",
                         fontSize: 10,
                       }}
                     />
@@ -496,7 +495,7 @@ export function SimulationResults({
                           detour.length
                             ? "border-b border-border/60 bg-destructive/10"
                             : inSs
-                              ? "border-b border-border/60 bg-destructive/[0.04]"
+                              ? "border-b border-border/60 bg-[#8b6914]/[0.06]"
                               : "border-b border-border/60"
                         }
                       >
