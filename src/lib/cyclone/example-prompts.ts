@@ -99,18 +99,15 @@ Pave: normal 3.5, 0.6
   {
     id: "excavator-load",
     title: "3. Excavator loading dump trucks (GEN/CON)",
-    goal: "Classic GEN/CON: 1 empty truck = 5 excavator scoops; CON releases 1 full truck to haul.",
+    goal: "GEN TruckIdle=5 scoops per truck; CON TruckFull=5; then Haul&Return.",
     source: "Halpin GENERATE/CONSOLIDATE teaching (excavator fill dump truck).",
     features: ["GEN 5", "CON 5", "COMBI Scoop", "cost", "sensitivity"],
     prompt: `# Example 3 — Excavator loading dump trucks (GEN / CON)
-# Clearest GEN/CON lesson (unit scale):
-#   Empty truck arrives at load zone → GEN ScoopSlots = 5
-#     (1 truck "slot" becomes 5 scoop-units the excavator must complete)
-#   Excavator meets each scoop-unit at Scoop (COMBI)
-#   CON TruckFull = 5 → after 5 scoops, 1 full truck continues to Haul → Dump → Return
-# Production = 1 full truck load, counted after TruckFull (CON).
+# 1 truck at load → GEN TruckIdle = 5 scoop-units → excavator Scoop ×5
+# → CON TruckFull = 5 → 1 full truck → Haul&Return → idle
+# Production after TruckFull.
 
-Trucks: SpotAtLoad → ScoopSlots → Scoop → TruckFull → Haul → Dump → Return
+Trucks: Scoop → TruckFull → Haul&Return
 Excavator: Scoop
 4 trucks, 1 excavator
 
@@ -118,7 +115,7 @@ Counter after: TruckFull
 production = 1 load
 
 Functions:
-GEN ScoopSlots = 5
+GEN TruckIdle = 5
 CON TruckFull = 5
 
 Cost:
@@ -130,11 +127,8 @@ Trucks: 2..10
 Excavator: 1..2
 
 Durations:
-SpotAtLoad: tri 0.5, 1, 1.5
 Scoop: tri 0.4, 0.7, 1.2
-Haul: normal 10, 1.5
-Dump: const 1.0
-Return: lognormal 9, 1.5
+Haul&Return: normal 10, 1.5
 `,
   },
   {

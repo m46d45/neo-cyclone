@@ -328,6 +328,8 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
       if (gen > 1) {
         record(`QUEUE "${q.label}" GEN ${gen} (arrival → ${gen} units)`);
       }
+      // QUEUE → QUEUE (e.g. home idle → GEN TruckIdle load zone)
+      tryForwardQueueToQueue(nodeId);
       tryStartCombisFedBy(nodeId);
     } else if (node.type === "NORMAL") {
       startNormal(nodeId, entity);
@@ -394,6 +396,26 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
    * When a shared resource (tower crane, crew, …) can feed several COMBIs,
    * scan candidates in priority order (Halpin / MicroCYCLONE tradition).
    */
+  /**
+   * If a QUEUE has a single successor that is also a QUEUE, forward all units
+   * (home fleet pool → GEN load-zone). GEN multiplies on arrival at the dest.
+   */
+  function tryForwardQueueToQueue(queueId: string) {
+    const outs = outArcs.get(queueId) ?? [];
+    if (outs.length !== 1) return;
+    const destId = outs[0]!.to;
+    const dest = nodeById.get(destId);
+    if (!dest || dest.type !== "QUEUE") return;
+    const q = queues.get(queueId);
+    if (!q || q.units.length === 0) return;
+    while (q.units.length > 0) {
+      touchQueue(q);
+      const e = q.units.shift()!;
+      q.departures += 1;
+      enterNode(destId, e);
+    }
+  }
+
   function tryStartCombisFedBy(queueId: string) {
     const outs = outArcs.get(queueId) ?? [];
     const combis: string[] = [];
@@ -615,6 +637,8 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     }
   }
 
+  // Initial units sitting in home may need QUEUE→QUEUE forward into GEN
+  for (const qid of queues.keys()) tryForwardQueueToQueue(qid);
   tryStartAllCombisByPriority();
   tryStartAllNormalsFromQueues();
 

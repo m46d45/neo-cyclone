@@ -134,6 +134,19 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
 
   const fn = spec.functions ?? { gens: [], cons: [], branches: [] };
 
+  // GEN labels not listed in any cycle are load-zone queues: prepend to the
+  // first resource itinerary (e.g. GEN TruckIdle before Scoop → …).
+  for (const g of fn.gens) {
+    const gk = normLabel(g.label);
+    const used = spec.resources.some((r) =>
+      r.itinerary.some((lab) => normLabel(lab) === gk),
+    );
+    if (used) continue;
+    const host = spec.resources[0];
+    if (!host) continue;
+    host.itinerary = [g.label.trim(), ...host.itinerary];
+  }
+
   /**
    * COMBI = two or more resources must meet (task appears in ≥2 resource cycles
    * or in itinerary + alsoServes of another). Single-resource work = NORMAL
@@ -292,14 +305,14 @@ export function buildFromSpec(spec: OperationSpec): CycloneModel {
     }
     const countAtKey = countAtForThis ? normLabel(countAtForThis) : null;
 
-    // Home QUEUE feeds the first work step (COMBI if meeting, else NORMAL).
-    // GEN/CON first is rare — still link home → first step.
+    // Home QUEUE feeds first step: COMBI / NORMAL / GEN load-zone queue.
     const first = steps[0]!;
-    if (first.type === "COMBI" || first.type === "NORMAL") {
+    if (first.type === "COMBI" || first.type === "NORMAL" || first.type === "GEN") {
       addLink(home, first.id);
     } else {
       const firstWork =
-        steps.find((s) => s.type === "COMBI" || s.type === "NORMAL") ?? first;
+        steps.find((s) => s.type === "COMBI" || s.type === "NORMAL" || s.type === "GEN") ??
+        first;
       addLink(home, firstWork.id);
     }
     const stags: string[] = [];
