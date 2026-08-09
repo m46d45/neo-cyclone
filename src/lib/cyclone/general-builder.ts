@@ -864,13 +864,33 @@ function splitSteps(s: string): string[] {
 }
 
 function guessCount(text: string, label: string): number {
-  const re = new RegExp(`(\\d+)\\s*${label.replace(/\s+/g, "\\s*")}\\b`, "i");
-  const m = text.match(re);
+  // Ignore Cost / Sensitivity / Priority / Durations bodies so "Crane: 280"
+  // cannot become a resource count via newline-spanning regex.
+  const cleaned = text
+    .split(/\n/)
+    .filter((line) => {
+      const s = line.trim();
+      if (/^(cost|sensitivity|priority|durations?)\s*:/i.test(s)) return false;
+      if (/^[A-Za-z][A-Za-z0-9 _/-]{0,40}:\s*\d+(\.\d+)?\s*$/.test(s)) return false;
+      if (/^[A-Za-z][A-Za-z0-9 _/-]{0,40}:\s*\d+\s*\.\.\s*\d+/.test(s)) return false;
+      return true;
+    })
+    .join("\n");
+  const esc = label.replace(/\s+/g, "[ \\t]+");
+  // Same-line only: "5 trucks" / "1 CrewA Steel"
+  const re = new RegExp(`(\\d+)[ \\t]+${esc}\\b`, "i");
+  const m = cleaned.match(re);
   if (m?.[1]) return Math.max(1, Math.floor(Number(m[1])));
+  const reN = new RegExp(`\\bn[ \\t]+${esc}[ \\t]*=[ \\t]*(\\d+)`, "i");
+  const mN = cleaned.match(reN);
+  if (mN?.[1]) return Math.max(1, Math.floor(Number(mN[1])));
   const word = label.split(/\s+/)[0] ?? label;
-  const re2 = new RegExp(`(\\d+)\\s*${word}s?\\b`, "i");
-  const m2 = text.match(re2);
-  return m2?.[1] ? Math.max(1, Math.floor(Number(m2[1]))) : 1;
+  if (word.length >= 3) {
+    const re2 = new RegExp(`(\\d+)[ \\t]+${word}s?\\b`, "i");
+    const m2 = cleaned.match(re2);
+    if (m2?.[1]) return Math.max(1, Math.floor(Number(m2[1])));
+  }
+  return 1;
 }
 
 const RESOURCE_PATTERNS: { re: RegExp; label: string }[] = [

@@ -116,42 +116,46 @@ Haul&Return: normal 10, 1.5
   },
   {
     id: "tower-crane",
-    title: "4. Tower crane multi-demand (priority)",
-    goal: "Shared crane serves several lifts; Priority decides who goes first.",
-    source: "Halpin multi-work / crane contention teaching pattern (simplified).",
-    features: ["multi-demand |", "Priority P1–P3", "cost"],
-    prompt: `# Example 4 — Tower crane with competing demands
-# One crane idle pool feeds several lift COMBIs. Lower Priority number = first.
-# (No sensitivity here — see Example 5 Masonry for SA.)
+    title: "4. Tower crane — 3 zones + priority",
+    goal: "One crane serves three different work zones (A/B/C); Priority when demands compete.",
+    source: "Halpin multi-work / crane contention (zones made explicit for teaching).",
+    features: ["3 locations", "multi-demand |", "Priority P1–P3", "cost"],
+    prompt: `# Example 4 — Tower crane serving three zones
+# One tower crane, three clear work locations (not the same task renamed):
+#   Zone A — floor steel:   CrewA  LiftAtA → ErectSteelA
+#   Zone B — perimeter forms: CrewB  LiftAtB → SetFormsB
+#   Zone C — core concrete: CrewC  LiftAtC → PlaceConcreteC
+# Crane: LiftAtA | LiftAtB | LiftAtC   (one idle pool, three demands)
+# Priority: lower number first when several zones wait at once.
+# 1 steel crew + longer erect → crane free for B/C while steel is busy on deck.
+# Production = steel lifts at Zone A (primary); watch B/C util in the report.
 
-Steel crew: Lift Steel → Place Steel
-Form crew: Lift Forms → Place Forms
-Concrete crew: Lift Bucket → Pour
-Crane: Lift Steel | Lift Forms | Lift Bucket
+1 CrewA Steel: LiftAtA → ErectSteelA
+2 CrewB Forms: LiftAtB → SetFormsB
+2 CrewC Concrete: LiftAtC → PlaceConcreteC
+1 Crane: LiftAtA | LiftAtB | LiftAtC
 
-1 steel crew, 2 form crew, 2 concrete crew, 1 crane
-
-Counter after: Lift Steel
-production = 1 lift
+Counter after: LiftAtA
+production = 1 steel lift
 
 Priority:
-Lift Steel: 1
-Lift Forms: 2
-Lift Bucket: 3
+LiftAtA: 1
+LiftAtB: 2
+LiftAtC: 3
 
 Cost:
 Crane: 280
-Steel crew: 95
-Form crew: 80
-Concrete crew: 90
+CrewA Steel: 95
+CrewB Forms: 80
+CrewC Concrete: 90
 
 Durations:
-Lift Steel: tri 4, 6, 9
-Place Steel: normal 12, 2
-Lift Forms: tri 3, 5, 8
-Place Forms: normal 10, 1.5
-Lift Bucket: tri 2, 3, 5
-Pour: normal 8, 1.2
+LiftAtA: tri 4, 6, 9
+ErectSteelA: normal 25, 4
+LiftAtB: tri 3, 5, 8
+SetFormsB: normal 10, 1.5
+LiftAtC: tri 2, 3, 5
+PlaceConcreteC: normal 8, 1.2
 `,
   },
   {
