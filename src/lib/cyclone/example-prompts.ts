@@ -223,7 +223,7 @@ Lay: tri 4, 6, 9
 # Figure 14.1 + Table 14.1 Entity Path Table (names from figure labels).
 # Categories: Set positions, Forms, Batches, Crews, Cure positions, Crane, Trucks, Batch permit.
 # Crews multi-demand: MixAndPour | LoadTunnel | CleanForm
-# Crane multi-demand: SteamCure | UnloadTunnel
+# Crane multi-demand: LoadTunnel | UnloadTunnel (NOT full SteamCure — parallel chamber)
 # Production after MoveToStorage. Run Sensitivity tab for system sensitivity (Ch.14).
 
 3 SetPositions: MixAndPour → PullForms
@@ -231,19 +231,22 @@ Lay: tri 4, 6, 9
 20 Batches: Batch → MixAndPour → PullForms → LoadTunnel → SteamCure → UnloadTunnel → MoveToStorage
 2 Crews: MixAndPour | LoadTunnel | CleanForm
 8 CurePositions: LoadTunnel → SteamCure → UnloadTunnel
-1 Crane: SteamCure | UnloadTunnel
+1 Crane: LoadTunnel | UnloadTunnel
 4 Trucks: UnloadTunnel → MoveToStorage
 1 BatchPermit: Batch
 
 Counter after: MoveToStorage
 production = 1 panel
 
+# Crane only loads/unloads the tunnel (short). SteamCure holds CurePositions
+# in parallel (up to 8) — if crane stayed on SteamCure, curing becomes serial
+# (~0.45 panel/h flat) and SA looks nothing like Halpin Ch.14 curves.
+
 Priority:
 MixAndPour: 1
 LoadTunnel: 2
 CleanForm: 3
 UnloadTunnel: 1
-SteamCure: 2
 
 Cost:
 SetPositions: 0
@@ -266,7 +269,7 @@ Batch: const 2
 MixAndPour: tri 8, 12, 18
 PullForms: tri 4, 6, 10
 LoadTunnel: tri 5, 8, 12
-SteamCure: const 120
+SteamCure: const 90
 UnloadTunnel: tri 6, 10, 15
 MoveToStorage: tri 8, 12, 18
 CleanForm: tri 10, 15, 22
