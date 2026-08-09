@@ -80,6 +80,7 @@ creates a **home QUEUE** (`Trucks Idle`, `Loader Idle`) and work nodes.
 | Syntax | Meaning |
 |--------|---------|
 | `A → B → C` | **Sequence** — same unit walks the path in order |
+| (arrows) | Unicode `→` or keyboard `->` / `-->` / `=>` — all accepted |
 | `A \| B \| C` | **Multi-demand** — idle resource may serve **A or B or C** (whichever is ready; **Priority** breaks ties) |
 
 **Examples (standard):**

@@ -52,6 +52,7 @@ export const GENERAL_TEMPLATE = `# =============================================
 #    Inline GEN/CON in the chain (preferred):
 #      Trucks: GEN 5 → Scoop → CON 5 TruckFull → Haul&Return
 #    Sequence:     Resource: Task1 → Task2 → Task3
+#      arrows OK: →   ->   -->   =>
 #    Multi-demand: Resource: TaskA | TaskB | TaskC
 #      → one home QUEUE may serve A or B or C (not a sequence).
 #      → use Priority: when several demands wait (lower = first).

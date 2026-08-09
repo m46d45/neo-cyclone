@@ -259,7 +259,7 @@ export function parseStepsWithInlineDurations(stepChunk: string): {
   durations: Record<string, DurationDist>;
 } {
   const parts = stepChunk
-    .split(/\s*(?:→|->|=>|—)\s*/)
+    .split(/\s*(?:→|-->|->|=>|—)\s*/)
     .map((s) => s.trim())
     .filter(Boolean);
 

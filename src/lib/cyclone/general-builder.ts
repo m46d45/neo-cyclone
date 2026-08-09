@@ -873,7 +873,7 @@ export function parseExplicitResourceCycles(text: string): {
     if (
       parseDurationToken(rhs) &&
       /const|tri|unif|normal|norm|logn|beta|gamma|uniform|triangular/i.test(rhs) &&
-      !/→|->|=>|—|\|/.test(rhs)
+      !/→|-->|->|=>|—|\|/.test(rhs)
     ) {
       continue;
     }
@@ -882,7 +882,7 @@ export function parseExplicitResourceCycles(text: string): {
 
     // Must look like a task sequence or multi-demand
     const looksLikeCycle =
-      /→|->|=>|—/.test(rhs) ||
+      /→|-->|->|=>|—/.test(rhs) ||
       /\|/.test(rhs) ||
       (/\[/.test(rhs) && /\]/.test(rhs));
     if (!looksLikeCycle) {
@@ -904,7 +904,7 @@ export function parseExplicitResourceCycles(text: string): {
       if (parts.length > 1) {
         const paths: string[][] = [];
         for (const part of parts) {
-          if (/→|->|=>|—/.test(part) || /\(.*\d/.test(part)) {
+          if (/→|-->|->|=>|—/.test(part) || /\(.*\d/.test(part)) {
             const parsed = parseStepsWithInlineDurations(part);
             Object.assign(inlineDurations, parsed.durations);
             paths.push(parsed.labels);
@@ -919,7 +919,7 @@ export function parseExplicitResourceCycles(text: string): {
     }
 
     if (!itinerary.length) {
-      if (/→|->|=>|—/.test(rhs) || /\(.*\d/.test(rhs)) {
+      if (/→|-->|->|=>|—/.test(rhs) || /\(.*\d/.test(rhs)) {
         const parsed = parseStepsWithInlineDurations(rhs);
         itinerary = parsed.labels;
         Object.assign(inlineDurations, parsed.durations);
@@ -963,7 +963,7 @@ function mergeAlsoServes(cycles: ResourceCycle[], id: string, itinerary: string[
 
 function splitSteps(s: string): string[] {
   return s
-    .split(/\s*(?:→|->|=>|—|,|;|\|)\s*/)
+    .split(/\s*(?:→|-->|->|=>|—|,|;|\|)\s*/)
     .map((x) => x.trim().replace(/\s*[\(\[].*$/, ""))
     .filter((x) => x.length > 0 && x.length < 40)
     .slice(0, 12);
@@ -1069,7 +1069,7 @@ function extractResources(text: string): { id: string; label: string; count: num
 
 function extractStepLabels(text: string): string[] {
   const arrow = text.match(
-    /([A-Za-z][A-Za-z0-9_/ -]{1,24})\s*(?:→|->|=>|—)\s*([A-Za-z0-9_/ →\->,-]{3,140})/,
+    /([A-Za-z][A-Za-z0-9_/ -]{1,24})\s*(?:→|-->|->|=>|—)\s*([A-Za-z0-9_/ →\->,-]{3,140})/,
   );
   if (arrow) {
     return parseStepsWithInlineDurations(`${arrow[1]} → ${arrow[2]}`).labels;
