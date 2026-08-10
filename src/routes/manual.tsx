@@ -21,7 +21,7 @@ function ManualPage() {
             <BookOpen className="size-4 text-primary" />
             <h1 className="font-display text-base font-semibold">Neo-CYCLONE Manual</h1>
             <Badge variant="secondary" className="border-primary/25 bg-primary/10 text-primary">
-              v1.6.2
+              v1.6.3
             </Badge>
           </div>
           <Button asChild variant="outline" size="sm">
@@ -85,6 +85,23 @@ function ManualPage() {
             <li>Click <strong className="text-foreground">Simulate</strong> — productivity, waste, cost.</li>
             <li>Optional Sensitivity, AI Assistant, Excel / PNG export.</li>
           </ol>
+          <h3 className="font-display mt-5 text-base font-semibold text-foreground">2.2 Random seed (reproducibility)</h3>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-xs">
+            <li>
+              Seed is the start of the random stream for stochastic durations and probability branches.
+              Default <strong className="text-foreground">12345</strong> for class demos and fair comparisons.
+            </li>
+            <li>
+              <strong className="text-foreground">Same seed + same model + same max cycles/time</strong> →
+              identical results. Different seed → another random path (structure unchanged).
+            </li>
+            <li>
+              Under the CYCLONE Model: seed field + <strong className="text-foreground">dice</strong> button
+              randomizes a new visible seed (never a hidden server seed).
+            </li>
+            <li>Results header and Excel always record the seed — cite it in assignments and papers.</li>
+            <li>Seed is not an operational parameter (not fleet size or cost).</li>
+          </ul>
           <h3 className="font-display mt-5 text-base font-semibold text-foreground">2.3 Iterate before Simulate</h3>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-xs">
             <li>Home QUEUE per resource? Multi-resource → COMBI; single → NORMAL?</li>
@@ -239,7 +256,10 @@ function ManualPage() {
           <h3 className="font-display mt-4 text-base font-semibold text-foreground">8.1 Simulation</h3>
           <ul className="mt-2 list-disc space-y-1.5 pl-5 text-xs">
             <li>Max cycles: default <strong className="text-foreground">100</strong>, hard cap <strong className="text-foreground">500</strong></li>
-            <li>Seed default <strong className="text-foreground">12345</strong> (reproducible classroom runs)</li>
+            <li>
+              Seed default <strong className="text-foreground">12345</strong> (reproducible classroom runs);
+              see §2.2 — dice button randomizes another path
+            </li>
             <li>Sensitivity: max <strong className="text-foreground">5</strong> resources; ~<strong className="text-foreground">150</strong> combinations (ranges down-sampled)</li>
           </ul>
           <h3 className="font-display mt-4 text-base font-semibold text-foreground">8.2 Sensitivity performance</h3>
@@ -297,7 +317,7 @@ function ManualPage() {
           <p className="font-mono text-[11px] leading-relaxed text-foreground">
             1. Select Example OR write Format Prompt{"\n"}
             2. Draw Model → inspect cycles / meetings / counter{"\n"}
-            3. Simulate → productivity, waste, cost{"\n"}
+            3. Seed (default 12345) · Simulate → productivity, waste, cost{"\n"}
             4. Sensitivity → if Sensitivity: block present{"\n"}
             5. AI Assistant → optional Q&A / propose prompt edits{"\n"}
             6. Export → Excel / PNG as needed
@@ -305,7 +325,7 @@ function ManualPage() {
         </section>
 
         <p className="text-center text-xs text-muted-foreground">
-          {PRODUCT_TAGLINE}<span className="mx-1.5">·</span>{PRODUCT_DEDICATION} · Manual v1.6.2
+          {PRODUCT_TAGLINE}<span className="mx-1.5">·</span>{PRODUCT_DEDICATION} · Manual v1.6.3
         </p>
       </main>
     </div>
