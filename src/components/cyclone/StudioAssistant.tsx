@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useCycloneStore } from "@/lib/cyclone/store";
-import { chatAssistant } from "@/lib/cyclone/assistant-server";
+import { chatAssistant, clampAssistantReply } from "@/lib/cyclone/assistant-server";
 import { buildAssistantContext } from "@/lib/cyclone/assistant-context";
 import { uid } from "@/lib/cyclone/agent/session";
 import { PRODUCT_TAGLINE } from "@/lib/cyclone/prompt-template";
@@ -19,8 +19,8 @@ type UiMsg = {
   suggestSimulate?: boolean;
 };
 
+/** Short chips only — answers capped to ≤20 lines. */
 const QUICK = [
-  "Explain this model",
   "How many resources?",
   "Which resource is the bottleneck?",
   "What was productivity?",
@@ -47,7 +47,7 @@ export function StudioAssistant() {
       id: "welcome",
       role: "system",
       text:
-        "AI Assistant is bound to your Format Prompt, CYCLONE network, and last simulation results. Ask in English (recommended) about productivity, idleness/bottleneck, or request prompt edits (e.g. set trucks to 8). Proposed prompts apply only after you click Apply.",
+        "Bound to Format Prompt, network, and last results. English preferred. Answers stay short (≤20 lines). Prompt edits apply only after Apply.",
     },
   ]);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -95,7 +95,7 @@ export function StudioAssistant() {
       const assistantMsg: UiMsg = {
         id: uid("a"),
         role: "assistant",
-        text: res.reply || res.error || "No reply.",
+        text: clampAssistantReply(res.reply || res.error || "No reply."),
         proposedPrompt: res.proposedPrompt,
         suggestSimulate: res.suggestSimulate,
       };
@@ -165,6 +165,8 @@ export function StudioAssistant() {
           {result ? `Last run: ${result.cyclesCompleted} cycles` : "Not simulated yet"}
           {" · "}
           prompt {prompt?.trim() ? "loaded" : "empty"}
+          {" · "}
+          replies ≤20 lines
         </p>
       </CardHeader>
       <CardContent className="space-y-3">

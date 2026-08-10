@@ -18,17 +18,33 @@ export type AssistantResponse = {
   error: string | null;
 };
 
+/** Hard cap for assistant replies (teaching UI). */
+export const ASSISTANT_MAX_REPLY_LINES = 20;
+
 const SYSTEM = `You are the Neo-CYCLONE AI Assistant — educational co-pilot for Halpin CYCLONE simulation.
 Product: AI-Assisted Construction Operation Simulation (international, English-first).
 LANGUAGE: Prefer English. If the user clearly writes in another language, you may reply in that language; otherwise use English. Keep task/resource names as in CONTEXT.
 RULES:
 1. Ground answers in CONTEXT (especially last-run idleness for bottleneck questions).
-2. For edits, return FULL Format Prompt in proposedPrompt.
+2. For edits, return FULL Format Prompt in proposedPrompt (not in reply body).
 3. Do not invent a different operation.
 4. COMBI only if >=2 resources.
 5. suggestSimulate=true after prompt changes.
+6. REPLY LENGTH: the "reply" field must be at most ${ASSISTANT_MAX_REPLY_LINES} short lines (prefer bullets). No long essays. No full prompt dump in reply.
 RESPONSE — ONLY JSON:
 {"reply":"...","proposedPrompt":null,"suggestSimulate":false}`;
+
+export function clampAssistantReply(text: string, maxLines = ASSISTANT_MAX_REPLY_LINES): string {
+  const normalized = String(text ?? "")
+    .replace(/\r\n/g, "\n")
+    .trim();
+  if (!normalized) return normalized;
+  const lines = normalized.split("\n");
+  if (lines.length <= maxLines) return normalized;
+  const kept = lines.slice(0, maxLines - 1);
+  kept.push("… (truncated for brevity)");
+  return kept.join("\n");
+}
 
 export const chatAssistant = createServerFn({ method: "POST" })
   .validator((input: AssistantRequest) => ({
@@ -72,7 +88,7 @@ export const chatAssistant = createServerFn({ method: "POST" })
     const context = data.context || "(no studio context)";
     const apiKey = process.env.XAI_API_KEY;
     if (!apiKey) {
-      return localAssistant(message, data.prompt, context);
+      return finalizeLocal(localAssistant(message, data.prompt, context));
     }
 
     try {
@@ -89,8 +105,8 @@ export const chatAssistant = createServerFn({ method: "POST" })
         },
         body: JSON.stringify({
           model: "grok-4.5",
-          max_tokens: 3200,
-          temperature: 0.3,
+          max_tokens: 900,
+          temperature: 0.25,
           messages: [
             { role: "system", content: SYSTEM },
             { role: "user", content: `CONTEXT:\n${context}\n\nUSER:\n${message}` },
@@ -100,7 +116,7 @@ export const chatAssistant = createServerFn({ method: "POST" })
       });
 
       if (!res.ok) {
-        const local = localAssistant(message, data.prompt, context);
+        const local = finalizeLocal(localAssistant(message, data.prompt, context));
         local.error = `xAI API ${res.status}`;
         return local;
       }
@@ -111,7 +127,7 @@ export const chatAssistant = createServerFn({ method: "POST" })
       if (parsed) {
         return {
           ok: true,
-          reply: parsed.reply || "Done.",
+          reply: clampAssistantReply(parsed.reply || "Done."),
           proposedPrompt: parsed.proposedPrompt,
           suggestSimulate: Boolean(parsed.suggestSimulate),
           source: "ai",
@@ -120,18 +136,22 @@ export const chatAssistant = createServerFn({ method: "POST" })
       }
       return {
         ok: true,
-        reply: stripFences(raw).slice(0, 8000) || "No response.",
+        reply: clampAssistantReply(stripFences(raw) || "No response."),
         proposedPrompt: null,
         suggestSimulate: false,
         source: "ai",
         error: null,
       };
     } catch (e) {
-      const local = localAssistant(message, data.prompt, context);
+      const local = finalizeLocal(localAssistant(message, data.prompt, context));
       local.error = e instanceof Error ? e.message : "request failed";
       return local;
     }
   });
+
+function finalizeLocal(r: AssistantResponse): AssistantResponse {
+  return { ...r, reply: clampAssistantReply(r.reply) };
+}
 
 function parseAssistantJson(raw: string): {
   reply: string;
@@ -226,6 +246,40 @@ function parseProductivityHint(context: string): string {
   return bits.join(", ");
 }
 
+/** Compact model summary from CONTEXT network section (≤ ~12 bullets). */
+function compactModelSummary(prompt: string, context: string): string {
+  const out: string[] = [];
+  const name = context.match(/model:\s*(.+)/i)?.[1]?.trim();
+  if (name && name !== "unnamed") out.push(`Model: ${name}`);
+
+  const combis = [...context.matchAll(/- COMBI:([^\n]+)/g)].map((m) => m[1]!.trim().split(" ")[0]!);
+  const normals = [...context.matchAll(/- NORMAL:([^\n]+)/g)].map((m) => m[1]!.trim().split(" ")[0]!);
+  const queues = [...context.matchAll(/- QUEUE:([^\n]+)/g)].map((m) => m[1]!.trim().split(" ")[0]!);
+  const counters = [...context.matchAll(/- COUNTER:([^\n]+)/g)].map((m) => m[1]!.trim().split(" ")[0]!);
+
+  const fleet = extractFleetCounts(prompt);
+  if (fleet.length) {
+    out.push("Fleet: " + fleet.map((c) => `${c.n}× ${c.name}`).join(", "));
+  }
+  if (queues.length) out.push(`Queues: ${queues.slice(0, 6).join(", ")}${queues.length > 6 ? "…" : ""}`);
+  if (combis.length) out.push(`COMBI: ${combis.slice(0, 5).join(", ")}${combis.length > 5 ? "…" : ""}`);
+  if (normals.length) out.push(`NORMAL: ${normals.slice(0, 5).join(", ")}${normals.length > 5 ? "…" : ""}`);
+  if (counters.length) out.push(`Counter: ${counters.join(", ")}`);
+
+  if (hasSimResults(context)) {
+    const hint = parseProductivityHint(context);
+    if (hint) out.push(`Last run: ${hint}`);
+  } else {
+    out.push("Not simulated yet — Draw Model then Simulate for metrics.");
+  }
+
+  if (out.length === 0) {
+    const lines = prompt.trim() ? prompt.trim().split(/\n/).filter(Boolean).length : 0;
+    out.push(lines ? `Prompt loaded (${lines} lines). Draw Model for network summary.` : "No prompt yet.");
+  }
+  return out.slice(0, ASSISTANT_MAX_REPLY_LINES).join("\n");
+}
+
 function localAssistant(message: string, prompt: string, context: string): AssistantResponse {
   const q = message.toLowerCase();
   let reply = "";
@@ -241,34 +295,36 @@ function localAssistant(message: string, prompt: string, context: string): Assis
       const sorted = [...idleStats].sort((a, b) => b.idlePct - a.idlePct);
       const worst = sorted[0]!;
       reply =
-        "From the last run, home-QUEUE idleness (waste):\n" +
+        "Home-QUEUE idleness (waste):\n" +
         sorted
-          .map((r) => `• **${r.resourceLabel}**: idle ${r.idlePct.toFixed(1)}% · busy ${r.busyPct.toFixed(1)}% (n=${r.n})`)
+          .slice(0, 8)
+          .map((r) => `• ${r.resourceLabel}: idle ${r.idlePct.toFixed(1)}% · busy ${r.busyPct.toFixed(1)}%`)
           .join("\n") +
-        `\n\n**Highest idle (waste):** ${worst.resourceLabel} (${worst.idlePct.toFixed(1)}% idle).`;
+        `\nHighest idle: ${worst.resourceLabel} (${worst.idlePct.toFixed(1)}%).`;
     } else {
-      reply = "Run **Simulate** first so idleness data exists, then ask again about the bottleneck resource.";
+      reply = "Run Simulate first, then ask about the bottleneck.";
     }
   }
 
-  if (/how many|fleet|jumlah|berapa/.test(q) && prompt) {
+  if (/how many|fleet|jumlah|berapa|resources\?/.test(q) && prompt) {
     const counts = extractFleetCounts(prompt);
     if (counts.length) {
-      reply += (reply ? "\n\n" : "") + "Fleet counts in Format Prompt:\n" + counts.map((c) => `• ${c.n} × ${c.name}`).join("\n");
+      reply += (reply ? "\n" : "") + "Fleet:\n" + counts.map((c) => `• ${c.n} × ${c.name}`).join("\n");
+    } else {
+      reply += (reply ? "\n" : "") + "No clear fleet counts in the Format Prompt.";
     }
   }
 
   if (/explain|summary|describe|jelaskan|model/.test(q)) {
-    const lines = prompt.trim() ? prompt.trim().split(/\n/).length : 0;
-    reply += (reply ? "\n\n" : "") + `Summary: prompt ${lines ? lines + " lines" : "empty"}.` + (hasSimResults(context) ? " Last run available in context." : " Not simulated yet.");
+    reply = compactModelSummary(prompt, context);
   }
 
   if (/productiv|produktiv|units per|steady|hasil/.test(q)) {
     if (hasSimResults(context)) {
       const hint = parseProductivityHint(context);
-      reply += (reply ? "\n\n" : "") + (hint ? `Last run: ${hint}.` : "Last run metrics are in studio context.");
+      reply += (reply ? "\n" : "") + (hint ? `Productivity: ${hint}.` : "Last run metrics are in context.");
     } else {
-      reply += (reply ? "\n\n" : "") + "No results yet. Draw Model, then Simulate.";
+      reply += (reply ? "\n" : "") + "No results yet. Draw Model, then Simulate.";
     }
   }
 
@@ -276,9 +332,12 @@ function localAssistant(message: string, prompt: string, context: string): Assis
     const idleStats = parseIdleFromContext(context);
     if (idleStats.length) {
       reply +=
-        (reply ? "\n\n" : "") +
-        "Resource idleness (home QUEUE waste):\n" +
-        idleStats.map((r) => `• ${r.resourceLabel}: idle ${r.idlePct.toFixed(1)}% / busy ${r.busyPct.toFixed(1)}%`).join("\n");
+        (reply ? "\n" : "") +
+        "Idleness:\n" +
+        idleStats
+          .slice(0, 8)
+          .map((r) => `• ${r.resourceLabel}: idle ${r.idlePct.toFixed(1)}% / busy ${r.busyPct.toFixed(1)}%`)
+          .join("\n");
     }
   }
 
@@ -298,21 +357,20 @@ function localAssistant(message: string, prompt: string, context: string): Assis
     const re = new RegExp(`(\\d+)(\\s+)(${escapeRe(name)}s?)\\b`, "i");
     if (re.test(prompt)) {
       proposedPrompt = prompt.replace(re, `${n}$2$3`);
-      reply += (reply ? "\n\n" : "") + `I can set **${name}** to **${n}**. Click **Apply prompt**, then Draw Model + Simulate.`;
+      reply += (reply ? "\n" : "") + `Propose: set ${name} → ${n}. Click Apply, then Draw + Simulate.`;
       suggestSimulate = true;
     }
   }
 
   if (/help|keyword|command/.test(q)) {
     reply +=
-      (reply ? "\n\n" : "") +
-      "Examples: Explain this model · How many trucks? · Which resource is the bottleneck? · What was productivity? · Set trucks to 8.";
+      (reply ? "\n" : "") +
+      "Try: Resources? · Bottleneck? · Productivity? · Set trucks to 8.";
   }
 
   if (!reply) {
     reply =
-      "Local mode (no XAI_API_KEY). Try: Explain this model / How many trucks? / Bottleneck resource? / Productivity / Set trucks to 8.\n\n" +
-      context.slice(0, 800);
+      "Local mode (no XAI_API_KEY). Short chips: Resources? · Bottleneck? · Productivity? · Set trucks to 8.";
   }
 
   return { ok: true, reply, proposedPrompt, suggestSimulate, source: "local", error: null };
