@@ -256,7 +256,7 @@ export function StudioAssistant() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             rows={2}
-            placeholder="Bound to Format Prompt, network, and last results. English preferred. Answers stay short (≤20 lines). Prompt edits apply only after Apply. Ask about the model or results, or request a prompt change…"
+            placeholder="Ask about the model or results, or request a prompt change. Bound to Format Prompt, network, and last results. English preferred. Answers stay short (≤20 lines). Prompt edits apply only after Apply."
             className="min-h-[64px] flex-1 resize-y text-xs"
             disabled={loading}
             onKeyDown={(e) => {
