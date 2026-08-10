@@ -23,7 +23,7 @@ const QUICK = [
   "How many resources?",
   "Which resource is the bottleneck?",
   "What was productivity?",
-  "Set trucks to 8",
+  "What is the unit cost?",
 ];
 
 export function StudioAssistant() {
