@@ -47,7 +47,7 @@ export const GENERAL_TEMPLATE = `# =============================================
 # Home QUEUE is automatic per resource; GEN is an extra load-zone QUEUE.
 # ============================================================
 
-# Baris 1 / line 1 — operation name (reports + Excel filename)
+# After notes (# …), first data line — operation name (reports + Excel filename)
 Operation: <short name of the construction operation>
 
 

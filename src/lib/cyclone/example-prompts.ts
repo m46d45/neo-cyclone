@@ -28,11 +28,11 @@ export const EXAMPLE_PROMPTS: ExamplePrompt[] = [
     goal: "Classic fleet — resource cycles, cost, steady-state (no branch, no sensitivity).",
     source: "Halpin earthmoving teaching model (classic).",
     features: ["COMBI Load", "cost", "steady-state"],
-    prompt: `Operation: Earthmoving
-
-# Example 1 — Earthmoving fleet (classic)
+    prompt: `# Example 1 — Earthmoving fleet (classic)
 # Pure classic cycle: no breakdown, no sensitivity analysis yet.
 # Focus: resource cycles, cost report, steady-state productivity.
+
+Operation: Earthmoving
 
 Trucks: Load → Haul → Dump → Return
 Loader: Load
@@ -63,12 +63,12 @@ Return: lognormal 7, 1.5
       "Counter after Pave",
       "cost",
     ],
-    prompt: `Operation: Asphalt Paving
-
-# Example 2 — Asphalt paving (simplified + breakdown)
+    prompt: `# Example 2 — Asphalt paving (simplified + breakdown)
 # Trucks: DumpToPaver → RefillAsphalt (normal), or Breakdown then RefillAsphalt.
 # Breakdown is a detour delay — then refill — then dump again.
 # Production after Pave. No sensitivity (see Example 5 Masonry for SA).
+
+Operation: Asphalt Paving
 
 Trucks: DumpToPaver → RefillAsphalt
 Paver: DumpToPaver → Pave
@@ -97,12 +97,12 @@ Pave: normal 3.5, 0.6
     goal: "Inline GEN 5 + CON 5 TruckFull; Haul&Return (no sensitivity).",
     source: "Halpin GENERATE/CONSOLIDATE teaching (excavator fill dump truck).",
     features: ["GEN 5", "CON 5", "COMBI Scoop", "cost"],
-    prompt: `Operation: Loading Dump Truck
-
-# Example 3 — Excavator loading dump trucks (GEN / CON)
+    prompt: `# Example 3 — Excavator loading dump trucks (GEN / CON)
 # Chain is the source of truth (inline GEN/CON):
 #   GEN 5 → Scoop → CON 5 TruckFull → Haul&Return
 # Home QUEUE "Trucks Idle" + GEN load-zone. No sensitivity (see Example 5 Masonry for SA).
+
+Operation: Loading Dump Truck
 
 Trucks: GEN 5 → Scoop → CON 5 TruckFull → Haul&Return
 Excavator: Scoop
@@ -126,9 +126,7 @@ Haul&Return: normal 10, 1.5
     goal: "One crane serves three different work zones (A/B/C); Priority when demands compete.",
     source: "Halpin multi-work / crane contention (zones made explicit for teaching).",
     features: ["3 locations", "multi-demand |", "Priority P1–P3", "cost"],
-    prompt: `Operation: Tower Crane
-
-# Example 4 — Tower crane serving three zones
+    prompt: `# Example 4 — Tower crane serving three zones
 # One tower crane, three clear work locations (not the same task renamed):
 #   Zone A — floor steel:   CrewA  LiftAtA → ErectSteelA
 #   Zone B — perimeter forms: CrewB  LiftAtB → SetFormsB
@@ -137,6 +135,8 @@ Haul&Return: normal 10, 1.5
 # Priority: lower number first when several zones wait at once.
 # 1 steel crew + longer erect → crane free for B/C while steel is busy on deck.
 # Production = EVERY crane lift (A+B+C) — multi-counter; util/idle shows waste.
+
+Operation: Tower Crane
 
 1 CrewA Steel: LiftAtA → ErectSteelA
 2 CrewB Forms: LiftAtB → SetFormsB
@@ -178,14 +178,14 @@ PlaceConcreteC: normal 8, 1.2
       "GEN/CON on mortar place",
       "pairwise SA",
     ],
-    prompt: `Operation: Masonry
-
-# Example 5 — Masonry face stocks (2 brick + 1 mortar) + SA
+    prompt: `# Example 5 — Masonry face stocks (2 brick + 1 mortar) + SA
 # At the mason: 2 brick-pack stacks + 1 mortar place (not a generic scaffold).
 # Helpers only refill empty positions (multi-demand). Materials available at ground.
 # GEN 2 / CON 2 on the MORTAR PLACE (1 bucket → 2 doses → CON 2 reunites place).
 # Helpers only refill. BrickPos / MortarPos are face positions (cost 0).
 # Sensitivity varies all fleets/positions. production = 20 bricks per lay.
+
+Operation: Masonry
 
 4 Masons: Lay
 3 Helpers: ReceiveBrick | ReceiveMortar
@@ -229,14 +229,14 @@ Lay: tri 4, 6, 9
       "crane multi-demand",
       "complex sensitivity",
     ],
-    prompt: `Operation: Precast Plant
-
-# Example 6 — Precast concrete element plant (Halpin Ch.14)
+    prompt: `# Example 6 — Precast concrete element plant (Halpin Ch.14)
 # Figure 14.1 + Table 14.1 Entity Path Table (names from figure labels).
 # Categories: Set positions, Forms, Batches, Crews, Cure positions, Crane, Trucks, Batch permit.
 # Crews multi-demand: MixAndPour | LoadTunnel | CleanForm
 # Crane multi-demand: LoadTunnel | UnloadTunnel (NOT full SteamCure — parallel chamber)
 # Production after MoveToStorage. Run Sensitivity tab for system sensitivity (Ch.14).
+
+Operation: Precast Plant
 
 3 SetPositions: MixAndPour → PullForms
 5 Forms: MixAndPour → PullForms → LoadTunnel → SteamCure → UnloadTunnel → CleanForm
