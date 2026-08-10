@@ -1,9 +1,9 @@
-import { Loader2, Play } from "lucide-react";
+import { Dices, Loader2, Play } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useCycloneStore } from "@/lib/cyclone/store";
+import { useCycloneStore, DEFAULT_SEED } from "@/lib/cyclone/store";
 import { t } from "@/lib/cyclone/agent/i18n";
 import { MAX_CYCLES_LIMIT, DEFAULT_MAX_CYCLES } from "@/lib/cyclone/run-limits";
 
@@ -61,16 +61,45 @@ export function ModelSimulateBar() {
         </div>
         <div className="space-y-1">
           <Label htmlFor="sim-seed" className="text-[11px]">
-            Seed
+            Seed (reproducibility)
           </Label>
-          <Input
-            id="sim-seed"
-            type="number"
-            step={1}
-            value={seed}
-            onChange={(e) => setSeed(Number(e.target.value) || 12345)}
-            className="h-9 font-mono text-sm"
-          />
+          <div className="flex gap-1.5">
+            <Input
+              id="sim-seed"
+              type="number"
+              step={1}
+              value={seed}
+              onChange={(e) => {
+                const n = Number(e.target.value);
+                setSeed(Number.isFinite(n) ? Math.floor(n) : DEFAULT_SEED);
+              }}
+              className="h-9 min-w-0 flex-1 font-mono text-sm"
+              title="Same seed + same model → identical results"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 shrink-0"
+              title="Pick a random seed (another stochastic path)"
+              aria-label="Randomize seed"
+              onClick={() => {
+                // 1..2^31-1 — avoids 0 edge cases; still fully user-visible
+                const next = 1 + Math.floor(Math.random() * 2147483646);
+                setSeed(next);
+                toast.message(`Seed set to ${next}`, {
+                  description: "Same seed + model → same results. Default classroom seed is 12345.",
+                });
+              }}
+            >
+              <Dices className="size-4" />
+            </Button>
+          </div>
+          <p className="text-[10px] leading-snug text-muted-foreground">
+            Default <strong className="text-foreground">{DEFAULT_SEED}</strong>. Same seed + model →
+            identical run. Change seed only to sample another random path; results always show the seed
+            used.
+          </p>
         </div>
         <div className="space-y-1">
           <Label htmlFor="sim-time" className="text-[11px]">
