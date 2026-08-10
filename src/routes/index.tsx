@@ -9,7 +9,7 @@ import { NetworkLogic } from "@/components/cyclone/NetworkLogic";
 import { ResultsPanel } from "@/components/cyclone/ResultsPanel";
 import { StudioAssistant } from "@/components/cyclone/StudioAssistant";
 import { LogoMark } from "@/components/cyclone/LogoMark";
-import { PRODUCT_DEDICATION, PRODUCT_TAGLINE } from "@/lib/cyclone/prompt-template";
+import { PRODUCT_TAGLINE } from "@/lib/cyclone/prompt-template";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({ component: StudioPage });
@@ -87,11 +87,6 @@ function StudioPage() {
 
         <footer className="mt-10 border-t border-border pt-6 text-center text-xs text-muted-foreground">
           {PRODUCT_TAGLINE}
-          <span className="mx-1.5 text-border">·</span>
-          {PRODUCT_DEDICATION} ·{" "}
-          <Link to="/manual" className="text-primary hover:underline">
-            Manual
-          </Link>
         </footer>
       </main>
     </div>

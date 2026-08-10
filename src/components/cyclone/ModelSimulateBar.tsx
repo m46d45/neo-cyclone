@@ -63,7 +63,7 @@ export function ModelSimulateBar() {
           <Label htmlFor="sim-seed" className="text-[11px]">
             Seed (reproducibility)
           </Label>
-          <div className="flex gap-1.5">
+          <div className="flex items-center gap-1.5">
             <Input
               id="sim-seed"
               type="number"
@@ -79,12 +79,10 @@ export function ModelSimulateBar() {
             <Button
               type="button"
               variant="outline"
-              size="icon"
-              className="h-9 w-9 shrink-0"
+              className="h-9 shrink-0 gap-1 px-2.5 text-[11px]"
               title="Pick a random seed (another stochastic path)"
               aria-label="Randomize seed"
               onClick={() => {
-                // 1..2^31-1 — avoids 0 edge cases; still fully user-visible
                 const next = 1 + Math.floor(Math.random() * 2147483646);
                 setSeed(next);
                 toast.message(`Seed set to ${next}`, {
@@ -92,7 +90,8 @@ export function ModelSimulateBar() {
                 });
               }}
             >
-              <Dices className="size-4" />
+              <Dices className="size-3.5" />
+              Random
             </Button>
           </div>
           <p className="text-[10px] leading-snug text-muted-foreground">
