@@ -497,7 +497,7 @@ export function downloadSimulationReportExcel(
 ) {
   const xml = buildSimulationReportExcel(model, result);
   downloadBlob(
-    safeFilename(`report_${model.id}`, "xls"),
+    safeFilename(`report_${model.name || model.id}`, "xls"),
     xml,
     "application/vnd.ms-excel;charset=utf-8",
   );

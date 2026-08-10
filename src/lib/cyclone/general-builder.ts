@@ -1097,7 +1097,7 @@ export function parseExplicitResourceCycles(text: string): {
     ) {
       continue;
     }
-    if (/^(http|https|min|note|phase|cost|priority|sensitivity|duration|counter|count|production)/i.test(label)) continue;
+    if (/^(http|https|min|note|phase|cost|priority|sensitivity|duration|counter|count|production|operation|model|title|op)$/i.test(label)) continue;
     if (/^counter\s+after$|^count\s+at$|^production$/i.test(label)) continue;
 
     // Must look like a task sequence or multi-demand
@@ -1303,6 +1303,35 @@ function extractStepLabels(text: string): string[] {
   return ["Work", "Return"];
 }
 
+
+/** Operation title for reports / Excel filename (not a resource cycle). */
+export function parseOperationName(text: string): string | null {
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  for (const line of lines) {
+    // Official syntax (preferred)
+    const m = line.match(/^(?:operation|model|title|op)\s*:\s*(.+)$/i);
+    if (m?.[1]) {
+      const name = m[1].replace(/\s*[#/].*$/, "").trim();
+      if (name && name.length <= 80) return name;
+    }
+  }
+  // From teaching comments: "# Example 1 — Earthmoving fleet" or "# Earthmoving"
+  for (const line of lines) {
+    if (!line.startsWith("#")) continue;
+    const body = line.replace(/^#+\s*/, "").trim();
+    if (!body || /format prompt|network|duration|notes|====|----/i.test(body)) continue;
+    const ex = body.match(/^example\s*\d+\s*[—\-–:]\s*(.+)$/i);
+    if (ex?.[1]) {
+      let name = ex[1].trim();
+      // drop trailing parenthetical notes
+      name = name.replace(/\s*\([^)]*\)\s*$/, "").trim();
+      // take before first " · " or " - " long suffix like "(classic)"
+      if (name.length > 2 && name.length <= 80) return name.slice(0, 56);
+    }
+  }
+  return null;
+}
+
 export function buildOperationFromText(text: string): CycloneModel | null {
   const raw = stripPromptComments(text);
   if (!raw) return null;
@@ -1355,12 +1384,22 @@ export function buildOperationFromText(text: string): CycloneModel | null {
   })();
 
   const allSteps = [...new Set(resources.flatMap((r) => r.itinerary))];
+  // Prefer Operation: / Model: / Title: (or # Example N — Name). Avoid resource-cycle lines as title.
+  const fromPrompt = parseOperationName(text) ?? parseOperationName(raw);
   const nameLine =
-    raw
+    fromPrompt ??
+    (raw
       .split("\n")
       .map((l) => l.trim())
-      .find((l) => l && /:/.test(l) && /→|->|=>/.test(l)) ?? allSteps.join(" · ");
-  const name = nameLine.slice(0, 56) || "Custom operation";
+      .find(
+        (l) =>
+          l &&
+          /:/.test(l) &&
+          /→|->|=>/.test(l) &&
+          !/^(operation|model|title|op)\s*:/i.test(l),
+      ) ??
+      allSteps.join(" · "));
+  const name = String(nameLine).slice(0, 56) || "Custom operation";
 
   try {
     const functions = parseFunctionsAndBranch(raw);

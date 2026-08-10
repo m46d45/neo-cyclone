@@ -48,7 +48,7 @@ Load: tri 1.5, 2, 3
 Haul: normal 8, 1.5
 Dump: const 1.2
 Return: lognormal 7, 1.5
-`,
+\nOperation: Earthmoving`,
   },
   {
     id: "asphalt-paving",
@@ -85,7 +85,7 @@ DumpToPaver: tri 0.8, 1.2, 1.8
 RefillAsphalt: tri 8, 12, 18
 Breakdown: tri 20, 35, 55
 Pave: normal 3.5, 0.6
-`,
+\nOperation: Asphalt Paving`,
   },
   {
     id: "excavator-load",
@@ -112,7 +112,7 @@ Excavator: 150
 Durations:
 Scoop: tri 0.4, 0.7, 1.2
 Haul&Return: normal 10, 1.5
-`,
+\nOperation: Loading Dump Truck`,
   },
   {
     id: "tower-crane",
@@ -156,7 +156,7 @@ LiftAtB: tri 3, 5, 8
 SetFormsB: normal 10, 1.5
 LiftAtC: tri 2, 3, 5
 PlaceConcreteC: normal 8, 1.2
-`,
+\nOperation: Tower Crane`,
   },
   {
     id: "masonry",
@@ -205,7 +205,7 @@ Durations:
 ReceiveBrick: tri 2, 3, 5
 ReceiveMortar: tri 3, 4, 6
 Lay: tri 4, 6, 9
-`,
+\nOperation: Masonry`,
   },
   {
     id: "precast-forms",
@@ -273,7 +273,7 @@ SteamCure: const 90
 UnloadTunnel: tri 6, 10, 15
 MoveToStorage: tri 8, 12, 18
 CleanForm: tri 10, 15, 22
-`,
+\nOperation: Precast Plant`,
   },
 
 ];

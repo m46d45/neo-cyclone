@@ -48,6 +48,12 @@ export const GENERAL_TEMPLATE = `# =============================================
 # ============================================================
 
 # ------------------------------------------------------------
+0. OPERATION name (optional, for reports / Excel filename)
+#    Operation: Earthmoving
+# ------------------------------------------------------------
+Operation: <short name of the construction operation>
+
+# ------------------------------------------------------------
 # 1. NETWORK — resource cycles (required)
 #    Home QUEUE is created automatically for each resource.
 #    Inline GEN/CON in the chain (preferred):
