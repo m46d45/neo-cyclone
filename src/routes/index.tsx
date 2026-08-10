@@ -1,7 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BookOpen } from "lucide-react";
-import { useCurrentUserState } from "@/lib/auth/use-current-user";
-import { SignedIn, SignedOut, UserButton } from "@/lib/auth/gates";
 import { AIAssist } from "@/components/cyclone/AIAssist";
 import { DiagramCanvas } from "@/components/cyclone/DiagramCanvas";
 import { ModelSimulateBar } from "@/components/cyclone/ModelSimulateBar";
@@ -14,8 +12,6 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/")({ component: StudioPage });
 
 function StudioPage() {
-  const { isPending } = useCurrentUserState();
-
   return (
     <div className="halpin-shell min-h-dvh overflow-x-hidden text-foreground">
       <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur-md pt-[var(--grok-banner-h,0px)]">
@@ -36,20 +32,6 @@ function StudioPage() {
                 Manual
               </Link>
             </Button>
-            {isPending ? (
-              <div className="h-8 w-8 animate-pulse rounded-full bg-muted" />
-            ) : (
-              <>
-                <SignedOut>
-                  <Button asChild variant="outline" size="sm">
-                    <Link to="/login">Sign in</Link>
-                  </Button>
-                </SignedOut>
-                <SignedIn>
-                  <UserButton />
-                </SignedIn>
-              </>
-            )}
           </div>
         </div>
         <div className="gold-rule" />
