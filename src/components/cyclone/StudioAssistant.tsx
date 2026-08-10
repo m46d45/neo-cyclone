@@ -166,23 +166,34 @@ export function StudioAssistant() {
         </p>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="flex max-h-[320px] min-h-[180px] flex-col gap-2 overflow-y-auto rounded-[var(--radius-md)] border border-border bg-muted/20 p-3">
+        <div className="flex max-h-[320px] min-h-[180px] flex-col gap-2.5 overflow-y-auto rounded-[var(--radius-md)] border border-border bg-muted/40 p-3">
           {messages.map((m) => (
             <div
               key={m.id}
               className={
                 m.role === "user"
-                  ? "ml-8 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-foreground"
+                  ? "ml-10 rounded-2xl rounded-br-md border border-primary/50 bg-primary px-3 py-2 text-xs text-primary-foreground shadow-sm"
                   : m.role === "system"
-                    ? "rounded-lg border border-border bg-background/80 px-3 py-2 text-[11px] text-muted-foreground"
-                    : "mr-4 rounded-lg border border-border bg-card px-3 py-2 text-xs text-foreground"
+                    ? "rounded-lg border border-dashed border-border bg-background/90 px-3 py-2 text-[11px] text-muted-foreground"
+                    : "mr-10 rounded-2xl rounded-bl-md border border-border bg-background px-3 py-2 text-xs text-foreground shadow-sm"
               }
             >
+              {m.role !== "system" ? (
+                <p
+                  className={
+                    m.role === "user"
+                      ? "mb-1 text-[10px] font-semibold uppercase tracking-wide text-primary-foreground/85"
+                      : "mb-1 text-[10px] font-semibold uppercase tracking-wide text-primary"
+                  }
+                >
+                  {m.role === "user" ? "You" : "Assistant"}
+                </p>
+              ) : null}
               <p className="whitespace-pre-wrap leading-relaxed">{m.text}</p>
               {m.proposedPrompt ? (
                 <div className="mt-2 space-y-2 border-t border-border pt-2">
                   <p className="text-[10px] font-medium text-primary">Proposed Format Prompt</p>
-                  <pre className="max-h-40 overflow-auto rounded border border-border bg-background p-2 font-mono text-[10px] leading-snug">
+                  <pre className="max-h-40 overflow-auto rounded border border-border bg-muted/40 p-2 font-mono text-[10px] leading-snug text-foreground">
                     {m.proposedPrompt}
                   </pre>
                   <div className="flex flex-wrap gap-2">
