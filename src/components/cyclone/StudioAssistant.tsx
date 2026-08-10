@@ -172,18 +172,27 @@ export function StudioAssistant() {
               key={m.id}
               className={
                 m.role === "user"
-                  ? "ml-10 rounded-2xl rounded-br-md border border-primary/50 bg-primary px-3 py-2 text-xs text-primary-foreground shadow-sm"
+                  ? "flex w-full justify-end"
                   : m.role === "system"
-                    ? "rounded-lg border border-dashed border-border bg-background/90 px-3 py-2 text-[11px] text-muted-foreground"
-                    : "mr-10 rounded-2xl rounded-bl-md border border-border bg-background px-3 py-2 text-xs text-foreground shadow-sm"
+                    ? "flex w-full justify-center"
+                    : "flex w-full justify-start"
+              }
+            >
+            <div
+              className={
+                m.role === "user"
+                  ? "max-w-[min(78%,22rem)] rounded-2xl rounded-br-sm border border-primary/50 bg-primary px-2.5 py-1.5 text-xs text-primary-foreground shadow-sm"
+                  : m.role === "system"
+                    ? "w-full max-w-full rounded-lg border border-dashed border-border bg-background/90 px-3 py-2 text-[11px] text-muted-foreground"
+                    : "max-w-[min(85%,28rem)] rounded-2xl rounded-bl-sm border border-border bg-background px-2.5 py-1.5 text-xs text-foreground shadow-sm"
               }
             >
               {m.role !== "system" ? (
                 <p
                   className={
                     m.role === "user"
-                      ? "mb-1 text-[10px] font-semibold uppercase tracking-wide text-primary-foreground/85"
-                      : "mb-1 text-[10px] font-semibold uppercase tracking-wide text-primary"
+                      ? "mb-0.5 text-right text-[9px] font-semibold uppercase tracking-wide text-primary-foreground/80"
+                      : "mb-0.5 text-[9px] font-semibold uppercase tracking-wide text-primary"
                   }
                 >
                   {m.role === "user" ? "You" : "Assistant"}
@@ -220,6 +229,7 @@ export function StudioAssistant() {
                   </div>
                 </div>
               ) : null}
+            </div>
             </div>
           ))}
           {loading ? (
