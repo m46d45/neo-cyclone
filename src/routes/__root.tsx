@@ -53,7 +53,24 @@ function RootComponent() {
         <AuthProvider>
           <CreatedWithGrokBanner />
           <Outlet />
-          <Toaster richColors position="top-center" />
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              classNames: {
+                toast:
+                  "border border-[#e0d8c8] bg-[#faf8f4] text-[#0b0b0a] shadow-md",
+                title: "text-[#0b0b0a] font-medium",
+                description: "text-[#5c564a]",
+                success:
+                  "!border-[#b89b5e]/70 !bg-[#f5efe3] !text-[#0b0b0a] [&_[data-icon]]:!text-[#b89b5e]",
+                error:
+                  "!border-[#b54a3c]/50 !bg-[#faf6f4] !text-[#0b0b0a] [&_[data-icon]]:!text-[#b54a3c]",
+                info: "!border-[#e0d8c8] !bg-[#faf8f4] !text-[#0b0b0a] [&_[data-icon]]:!text-[#b89b5e]",
+                warning:
+                  "!border-[#b89b5e]/50 !bg-[#f7f0e0] !text-[#0b0b0a] [&_[data-icon]]:!text-[#8b7355]",
+              },
+            }}
+          />
         </AuthProvider>
         <Scripts />
       </body>
