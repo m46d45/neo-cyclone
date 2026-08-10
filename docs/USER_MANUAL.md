@@ -1,4 +1,4 @@
-# Neo-CYCLONE — User Manual
+# Neo-CYCLONE — User Manual (v1.6.4)
 
 | | |
 |--|--|
@@ -43,7 +43,7 @@ Halpin’s foundation is not obsolete in the age of AI — it is the **grammar**
 | **Product** | AI-Assisted Construction Operation Simulation |
 | **Dedication line** | AI-agent of Daniel W. Halpin's CYCLONE |
 | **Practice** | Prompt-first → **Draw Model** → check network → **Simulate** |
-| **AI Assistant (Ch. 7)** | Studio-bound co-pilot: explain results, bottleneck, propose prompt edits (Apply required) | Autonomous agent that runs simulations without you |
+| **AI Assistant (Ch. 7)** | Context-bound co-pilot: explain results, bottleneck, propose prompt edits (Apply required) | Autonomous agent that runs simulations without you |
 
 **In practice:** (1) structured prompt (2) **Draw Model** (3) inspect cycles (4) **Simulate** (5) optional AI Assistant under Results.
 
@@ -52,7 +52,7 @@ Halpin’s foundation is not obsolete in the age of AI — it is the **grammar**
 | Area | Content |
 |------|--------|
 | **Left** | Prompt · Example · Draw Model · Format Prompt |
-| **Right** | CYCLONE Model · network logic · run parameters |
+| **Right** | CYCLONE Model · Simulate (cycles, seed) |
 | **Below** | Results: Simulation · Sensitivity Analysis · **AI Assistant** |
 
 ---
@@ -100,10 +100,20 @@ Seed is **not** an operational parameter (not fleet size or cost). Prefer the de
 
 ## Chapter 4 — Format Prompt
 
-Block order: **Network → Durations → Priority → Branch → Cost → Sensitivity** (last).  
+Block order: **Operation (optional) → Network → Durations → Priority → Branch → Cost → Sensitivity** (last).  
 `#` / `//` = notes only. Time in **minutes**. Cost in **USD / resource-hour**.
 
 See the Format Prompt panel in the studio for the live template. Sequence arrows: `→` · `->` · `-->` · `=>`. Multi-demand: `A | B | C` + Priority. Inline GEN/CON preferred on the resource chain.
+
+### Operation name (after `#` notes)
+
+First **data** line (after optional `#` / `//` notes):
+
+```text
+Operation: Earthmoving
+```
+
+Aliases: `Model:` · `Title:` · `Op:`. Sets the model title and Excel report filename. All six Examples place this after their `#` comment block.
 
 ### Duration distributions (minutes)
 
@@ -212,9 +222,9 @@ Use questions like these so answers stay useful and on-topic.
 - What is the unit cost (USD)?
 - Show resource idleness / busy percentages.
 
-**Prompt edits (propose → Apply)**
-- Set trucks to 8.
-- Increase loaders to 2.
+**Prompt edits (propose → Apply)** — use resource names from *your* model
+- Set the first fleet resource count to 8.
+- Increase a supporting resource count to 2.
 - Change a task duration distribution.
 - Adjust Cost or Sensitivity ranges.
 
@@ -320,4 +330,4 @@ Neo-CYCLONE does **not** replace those systems. It is **AI-Assisted Construction
 
 **Quick path:** 1. Example or Format Prompt → 2. Draw Model → 3. Simulate → 4. Sensitivity (if planned) → 5. AI Assistant (optional) → 6. Export Excel / PNG.
 
-AI-Assisted Construction Operation Simulation · AI-agent of Daniel W. Halpin's CYCLONE · Manual v1.6.3
+AI-Assisted Construction Operation Simulation · AI-agent of Daniel W. Halpin's CYCLONE · Manual v1.6.4

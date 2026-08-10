@@ -1,25 +1,28 @@
-# Neo-CYCLONE DSL v0.1 (internal)
+# Neo-CYCLONE internal model format (v0.1)
 
-**Status:** internal engine format (not a separate product UI)  
-**UI product decision:** **single interface = AI agent only**  
-Diagram + Results support the agent; users do not edit Syntax / Network / multi-surface studios.
+**Status:** internal only — **not** a user-facing product surface.  
+**Product UI (2026):** single studio — **Format Prompt → Draw Model → Simulate → Results**, plus **AI Assistant**.  
+There is no separate Syntax editor, Network builder studio, or “Neo-CYCLONE Go” command.
 
-The agent drafts models → diagram updates for verification → **Neo-CYCLONE Go** runs the engine.
+## Role
 
-Engine still uses this DSL (YAML/JSON) under the hood for parse/validate/serialize.
+The browser engine represents a CYCLONE network as a validated object graph (and optional YAML/JSON for tests). Users never hand-edit this format; the Format Prompt builder and diagram are the teaching surface.
 
 | Field | Rule |
 |-------|------|
 | `dsl` | `"neo-cyclone/v0.1"` |
-| Nodes | QUEUE, COMBI, NORMAL, COUNTER, CONSOLIDATE |
-| Links | Order defines COMBI multi-resource mapping |
-| Run | seed, max_time, max_cycles |
+| Nodes | QUEUE, COMBI, NORMAL, COUNTER, CONSOLIDATE (GEN as QUEUE attribute) |
+| Links | Forward (solid black) / return (dashed gold); optional branch `p` |
+| Run | `seed` (default 12345), `max_cycles` (default 100, cap 500), time unit minutes |
 
-See `examples/earthmoving.ncyc.yaml` for a full sample.
+Sample YAML (developers/tests): `examples/earthmoving.ncyc.yaml` if present.
 
-### Agent product rules
+## Product rules (current)
 
-1. Phases may be skipped  
-2. Bilingual ID / EN  
-3. Run: **Neo-CYCLONE Go**  
-4. Output: standard CYCLONE stats only  
+1. One UI path: Format Prompt + CYCLONE Model + Results (Simulation / Sensitivity).  
+2. **English** product language (teaching tribute to Halpin).  
+3. Run control: **Simulate** (not a special “Go” keyword).  
+4. Reports: MicroCYCLONE-style process, element, cost, productivity, idleness; optional sensitivity.  
+5. Optional first data line after `#` notes: `Operation: <name>` (reports / Excel filename).
+
+See `docs/USER_MANUAL.md` and `docs/NOTATION_STANDARD.md` for user-facing rules.

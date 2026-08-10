@@ -6,6 +6,7 @@ import {
   GENERAL_TEMPLATE,
   PRODUCT_DEDICATION,
   PRODUCT_TAGLINE,
+  PRODUCT_VERSION,
 } from "@/lib/cyclone/prompt-template";
 
 export const Route = createFileRoute("/manual")({
@@ -21,7 +22,7 @@ function ManualPage() {
             <BookOpen className="size-4 text-primary" />
             <h1 className="font-display text-base font-semibold">Neo-CYCLONE Manual</h1>
             <Badge variant="secondary" className="border-primary/25 bg-primary/10 text-primary">
-              v1.6.3
+              v{PRODUCT_VERSION}
             </Badge>
           </div>
           <Button asChild variant="outline" size="sm">
@@ -69,7 +70,7 @@ function ManualPage() {
           <h3 className="font-display mt-6 text-base font-semibold text-foreground">1.4 Studio layout</h3>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-xs">
             <li><strong className="text-foreground">Left:</strong> Prompt · Example · Draw Model · Format Prompt</li>
-            <li><strong className="text-foreground">Right:</strong> CYCLONE Model · network logic · run parameters</li>
+            <li><strong className="text-foreground">Right:</strong> CYCLONE Model · Simulate bar · run parameters</li>
             <li><strong className="text-foreground">Below:</strong> Results — Simulation · Sensitivity Analysis · AI Assistant</li>
           </ul>
         </section>
@@ -129,8 +130,13 @@ function ManualPage() {
           <h2 className="font-display mt-1 text-xl font-semibold text-foreground">Chapter 4 — Format Prompt</h2>
           <div className="gold-rule my-3 max-w-xs" />
           <p className="mb-2 text-xs">
-            Block order: <strong className="text-foreground">Network → Durations → Priority → Branch → Cost → Sensitivity</strong>.
+            Block order: <strong className="text-foreground">Operation (optional) → Network → Durations → Priority → Branch → Cost → Sensitivity</strong>.
             Comments <code className="text-foreground">#</code>/<code className="text-foreground">//</code> ignored. Time: minutes. Cost: USD/h.
+          </p>
+          <p className="mb-2 text-xs">
+            After <code className="text-foreground">#</code> notes, first data line:{" "}
+            <code className="text-foreground">Operation: Earthmoving</code> (aliases Model / Title / Op) — model title and Excel filename.
+            Examples place it after their comment block.
           </p>
           <pre className="overflow-x-auto rounded-[var(--radius-md)] border border-primary/20 bg-card p-3 font-mono text-[11px] text-foreground">{GENERAL_TEMPLATE}</pre>
           <ul className="mt-3 list-disc space-y-1 pl-5 text-xs">
@@ -232,7 +238,8 @@ function ManualPage() {
           </ul>
           <p className="mt-3 text-xs font-medium text-foreground">Edits & teaching</p>
           <ul className="mt-1 list-disc space-y-1 pl-5 text-xs">
-            <li>Set trucks to 8. / Increase loaders to 2.</li>
+            <li>Change a fleet count in the Format Prompt (use names from your model).</li>
+            <li>What is the unit cost?</li>
             <li>What is home-QUEUE idleness and why is it waste?</li>
             <li>Why must every resource have a queue in a CYCLONE cycle?</li>
           </ul>
@@ -325,7 +332,7 @@ function ManualPage() {
         </section>
 
         <p className="text-center text-xs text-muted-foreground">
-          {PRODUCT_TAGLINE}<span className="mx-1.5">·</span>{PRODUCT_DEDICATION} · Manual v1.6.3
+          {PRODUCT_TAGLINE}<span className="mx-1.5">·</span>{PRODUCT_DEDICATION} · Manual v{PRODUCT_VERSION}
         </p>
       </main>
     </div>
