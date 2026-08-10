@@ -2,12 +2,13 @@
 
 | | |
 |--|--|
-| **Version** | 1.6.3 |
+| **Version** | 1.6.4 |
 | **Language** | English |
 | **Product** | AI-Assisted Construction Operation Simulation |
 | **Dedication** | AI-agent of Daniel W. Halpin's CYCLONE |
 | **Live app** | [neo-cyclone.vercel.app](https://neo-cyclone.vercel.app/) |
 | **Notation reference** | [NOTATION_STANDARD.md](./NOTATION_STANDARD.md) |
+| **Internal engine notes** | [NEO_CYCLONE_DSL_v0.1.md](./NEO_CYCLONE_DSL_v0.1.md) (developers only) |
 
 ---
 
@@ -38,22 +39,25 @@ Halpin’s foundation is not obsolete in the age of AI — it is the **grammar**
 
 ### 1.3 Approach — is this an “AI agent”?
 
-| Term | Meaning in Neo-CYCLONE |
-|------|------------------------|
-| **Product** | AI-Assisted Construction Operation Simulation |
-| **Dedication line** | AI-agent of Daniel W. Halpin's CYCLONE |
-| **Practice** | Prompt-first → **Draw Model** → check network → **Simulate** |
-| **AI Assistant (Ch. 7)** | Context-bound co-pilot: explain results, bottleneck, propose prompt edits (Apply required) | Autonomous agent that runs simulations without you |
+| Term | What it means | What it is not |
+|------|----------------|----------------|
+| **Product** | AI-Assisted Construction Operation Simulation | A general chatbot or black-box “AI simulator” |
+| **Dedication line** | AI-agent of Daniel W. Halpin's CYCLONE | A claim that the engine is neural-net based |
+| **Practice** | Prompt-first → **Draw Model** → check network → **Simulate** | Auto-run without your confirmation |
+| **AI Assistant (Ch. 7)** | Context-bound co-pilot: explain results, bottleneck, propose prompt edits (**Apply** required) | An autonomous agent that runs simulations without you |
 
-**In practice:** (1) structured prompt (2) **Draw Model** (3) inspect cycles (4) **Simulate** (5) optional AI Assistant under Results.
+**In practice:** (1) structured Format Prompt (2) **Draw Model** (3) inspect cycles (4) **Simulate** (5) optional AI Assistant under Results.
 
 ### 1.4 Studio layout
 
 | Area | Content |
 |------|--------|
-| **Left** | Prompt · Example · Draw Model · Format Prompt |
-| **Right** | CYCLONE Model · Simulate (cycles, seed) |
-| **Below** | Results: Simulation · Sensitivity Analysis · **AI Assistant** |
+| **Header** | Logo · product name · tagline · **Manual** (no sign-in required for teaching use) |
+| **Left** | Example selector · Format Prompt · **Draw Model** · collapsible Format Prompt template |
+| **Right** | **CYCLONE Model** diagram · **Simulate** bar (max cycles, seed, dice) |
+| **Below both columns** | **Results** tabs: Simulation · Sensitivity Analysis |
+| **Below Results** | **AI Assistant** (context-bound; replies ≤20 lines) |
+| **Footer** | Product tagline · version · year |
 
 ---
 
@@ -61,11 +65,40 @@ Halpin’s foundation is not obsolete in the age of AI — it is the **grammar**
 
 ## Chapter 2 — How-to
 
-1. Example → e.g. Earthmoving. 2. **Draw Model**. 3. Check QUEUEs / tasks / counter. 4. Max cycles (default 100, max 500), seed 12345 (dice optional). 5. **Simulate**. 6. Optional Excel / PNG. 7. Optional **AI Assistant** questions.
+### 2.1 Quick path (first run)
 
-Write Format Prompt (Chapter 4) → Draw → fix → Simulate → optional Cost / Sensitivity → optional AI Assistant.
+1. **Example** → e.g. Earthmoving (or paste / write your own Format Prompt).  
+2. **Draw Model** — diagram appears only after this click (selecting an Example does **not** auto-draw).  
+3. Check QUEUEs / tasks / counter / forward (solid black) vs return (dashed gold) arcs.  
+4. Set **max cycles** (default **100**, hard max **500**) and **seed** (default **12345**; dice optional).  
+5. **Simulate**.  
+6. Optional: download **Excel** report / chart **PNG**.  
+7. Optional: **AI Assistant** questions under Results.
 
-**Iterate before Simulate:** home QUEUE per resource? Multi-resource meetings → COMBI? Exact `Counter after:` names? GEN/CON only when unit logic needs them?
+### 2.2 From blank prompt
+
+Write Format Prompt (Chapter 4) → **Draw Model** → refine until the network looks right → **Simulate** → optional Cost / Sensitivity → optional AI Assistant.
+
+### 2.3 Iterate before Simulate
+
+Check before you run:
+
+- Home **QUEUE** per resource?  
+- Multi-resource meetings → **COMBI**; single-resource work → **NORMAL**?  
+- Exact `Counter after:` task name(s)?  
+- **GEN** / **CON** only when unit logic needs them (not required in every model)?  
+- Branch `p` sums sensible (e.g. 0.85 + 0.15)?  
+- `Operation:` name set if you care about Excel filename / report title?
+
+### 2.4 Results & export
+
+- **Simulation** tab: Process Report, production by cycle, steady-state line, idleness, activity stats, Cost Report (if rates given), Excel / PNG.  
+- **Sensitivity Analysis** tab: only if the prompt defines `Sensitivity:`; charts + table (hide/show).  
+- Excel filename uses **`Operation:`** name when present (else a slug of the model name).
+
+### 2.5 AI Assistant (overview)
+
+Bound to the current Format Prompt, drawn network, and last results. English preferred. Replies capped short (≤20 lines). Prompt edits apply **only after Apply** → then **Draw Model** → **Simulate**. Details: Chapter 7.
 
 ### 2.6 Random seed (reproducibility)
 
@@ -87,12 +120,18 @@ Seed is **not** an operational parameter (not fleet size or cost). Prefer the de
 
 ## Chapter 3 — Six Examples
 
-1. **Earthmoving** — classic fleet; cost; steady state  
-2. **Asphalt Paving** — branch probability  
-3. **Loading Dump Truck** — GEN / CON  
-4. **Tower Crane** — multi-demand, Priority, multi-counter  
-5. **Masonry** — face stocks; sensitivity intro  
-6. **Precast Plant** — Halpin Ch.14-style + complex SA  
+Select from the Example dropdown. Each prompt starts with `#` notes, then **`Operation:`**, then the network.
+
+| # | Example | Teaching focus |
+|---|---------|----------------|
+| 1 | **Earthmoving** | Classic fleet; cost; steady state (no branch, no SA) |
+| 2 | **Asphalt Paving** | Branch probability (breakdown detour) |
+| 3 | **Loading Dump Truck** | Inline **GEN** / **CON** |
+| 4 | **Tower Crane** | Multi-demand `\|`, Priority, multi-counter |
+| 5 | **Masonry** | Face stocks; **sensitivity** intro (3 resources) |
+| 6 | **Precast Plant** | Halpin Ch.14-style line + complex SA |
+
+Examples only fill the prompt — you must click **Draw Model**.
 
 ---
 
@@ -115,6 +154,21 @@ Operation: Earthmoving
 
 Aliases: `Model:` · `Title:` · `Op:`. Sets the model title and Excel report filename. All six Examples place this after their `#` comment block.
 
+### Network (resource cycles)
+
+```text
+Trucks: Load → Haul → Dump → Return
+Loader: Load
+5 trucks, 1 loader
+
+Counter after: Dump
+production = 12 m3
+```
+
+- One line per resource cycle. Home QUEUE is created automatically.  
+- Multi-demand (shared resource): `Crane: LiftAtA | LiftAtB | LiftAtC`  
+- Inline GEN/CON: `Trucks: GEN 5 → Scoop → CON 5 TruckFull → Haul&Return`
+
 ### Duration distributions (minutes)
 
 | Kind | Parameters |
@@ -130,22 +184,68 @@ Aliases: `Model:` · `Title:` · `Op:`. Sets the model title and Excel report fi
 
 Aliases: `pert` = `beta-pert` = `betapert`. `beta` with three numbers is treated as PERT.
 
+### Priority, Branch, Cost, Sensitivity
+
+```text
+Priority:
+LiftAtA: 1
+LiftAtB: 2
+
+Branch:
+After DumpToPaver: RefillAsphalt p=0.85, Breakdown p=0.15
+
+Cost:
+Trucks: 85
+Loader: 120
+
+Sensitivity:
+Trucks: 2..10
+Loader: 1..2
+```
+
+- **Priority:** lower number = higher priority (MicroCYCLONE tradition).  
+- **Branch:** probabilistic successors after a task.  
+- **Cost:** USD per resource-hour.  
+- **Sensitivity:** last block; pairwise charts when ≥2 resources vary (cap: 5 resources, ~150 combos).
+
 ## Chapter 5 — Modeling rules
 
-1. Every resource has a home QUEUE.  
-2. ≥2 resources meet → COMBI; one resource → NORMAL.  
-3. Return arcs (dashed gold) only to home QUEUE; forward = solid black.  
-4. GEN ▽ / CON △ optional and independent.  
-5. `Counter after:` exact task name(s).  
-6. Grid layout: ordered tasks, queues; counter near the end.
+1. Every resource has a **home QUEUE** (idleness / waste is measured there).  
+2. **≥2 resources meet** at a work step → **COMBI**; **one resource** only → **NORMAL**.  
+3. **Forward** arcs = solid **black**; **return** to home QUEUE = dashed **gold** (Neo-CYCLONE convention for teaching clarity).  
+4. **GEN** (inverted triangle) / **CON** (triangle) optional and independent — only when unit logic needs them.  
+5. `Counter after:` exact task name(s); one production unit per count (multiple counters allowed).  
+6. Layout: ordered tasks on a grid, queues beside cycles; counter near the end.  
+7. Do **not** hand-draw QUEUE or arrows in the prompt — the builder creates them from cycles.
+
+Full graphic notation: `docs/NOTATION_STANDARD.md`.
 
 ## Chapter 6 — Results
 
-Production by cycle · steady state (5%, ≥10 cycles) · idleness · cost · sensitivity · Excel/PNG.
+### 6.1 Simulation tab
+
+- **Process Report** — run length, cycles, units per event, total production, first unit time, average time between units  
+- **Production by cycle** — units/hour chart (starts at cycle 0); **steady state** band (5% band, window ≥ **10** cycles) as old-gold dashed line  
+- **Resource idleness** — idle % and busy % labels  
+- **Activity / element** stats (MicroCYCLONE-style)  
+- **Cost Report** — when Cost rates exist: per resource, total, unit cost (USD)  
+- Branch events (if any) may mark cycles on the productivity chart  
+
+### 6.2 Sensitivity Analysis tab
+
+Shown when the prompt includes `Sensitivity:`. Pairwise comparison charts (productivity & unit cost), best markers, idleness tables (hide/show detail table).
+
+### 6.3 Export
+
+- **Report Excel** (.xls) — multi-sheet; name from `Operation:`  
+- **Chart PNG** — download control on each chart frame  
+- Diagram PNG — from the model canvas tools  
+
+---
 
 ## Chapter 7 — AI Assistant
 
-The studio includes an **AI Assistant** panel (below Results after you work with a model). It is an **educational co-pilot**, not an autonomous simulator.
+The studio includes an **AI Assistant** panel (below Results). It is an **educational co-pilot**, not an autonomous simulator.
 
 ### 7.1 Purpose
 
@@ -169,6 +269,15 @@ The assistant does **not** replace the deterministic CYCLONE engine. Simulation 
 
 **Context bound to the studio:** the browser builds a **compact CONTEXT string** (Format Prompt excerpt, network summary, last-run productivity / idleness / cost, sensitivity summary) and sends only that snapshot to the server—not the full simulation object graph and not the whole internet.
 
+**Chat UI:** user bubbles (gold, right) vs assistant bubbles (white, left); guidance text lives in the **input placeholder**.
+
+**Quick chips (general — work for any operation):**
+
+- How many resources?  
+- Which resource is the bottleneck?  
+- What was productivity?  
+- What is the unit cost?  
+
 **Rate limits (protects xAI cost and host stability):**
 
 | Endpoint | Limit | Notes |
@@ -178,14 +287,16 @@ The assistant does **not** replace the deterministic CYCLONE engine. Simulation 
 
 When a limit is hit, the Assistant returns a clear **rate-limited** message (and a short toast in the UI). Limits are enforced in-memory per serverless isolate (best-effort on multi-instance hosts). Classroom use at normal pace is fine; automated spam is not.
 
+**Reply length:** answers stay short (**≤20 lines**).
+
 ### 7.3 What it can do
 
-- Explain the current model’s resource cycles, COMBI vs NORMAL, counter placement, GEN/CON, branch probability
-- Report fleet counts from the Format Prompt (e.g. `5 trucks, 1 loader`)
-- Interpret **last-run** productivity, steady state, unit cost, and **resource idleness / busy**
-- Identify a likely **bottleneck** (high idle vs high busy) from simulation stats
-- **Propose** Format Prompt edits (fleet size, durations, cost, sensitivity ranges)—only applied after **Apply prompt**
-- Answer teaching questions about CYCLONE concepts in the context of the open model
+- Explain the current model’s resource cycles, COMBI vs NORMAL, counter placement, GEN/CON, branch probability  
+- Report fleet counts from the Format Prompt  
+- Interpret **last-run** productivity, steady state, unit cost, and **resource idleness / busy**  
+- Identify a likely **bottleneck** (high idle vs high busy) from simulation stats  
+- **Propose** Format Prompt edits (fleet size, durations, cost, sensitivity ranges)—only applied after **Apply prompt**  
+- Answer teaching questions about CYCLONE concepts in the context of the open model  
 
 ### 7.4 What it cannot / must not do
 
@@ -204,37 +315,37 @@ When a limit is hit, the Assistant returns a clear **rate-limited** message (and
 Use questions like these so answers stay useful and on-topic.
 
 **Model understanding**
-- Explain this model’s resource cycles.
-- Which tasks are COMBI and which are NORMAL?
-- Where is the production counter, and what does one cycle mean?
-- How do GEN and CON work in this model?
-- Is there a branch / probability path? What does it represent?
+- Explain this model’s resource cycles.  
+- Which tasks are COMBI and which are NORMAL?  
+- Where is the production counter, and what does one cycle mean?  
+- How do GEN and CON work in this model?  
+- Is there a branch / probability path? What does it represent?  
 
 **Fleet & resources**
-- How many of each resource are in the Format Prompt?
-- Which resource has the highest idleness (waste)?
-- Which resource is the busiest?
-- What is the likely bottleneck resource?
+- How many of each resource are in the Format Prompt?  
+- Which resource has the highest idleness (waste)?  
+- Which resource is the busiest?  
+- What is the likely bottleneck resource?  
 
 **Simulation results**
-- What was last-run productivity (units/hour)?
-- Has the system reached steady state?
-- What is the unit cost (USD)?
-- Show resource idleness / busy percentages.
+- What was last-run productivity (units/hour)?  
+- Has the system reached steady state?  
+- What is the unit cost (USD)?  
+- Show resource idleness / busy percentages.  
 
 **Prompt edits (propose → Apply)** — use resource names from *your* model
-- Set the first fleet resource count to 8.
-- Increase a supporting resource count to 2.
-- Change a task duration distribution.
-- Adjust Cost or Sensitivity ranges.
+- Set the first fleet resource count to 8.  
+- Increase a supporting resource count to 2.  
+- Change a task duration distribution.  
+- Adjust Cost or Sensitivity ranges.  
 
 **Sensitivity (after SA has been run)**
-- Which fleet combination had the best unit cost?
-- Which combination had the highest productivity?
+- Which fleet combination had the best unit cost?  
+- Which combination had the highest productivity?  
 
 **Teaching**
-- What is home-QUEUE idleness and why is it waste?
-- Why must every resource have a queue in a CYCLONE cycle?
+- What is home-QUEUE idleness and why is it waste?  
+- Why must every resource have a queue in a CYCLONE cycle?  
 
 ### 7.6 Boundary (one line)
 
@@ -242,11 +353,11 @@ Use questions like these so answers stay useful and on-topic.
 
 ### 7.7 Typical workflow with the Assistant
 
-1. Select Example or write Format Prompt → **Draw Model** → **Simulate**.
-2. Open **AI Assistant** under Results.
-3. Ask about productivity, idleness, or bottleneck.
-4. If it proposes a new prompt → **Apply prompt** → **Draw Model** → **Simulate** again.
-5. Optional: Sensitivity tab for fleet comparisons.
+1. Select Example or write Format Prompt → **Draw Model** → **Simulate**.  
+2. Open **AI Assistant** under Results.  
+3. Ask about productivity, idleness, or bottleneck.  
+4. If it proposes a new prompt → **Apply prompt** → **Draw Model** → **Simulate** again.  
+5. Optional: Sensitivity tab for fleet comparisons.  
 
 ---
 
@@ -264,9 +375,9 @@ Use questions like these so answers stay useful and on-topic.
 
 ### 8.2 Sensitivity performance
 
-- Sensitivity batches run in a **Web Worker** when the browser supports it, so the studio UI stays responsive during many combination runs.
-- If Workers are unavailable or fail, the same engine falls back to the **main thread** (same numerical results; UI may pause briefly on large SA).
-- Base **Simulate** (single trajectory) always runs on the main thread—it is fast enough for teaching cycles.
+- Sensitivity batches run in a **Web Worker** when the browser supports it, so the studio UI stays responsive during many combination runs.  
+- If Workers are unavailable or fail, the same engine falls back to the **main thread** (same numerical results; UI may pause briefly on large SA).  
+- Base **Simulate** (single trajectory) always runs on the main thread—it is fast enough for teaching cycles.  
 
 ### 8.3 AI Assistant & API limits
 
@@ -275,6 +386,7 @@ Use questions like these so answers stay useful and on-topic.
 | Assistant requests | **30 / hour / IP** |
 | AI DSL draft requests | **20 / hour / IP** |
 | Payload to server | **Compact CONTEXT** only (not full `SimResult` / model graph) |
+| Reply length | **≤20 lines** |
 | Full free-form chat | Requires `XAI_API_KEY` on the host |
 | Without API key | **Local mode** (English-first intent helper) still works |
 
@@ -282,9 +394,10 @@ These limits do **not** change CYCLONE modeling rules, production metrics, or Ha
 
 ### 8.4 Deploy
 
-- Source of truth: **GitHub `main`** → **Vercel** auto-deploy.
-- Optional env: `XAI_API_KEY` for AI mode; auth/database vars only if you enable sign-in.
-- Live app: [neo-cyclone.vercel.app](https://neo-cyclone.vercel.app/)
+- Source of truth: **GitHub `main`** → **Vercel** auto-deploy.  
+- Optional env: `XAI_API_KEY` for AI mode; auth/database vars only if you later enable accounts.  
+- Teaching use does **not** require sign-in.  
+- Live app: [neo-cyclone.vercel.app](https://neo-cyclone.vercel.app/)  
 
 ---
 
@@ -294,33 +407,33 @@ Selected literature on **CYCLONE**, **MicroCYCLONE**, and applications by **Dani
 
 ### 9.1 Foundations
 
-1. **Halpin, D. W.** (1973). Ph.D. dissertation, University of Illinois at Urbana–Champaign.
-2. **Halpin, D. W.** (1977). “CYCLONE: Method for Modeling of Job Site Processes.” *J. Constr. Div.*, ASCE, 103(3), 489–499.
-3. **Halpin, D. W., & Riggs, L. S.** (1992). *Planning and Analysis of Construction Operations*. Wiley.
+1. **Halpin, D. W.** (1973). Ph.D. dissertation, University of Illinois at Urbana–Champaign.  
+2. **Halpin, D. W.** (1977). “CYCLONE: Method for Modeling of Job Site Processes.” *J. Constr. Div.*, ASCE, 103(3), 489–499.  
+3. **Halpin, D. W., & Riggs, L. S.** (1992). *Planning and Analysis of Construction Operations*. Wiley.  
 
 ### 9.2 MicroCYCLONE
 
-4. **Lluch, J., & Halpin, D. W.** (1982). *J. Constr. Div.*, ASCE, 108(1), 129–145.
-5. **Halpin, D. W.** (1990–1992). MicroCYCLONE User / System manuals. Purdue / Learning Systems.
+4. **Lluch, J., & Halpin, D. W.** (1982). *J. Constr. Div.*, ASCE, 108(1), 129–145.  
+5. **Halpin, D. W.** (1990–1992). MicroCYCLONE User / System manuals. Purdue / Learning Systems.  
 
 ### 9.3 DISCO
 
-6. **Huang, R.-Y., & Halpin, D. W.** (1993–1995). DISCO papers (ISARC, *Microcomputers in Civil Engineering*, *J. Constr. Eng. Manage.*).
-7. **Huang, R.-Y.** (1994). Ph.D., Purdue (advisor: Halpin).
+6. **Huang, R.-Y., & Halpin, D. W.** (1993–1995). DISCO papers (ISARC, *Microcomputers in Civil Engineering*, *J. Constr. Eng. Manage.*).  
+7. **Huang, R.-Y.** (1994). Ph.D., Purdue (advisor: Halpin).  
 
 ### 9.4 PROSIDYC · COST · WebCYCLONE
 
-8. **Halpin, D. W., & Martinez, L.-H.** (1999). PROSIDYC. *WSC*.
-9. **Cheng, T.-M., et al.** (2000). COST. *17th ISARC*.
-10. **Halpin, D. W., Jen, H., & Kim, J.** (2003). WebCYCLONE. *WSC*.
+8. **Halpin, D. W., & Martinez, L.-H.** (1999). PROSIDYC. *WSC*.  
+9. **Cheng, T.-M., et al.** (2000). COST. *17th ISARC*.  
+10. **Halpin, D. W., Jen, H., & Kim, J.** (2003). WebCYCLONE. *WSC*.  
 
 ### 9.5 Purdue / Halpin-circle
 
-11. AbouRizk & Halpin; Hijazi; Lutz; Gonzalez-Quevedo; Abraham; Halpin et al. project-level CYCLONE; AbouRizk et al. (2011).
+11. AbouRizk & Halpin; Hijazi; Lutz; Gonzalez-Quevedo; Abraham; Halpin et al. project-level CYCLONE; AbouRizk et al. (2011).  
 
 ### 9.6 Related lineage
 
-12. UM-CYCLONE (Ioannou); STROBOSCOPE (Martinez); Simphony / Simphony.NET (AbouRizk et al.).
+12. UM-CYCLONE (Ioannou); STROBOSCOPE (Martinez); Simphony / Simphony.NET (AbouRizk et al.).  
 
 ### 9.7 Relation
 
