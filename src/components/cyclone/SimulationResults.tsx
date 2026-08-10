@@ -208,9 +208,6 @@ export function SimulationResults({
     <div className="space-y-4">
       <section className="space-y-2">
         <h3 className="font-display text-sm font-semibold text-foreground">Process Report</h3>
-        <p className="text-[11px] text-muted-foreground">
-          Classic MicroCYCLONE process summary (run length, cycles, production, units per hour).
-        </p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
           <Stat label="Run length" value={formatNum(result.simTime)} unit={unit} />
           <Stat

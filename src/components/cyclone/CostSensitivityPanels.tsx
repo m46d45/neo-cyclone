@@ -18,10 +18,6 @@ export function CostReportSection({ cost }: { cost: CostReport }) {
   return (
     <section className="space-y-2">
       <h3 className="font-display text-sm font-semibold text-foreground">Cost Report</h3>
-      <p className="text-[11px] text-muted-foreground">
-        MicroCYCLONE-style process costing (USD). Resource cost = count × (USD/h) × run hours;
-        unit cost = total cost ÷ production.
-      </p>
       <div className="overflow-x-auto rounded-[var(--radius-sm)] border border-border">
         <table className="w-full min-w-[480px] text-left text-xs">
           <thead className="border-b border-border bg-muted/40 text-[10px] uppercase text-muted-foreground">
