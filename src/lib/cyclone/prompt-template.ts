@@ -165,7 +165,7 @@ export const PRODUCT_TAGLINE = "AI-Assisted Construction Operation Simulation";
 export const PRODUCT_DEDICATION = "AI-agent of Daniel W. Halpin's CYCLONE";
 
 /** App release label for footer / citation. Keep in sync with manual badge. */
-export const PRODUCT_VERSION = "1.7.0";
+export const PRODUCT_VERSION = "1.7.1";
 
 /** Copyright / release year. */
 export const PRODUCT_YEAR = 2026;

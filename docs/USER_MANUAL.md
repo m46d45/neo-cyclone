@@ -2,7 +2,7 @@
 
 | | |
 |--|--|
-| **Version** | 1.7.0 |
+| **Version** | 1.7.1
 | **Product** | AI-Assisted Construction Operation Simulation |
 | **Live app** | [https://neo-cyclone.vercel.app/](https://neo-cyclone.vercel.app/) |
 | **Language** | English (product & teaching surface) |
@@ -13,27 +13,6 @@ This manual is written for people—not for scrapers. Read it with the [studio](
 
 ---
 
-## Start here — three minutes
-
-1. Open [neo-cyclone.vercel.app](https://neo-cyclone.vercel.app/).
-2. Choose **Example → 1. Earthmoving**.
-3. Click **Draw Model** (the diagram does not appear until you do).
-4. Leave **max cycles = 100** and **seed = 12345**.
-5. Click **Simulate**.
-6. Look at **units per hour by cycle** and **resource idleness**: who waits, who works?
-
-That loop—**prompt → draw → simulate → read waste and productivity**—is the whole studio. Everything below deepens it.
-
-### If something feels broken
-
-| What you see | Likely cause | What to do |
-|--------------|--------------|------------|
-| Empty diagram after choosing an Example | Examples only fill the prompt | Click **Draw Model** |
-| Nothing useful after Simulate | No trusted network yet | Draw first; fix until the story matches the picture |
-| Excel filename looks like resource spaghetti | Missing operation name | Add `Operation: MyName` after `#` notes |
-| Sensitivity tab empty | No ranges in the prompt | Add a `Sensitivity:` block (Examples 5–6) or skip SA |
-| Different numbers than a classmate | Different seed or cycle limit | Use seed **12345** and the same max cycles |
-| Page looks unstyled after a deploy | Browser cache | Hard refresh or open an incognito window |
 
 ---
 
@@ -700,4 +679,4 @@ Neo-CYCLONE does **not** claim to supersede research simulators. It is **AI-Assi
 
 ---
 
-*AI-Assisted Construction Operation Simulation · Manual v1.7.0*
+*AI-Assisted Construction Operation Simulation · Manual v1.7.1*

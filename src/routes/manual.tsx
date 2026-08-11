@@ -47,28 +47,6 @@ function ManualPage() {
           </p>
         </header>
 
-        <section className="scroll-mt-24">
-          <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">Start here — three minutes</h2>
-          <div className="gold-rule my-4 max-w-xs" />
-          <ol className="mt-3 list-decimal space-y-2.5 pl-5 text-[13px] leading-relaxed text-foreground/90"><li>Open <a className="text-primary hover:underline" href="https://neo-cyclone.vercel.app/" target="_blank" rel="noreferrer">neo-cyclone.vercel.app</a>.</li><li>Choose <strong className="text-foreground">Example → 1. Earthmoving</strong>.</li><li>Click <strong className="text-foreground">Draw Model</strong> (the diagram does not appear until you do).</li><li>Leave <strong className="text-foreground">max cycles = 100</strong> and <strong className="text-foreground">seed = 12345</strong>.</li><li>Click <strong className="text-foreground">Simulate</strong>.</li><li>Look at <strong className="text-foreground">units per hour by cycle</strong> and <strong className="text-foreground">resource idleness</strong>: who waits, who works?</li></ol>
-          <p className="mt-3 text-[14px] leading-[1.7] text-foreground/90">That loop—<strong className="text-foreground">prompt → draw → simulate → read waste and productivity</strong>—is the whole studio. Everything below deepens it.</p>
-          <h3 className="font-display mt-8 text-lg font-semibold text-foreground">If something feels broken</h3>
-          <div className="mt-4 overflow-x-auto rounded-[var(--radius-md)] border border-border shadow-sm">
-            <table className="w-full min-w-[520px] text-left text-[12px] leading-relaxed text-foreground/90">
-              <thead className="border-b border-border bg-muted/50 text-[10px] uppercase tracking-wide text-muted-foreground">
-                <tr><th className="px-2.5 py-2 font-medium">What you see</th><th className="px-2.5 py-2 font-medium">Likely cause</th><th className="px-2.5 py-2 font-medium">What to do</th></tr>
-              </thead>
-              <tbody className="bg-card/40">
-                                <tr className="border-b border-border/70"><td className="px-2.5 py-2 align-top">Empty diagram after choosing an Example</td><td className="px-2.5 py-2 align-top">Examples only fill the prompt</td><td className="px-2.5 py-2 align-top">Click <strong className="text-foreground">Draw Model</strong></td></tr>
-                <tr className="border-b border-border/70"><td className="px-2.5 py-2 align-top">Nothing useful after Simulate</td><td className="px-2.5 py-2 align-top">No trusted network yet</td><td className="px-2.5 py-2 align-top">Draw first; fix until the story matches the picture</td></tr>
-                <tr className="border-b border-border/70"><td className="px-2.5 py-2 align-top">Excel filename looks like resource spaghetti</td><td className="px-2.5 py-2 align-top">Missing operation name</td><td className="px-2.5 py-2 align-top">Add <code className="rounded bg-muted px-1 py-0.5 text-[12px] text-foreground">Operation: MyName</code> after <code className="rounded bg-muted px-1 py-0.5 text-[12px] text-foreground">#</code> notes</td></tr>
-                <tr className="border-b border-border/70"><td className="px-2.5 py-2 align-top">Sensitivity tab empty</td><td className="px-2.5 py-2 align-top">No ranges in the prompt</td><td className="px-2.5 py-2 align-top">Add a <code className="rounded bg-muted px-1 py-0.5 text-[12px] text-foreground">Sensitivity:</code> block (Examples 5–6) or skip SA</td></tr>
-                <tr className="border-b border-border/70"><td className="px-2.5 py-2 align-top">Different numbers than a classmate</td><td className="px-2.5 py-2 align-top">Different seed or cycle limit</td><td className="px-2.5 py-2 align-top">Use seed <strong className="text-foreground">12345</strong> and the same max cycles</td></tr>
-                <tr><td className="px-2.5 py-2 align-top">Page looks unstyled after a deploy</td><td className="px-2.5 py-2 align-top">Browser cache</td><td className="px-2.5 py-2 align-top">Hard refresh or open an incognito window</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
 
         <section className="scroll-mt-24">
           <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">Prologue — Why this studio exists</h2>
