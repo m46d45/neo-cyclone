@@ -110,10 +110,7 @@ function ManualPage() {
         </section>
 
         <section>
-          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">
-            Part I — Ideas before buttons
-          </p>
-          <h2 className="font-display mt-1 text-xl font-semibold text-foreground">
+<h2 className="font-display mt-1 text-xl font-semibold text-foreground">
             Chapter 1 — Operations, flow, and idleness
           </h2>
           <div className="gold-rule my-3 max-w-xs" />
@@ -227,10 +224,7 @@ function ManualPage() {
         </section>
 
         <section>
-          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">
-            Part II — Your first hour in the studio
-          </p>
-          <h2 className="font-display mt-1 text-xl font-semibold text-foreground">
+<h2 className="font-display mt-1 text-xl font-semibold text-foreground">
             Chapter 2 — Fifteen minutes that stick (Earthmoving)
           </h2>
           <div className="gold-rule my-3 max-w-xs" />
@@ -314,8 +308,7 @@ function ManualPage() {
         </section>
 
         <section>
-          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">Part III — Prompt & diagram</p>
-          <h2 className="font-display mt-1 text-xl font-semibold text-foreground">
+<h2 className="font-display mt-1 text-xl font-semibold text-foreground">
             Chapter 3 — How to talk so the studio can build a network
           </h2>
           <div className="gold-rule my-3 max-w-xs" />
@@ -323,11 +316,19 @@ function ManualPage() {
             You do not draw QUEUE circles by hand. You describe <strong>resource cycles</strong>; the builder creates
             queues, tasks, and arcs. Students learn the logic of cycles, not pixel-pushing.
           </p>
-          <h3 className="font-display mt-5 text-base font-semibold text-foreground">3.1–3.2 Comments and Operation</h3>
+          <h3 className="font-display mt-5 text-base font-semibold text-foreground">3.1 Comments vs data</h3>
           <p className="mt-2 text-xs leading-relaxed">
-            <code className="text-foreground">#</code> / <code className="text-foreground">//</code> = notes only.
+            Lines starting with <code className="text-foreground">#</code> or{" "}
+            <code className="text-foreground">//</code> are <strong className="text-foreground">notes only</strong>.
+            Use them for teaching context. The engine ignores them.
+          </p>
+          <h3 className="font-display mt-5 text-base font-semibold text-foreground">
+            3.2 Operation name (first data line after notes)
+          </h3>
+          <p className="mt-2 text-xs leading-relaxed">
             First data line after notes: <code className="text-foreground">Operation: Earthmoving</code> (aliases
-            Model / Title / Op) for report title and Excel filename. Examples place it after their comment block.
+            Model / Title / Op). Sets the model title and Excel report filename. All six Examples place this after
+            their <code className="text-foreground">#</code> comment block.
           </p>
           <h3 className="font-display mt-5 text-base font-semibold text-foreground">3.3 Network</h3>
           <p className="mt-2 text-xs leading-relaxed">
@@ -495,11 +496,10 @@ function ManualPage() {
         </section>
 
         
-        {/* Chapter 5 — full */}
+        {/* Chapter 5 — Simulation results */}
         <section>
-          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">Part IV — Reading results</p>
-          <h2 className="font-display mt-1 text-xl font-semibold text-foreground">
-            Chapter 5 — Simulation, cost, and sensitivity
+<h2 className="font-display mt-1 text-xl font-semibold text-foreground">
+            Chapter 5 — Simulation results
           </h2>
           <div className="gold-rule my-3 max-w-xs" />
 
@@ -563,8 +563,7 @@ function ManualPage() {
 
         {/* Chapter 6 */}
         <section>
-          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">Part V — Curriculum</p>
-          <h2 className="font-display mt-1 text-xl font-semibold text-foreground">
+<h2 className="font-display mt-1 text-xl font-semibold text-foreground">
             Chapter 6 — Six Examples as a learning path
           </h2>
           <div className="gold-rule my-3 max-w-xs" />
@@ -608,8 +607,7 @@ function ManualPage() {
 
         {/* Chapter 7 */}
         <section>
-          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">Part VI — AI Assistant</p>
-          <h2 className="font-display mt-1 text-xl font-semibold text-foreground">
+<h2 className="font-display mt-1 text-xl font-semibold text-foreground">
             Chapter 7 — What “AI-assisted” should mean here
           </h2>
           <div className="gold-rule my-3 max-w-xs" />
@@ -685,8 +683,7 @@ function ManualPage() {
 
         {/* Chapter 8 */}
         <section>
-          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">Part VII — Guardrails</p>
-          <h2 className="font-display mt-1 text-xl font-semibold text-foreground">
+<h2 className="font-display mt-1 text-xl font-semibold text-foreground">
             Chapter 8 — Limits, deploy, and integrity
           </h2>
           <div className="gold-rule my-3 max-w-xs" />
@@ -739,8 +736,7 @@ function ManualPage() {
 
         {/* Chapter 9 FAQ — detailed */}
         <section>
-          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">Part VIII — Stuck?</p>
-          <h2 className="font-display mt-1 text-xl font-semibold text-foreground">Chapter 9 — FAQ</h2>
+<h2 className="font-display mt-1 text-xl font-semibold text-foreground">Chapter 9 — FAQ</h2>
           <div className="gold-rule my-3 max-w-xs" />
 
           <h3 className="font-display text-sm font-semibold text-foreground">Drawing and the model diagram</h3>
@@ -851,8 +847,7 @@ function ManualPage() {
 
         {/* Chapter 10 */}
         <section>
-          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">Part IX — Teaching</p>
-          <h2 className="font-display mt-1 text-xl font-semibold text-foreground">
+<h2 className="font-display mt-1 text-xl font-semibold text-foreground">
             Chapter 10 — Notes for instructors
           </h2>
           <div className="gold-rule my-3 max-w-xs" />

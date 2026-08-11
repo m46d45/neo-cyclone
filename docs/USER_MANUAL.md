@@ -2,7 +2,7 @@
 
 | | |
 |--|--|
-| **Version** | 1.6.11 |
+| **Version** | 1.6.12 |
 | **Product** | AI-Assisted Construction Operation Simulation |
 | **Dedication** | AI-agent of Daniel W. Halpin's CYCLONE |
 | **Language** | English (product & teaching surface) |
@@ -49,13 +49,13 @@ That is the whole loop: **prompt → draw → simulate → read waste and produc
 
 ### Map of this manual
 
-| Part | Chapters | When to read |
+| Section | Chapters | When to read |
 |------|----------|--------------|
-| Ideas | 1 | Before inventing your own model |
+| Ideas | Ch. 1 | Before inventing your own model |
 | First run | 2 | Always, once |
 | Prompt language | 3 | When writing your own operation |
 | **Diagram & modeling** | **4** | **When you look at the CYCLONE Model panel** |
-| Results literacy | 5 | After first Simulate |
+| Results literacy | 5 | After first Simulate — **Simulation results** |
 | Curriculum | 6 | Course design / self-study path |
 | AI Assistant | 7 | When you use the co-pilot |
 | Limits & deploy | 8 | Homework rules, citations |
@@ -82,8 +82,6 @@ AI here does not invent a new physics of construction. The **engine** is still a
 If you leave this manual with one habit, let it be this: **draw the cycles until they tell the truth, then run the numbers**.
 
 ---
-
-# Part I — Ideas before buttons
 
 ## Chapter 1 — Operations, flow, and idleness
 
@@ -140,8 +138,6 @@ You do **not** need to sign in to learn. Teaching use stands alone.
 The right-hand diagram is not decoration. Chapter 4 teaches you how to **read** it.
 
 ---
-
-# Part II — Your first hour in the studio
 
 ## Chapter 2 — Fifteen minutes that stick (Earthmoving)
 
@@ -230,8 +226,6 @@ Example or Format Prompt → **Draw Model** → check diagram (Ch.4) → cycles 
 6. Assuming every rectangle is “the same as Halpin’s book figure” without checking Neo-CYCLONE’s legend (Chapter 4).
 
 ---
-
-# Part III — Writing models and reading diagrams
 
 ## Chapter 3 — How to talk so the studio can build a network
 
@@ -469,9 +463,7 @@ Full geometric rules: [`docs/NOTATION_STANDARD.md`](./NOTATION_STANDARD.md).
 
 ---
 
-# Part IV — Reading results like an engineer
-
-## Chapter 5 — Simulation, cost, and sensitivity
+## Chapter 5 — Simulation results
 
 ### 5.1 Process Report
 
@@ -506,8 +498,6 @@ Excel + PNG; always note Operation, seed, max cycles, SA ranges.
 
 ---
 
-# Part V — A small curriculum of examples
-
 ## Chapter 6 — Six Examples as a learning path
 
 Selecting an Example fills the prompt only. **You** click Draw Model. Use Chapter 4 while you look at each diagram.
@@ -524,8 +514,6 @@ Selecting an Example fills the prompt only. **You** click Draw Model. Use Chapte
 **Path:** 1→2→3 mechanics; 4 shared resources; 5–6 decisions under sensitivity.
 
 ---
-
-# Part VI — The AI Assistant as a classroom co-pilot
 
 ## Chapter 7 — What “AI-assisted” should mean here
 
@@ -568,8 +556,6 @@ Build & simulate → ask → if proposed prompt, Apply → Draw → Simulate →
 
 ---
 
-# Part VII — Limits, deploy, and integrity
-
 ## Chapter 8 — Guardrails
 
 ### 8.1 Simulation
@@ -599,8 +585,6 @@ GitHub `main` → Vercel · [neo-cyclone.vercel.app](https://neo-cyclone.vercel.
 Product + version · URL · Operation · seed · max cycles · Simulation and/or Sensitivity · optional software DOI if your course requires it.
 
 ---
-
-# Part VIII — When you are stuck
 
 ## Chapter 9 — FAQ (from real studio use)
 
@@ -675,8 +659,6 @@ A: Professor Daniel W. Halpin and the CYCLONE tradition—see Prologue and Refer
 **Q: Where is the full bibliography?**  
 A: **References** section at the **end** of this manual (after the Epilogue).
 
-
-# Part IX — Teaching with Neo-CYCLONE
 
 ## Chapter 10 — Notes for instructors (and peer mentors)
 
@@ -768,4 +750,4 @@ Neo-CYCLONE does **not** claim to supersede research simulators. It is **AI-Assi
 
 ---
 
-*AI-Assisted Construction Operation Simulation · Manual v1.6.11*
+*AI-Assisted Construction Operation Simulation · Manual v1.6.12*
