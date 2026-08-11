@@ -5,6 +5,7 @@
 | **Version** | 1.7.2
 | **Product** | AI-Assisted Construction Operation Simulation |
 | **Live app** | [https://neo-cyclone.vercel.app/](https://neo-cyclone.vercel.app/) |
+| **PDF manual** | [Neo-CYCLONE-User-Manual.pdf](./Neo-CYCLONE-User-Manual.pdf) |
 | **Language** | English (product & teaching surface) |
 | **Audience** | Students, instructors, and practitioners |
 | **Notation detail** | [NOTATION_STANDARD.md](./NOTATION_STANDARD.md) |

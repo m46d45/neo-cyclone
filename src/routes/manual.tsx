@@ -43,7 +43,16 @@ function ManualPage() {
           <p className="max-w-2xl text-[15px] leading-[1.75] text-foreground/90">
             Written for people who want to understand construction operations as flow. Read it with the studio open.
             Sub-chapters are kept where the idea needs room—not as empty labels. 
-            <strong className="text-foreground">References</strong> are at the end.
+            <strong className="text-foreground">References</strong> are at the end.{" "}
+            <a
+              className="font-medium text-primary hover:underline"
+              href="/Neo-CYCLONE-User-Manual.pdf"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Download PDF
+            </a>
+            .
           </p>
         </header>
 

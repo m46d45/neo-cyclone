@@ -20,7 +20,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test 'scripts/**/*.test.mjs'",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "manual:pdf": "node scripts/generate-manual-pdf.mjs"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.4",
