@@ -2,15 +2,64 @@
 
 | | |
 |--|--|
-| **Version** | 1.6.5 |
+| **Version** | 1.6.6 |
 | **Product** | AI-Assisted Construction Operation Simulation |
 | **Dedication** | AI-agent of Daniel W. Halpin's CYCLONE |
 | **Language** | English (product & teaching surface) |
 | **Live app** | [https://neo-cyclone.vercel.app/](https://neo-cyclone.vercel.app/) |
+| **Audience** | Students · instructors · practitioners (50+ active users in early classroom use) |
 | **Notation detail** | [NOTATION_STANDARD.md](./NOTATION_STANDARD.md) |
 | **Engine notes (developers)** | [NEO_CYCLONE_DSL_v0.1.md](./NEO_CYCLONE_DSL_v0.1.md) |
 
-This manual is written for **students, instructors, and practitioners** who want to *understand* construction operations as flow—not only to click buttons. You can read it top to bottom (~25–40 minutes) or jump by chapter. Keep the studio open beside you when you reach Chapter 2.
+This manual is for people who want to *understand* construction operations as **flow**—not only to click buttons. You can:
+
+- **3 minutes:** [Start here](#start-here--3-minutes)  
+- **15 minutes:** [Chapter 2](#chapter-2--fifteen-minutes-that-stick-earthmoving) with Example 1 open  
+- **Full read:** ~30–45 minutes top to bottom  
+
+Keep the [live studio](https://neo-cyclone.vercel.app/) open in another tab when you practice.
+
+---
+
+## Start here — 3 minutes
+
+If you only do one thing today:
+
+1. Open [neo-cyclone.vercel.app](https://neo-cyclone.vercel.app/).  
+2. **Example** → **1. Earthmoving**.  
+3. Click **Draw Model** (the diagram does **not** appear until you click).  
+4. Leave **max cycles = 100**, **seed = 12345**.  
+5. Click **Simulate**.  
+6. Look at **units/hour by cycle** and **resource idleness** (who waits? who works?).  
+
+That is the whole loop: **prompt → draw → simulate → read waste and productivity**. Everything else in this manual deepens that loop.
+
+### If something feels “broken”
+
+| Symptom | Likely cause | Fix |
+|---------|--------------|-----|
+| Empty diagram after choosing Example | Examples only fill the prompt | Click **Draw Model** |
+| Simulate disabled / no results | No network drawn yet | Draw Model first |
+| Excel name looks like resource spaghetti | No `Operation:` line | Add `Operation: MyName` after `#` notes |
+| No Sensitivity tab charts | Prompt has no `Sensitivity:` block | Add ranges (Examples 5–6) or skip SA |
+| AI answers only in English / short | Product policy | English-first; replies ≤20 lines; edit only after **Apply** |
+| Different numbers than a classmate | Different seed or cycles | Use seed **12345** and same max cycles |
+| Page looks unstyled | Browser cache after deploy | Hard refresh or incognito |
+
+### Map of this manual
+
+| Part | Chapters | When to read |
+|------|----------|--------------|
+| Ideas | 1 | Before inventing your own model |
+| First run | 2 | Always, once |
+| Prompt language | 3–4 | When writing your own operation |
+| Results literacy | 5 | After first Simulate |
+| Curriculum | 6 | Course design / self-study path |
+| AI Assistant | 7 | When you use the co-pilot |
+| Limits & deploy | 8 | Homework rules, citations |
+| Lineage | 9 | Papers, history, respect |
+| FAQ | 10 | Stuck mid-studio |
+| Classroom | 11 | Teaching with 10–50 students |
 
 ---
 
@@ -72,7 +121,18 @@ CYCLONE answered those questions with a small set of node types. Neo-CYCLONE kee
 | MicroCYCLONE-style reports (process, elements, cost, sensitivity) | A multiplayer game engine |
 | English-first, classroom-friendly limits | An unlimited free chat API |
 
-You do **not** need to sign in to learn. Accounts may appear later for broader AI access; teaching use stands alone.
+You do **not** need to sign in to learn. Teaching use stands alone.
+
+### 1.5 The studio at a glance
+
+| Area | What you do there |
+|------|-------------------|
+| **Left** | Choose Example or write Format Prompt → **Draw Model** |
+| **Right** | Inspect CYCLONE Model; set cycles & seed → **Simulate** |
+| **Below** | **Results**: Simulation · Sensitivity Analysis |
+| **Lower** | **AI Assistant** (optional co-pilot) |
+| **Header** | Manual (this text) |
+| **Footer** | Product name · version · year — cite the version in homework |
 
 ---
 
@@ -90,7 +150,7 @@ Go to the live app. You should see:
 - **Right:** empty CYCLONE Model until you draw  
 - **Below (later):** Results and AI Assistant  
 
-Footer shows product name, version, and year. Header offers **Manual** (this text).
+Footer shows product name, version, and year. Header offers **Manual**.
 
 ### 2.2 Load Example 1 — Earthmoving
 
@@ -170,6 +230,14 @@ Answers stay short (≤20 lines) and stay bound to **this** prompt, network, and
 ### 2.7 Quick path (cheat sheet)
 
 1. Example or write Format Prompt → 2. **Draw Model** → 3. Check cycles → 4. Cycles & seed → 5. **Simulate** → 6. Sensitivity (if planned) → 7. AI Assistant (optional) → 8. Export.
+
+### 2.8 Common first-session mistakes
+
+1. Expecting the diagram after only selecting an Example.  
+2. Simulating before the diagram matches the story.  
+3. Changing fleet size in chat and assuming the engine already changed (must **Apply** → Draw → Simulate).  
+4. Comparing results with a friend who used another seed.  
+5. Reading only total production and ignoring **idleness**.  
 
 ---
 
@@ -285,6 +353,30 @@ Costs are **USD per resource-hour**. Sensitivity varies counts for comparison ru
 
 The live **Format Prompt** panel in the studio shows the canonical template. Prefer that order so humans and the assistant parse the same story.
 
+### 3.10 Minimal custom prompt (template you can copy)
+
+```text
+Operation: My Operation Name
+
+ResourceA: Task1 → Task2 → Task3
+ResourceB: Task1
+3 ResourceA, 1 ResourceB
+
+Counter after: Task3
+production = 1 unit
+
+Durations:
+Task1: tri 1, 2, 3
+Task2: normal 8, 1.5
+Task3: const 1
+
+Cost:
+ResourceA: 80
+ResourceB: 120
+```
+
+Replace names with *your* operation. Draw Model. If the diagram lies, the prompt is incomplete—not “the AI failed.”
+
 ---
 
 ## Chapter 4 — Modeling rules that keep diagrams honest
@@ -298,6 +390,14 @@ The live **Format Prompt** panel in the studio shows the canonical template. Pre
 7. You describe cycles in text; the builder draws queues and arcs.
 
 Graphic shapes and edge rules in detail: `docs/NOTATION_STANDARD.md`.
+
+### 4.1 “Does this need COMBI?”
+
+Ask: *Do two (or more) distinct resources have to be present for this task to start?*  
+- Truck **and** loader at Load → **COMBI**  
+- Truck alone hauling → **NORMAL**  
+
+If the diagram shows COMBI for a solo task, your prompt probably listed two resources on the same step by accident—or the reverse if a true meeting was written as a single-resource line.
 
 ---
 
@@ -336,6 +436,13 @@ Sensitivity batches prefer a **Web Worker** so the UI stays responsive; if Worke
 
 For homework and papers, export Excel and note: Operation name, seed, max cycles, and any sensitivity ranges. Charts and diagrams as PNG support figure-ready slides.
 
+### 5.7 How to discuss results in one minute
+
+1. What is steady-state **units/hour**?  
+2. Which resource has the highest **idle %**?  
+3. What is **unit cost** (if costs were entered)?  
+4. If I add one unit of the busiest scarce resource, what do I *expect* to happen—then test with Sensitivity or a re-run.
+
 ---
 
 # Part V — A small curriculum of examples
@@ -354,6 +461,8 @@ Selecting an Example fills the prompt only. **You** click Draw Model.
 | 6 | **Precast Plant** | Halpin Ch.14-style line production; richer SA—systems thinking. |
 
 **Suggested course path:** 1 → 2 → 3 for mechanics; 4 for shared resources; 5–6 for decisions under sensitivity.
+
+**Self-study weekend:** Day 1: Examples 1–3 + Chapter 5. Day 2: Example 4 + your own operation. Day 3: Examples 5–6 + one sensitivity recommendation in writing.
 
 Rewrite any example. Change counts. Break a duration. Re-draw. That is the point.
 
@@ -390,7 +499,7 @@ It must **not** silently re-simulate, invent another operation, or replace CYCLO
 - **You** — gold bubble, right-aligned, compact  
 - **Assistant** — light bubble, left-aligned  
 - System guidance lives in the **placeholder** of the input box  
-- Quick chips are **general** (no “set trucks to 8” assumptions): resources, bottleneck, productivity, unit cost  
+- Quick chips are **general** (no truck-only assumptions): resources, bottleneck, productivity, unit cost  
 
 ### 7.4 Recommended questions
 
@@ -422,6 +531,14 @@ Why home-QUEUE idleness is waste. Why every resource needs a queue in a CYCLONE 
 2. Ask focused questions.  
 3. If a new prompt is proposed → **Apply** → **Draw Model** → **Simulate**.  
 4. Compare numbers; do not accept a suggestion without a run when the question is quantitative.
+
+### 7.7 What good vs weak questions look like
+
+| Weak | Stronger |
+|------|----------|
+| “Make it better” | “Which resource has the highest idle % after this run?” |
+| “Optimize everything” | “Propose trucks = 8; keep loader = 1; I will re-simulate.” |
+| “What is CYCLONE?” (with empty model) | Draw Example 1 first, then “Explain this model’s resource cycles.” |
 
 ---
 
@@ -462,7 +579,17 @@ These limits do **not** change CYCLONE rules or Halpin-style interpretation. The
 - Live: [https://neo-cyclone.vercel.app/](https://neo-cyclone.vercel.app/)  
 - Optional env: `XAI_API_KEY` for AI mode.  
 - Teaching does **not** require sign-in.  
-- Footer shows **version** (e.g. 1.6.5) and year—cite them in reports.
+- Footer shows **version** (e.g. 1.6.6) and year—cite them in reports.
+
+### 8.5 Citing Neo-CYCLONE in homework or papers
+
+Suggested elements:
+
+1. Product name and version (footer).  
+2. URL of the live app.  
+3. Operation name, seed, max cycles.  
+4. Whether results came from Simulation only or also Sensitivity.  
+5. Optional: Zenodo / GitHub release DOI if your course requires software citation.
 
 ---
 
@@ -505,14 +632,110 @@ Neo-CYCLONE does **not** claim to supersede research simulators. It is **AI-Assi
 
 ---
 
+# Part IX — When you are stuck
+
+## Chapter 10 — FAQ (from real studio use)
+
+**Q: I selected an Example but nothing drew.**  
+A: Click **Draw Model**. Examples only paste the prompt.
+
+**Q: Why is Simulate not useful yet?**  
+A: Draw a model you trust first. Simulation without a truthful diagram is noise.
+
+**Q: My classmate got different productivity.**  
+A: Compare seed, max cycles, and whether the Format Prompt is identical (including durations and branches).
+
+**Q: Where do I put the operation title for Excel?**  
+A: `Operation: Name` after `#` notes, before resource cycles.
+
+**Q: COMBI vs NORMAL looks wrong.**  
+A: COMBI only when **two or more resources** must meet. Solo work → NORMAL. Re-read the resource lines.
+
+**Q: Gold dashed vs black solid arrows?**  
+A: Black solid = forward work flow. Gold dashed = resource return to home QUEUE (teaching convention in Neo-CYCLONE).
+
+**Q: Sensitivity tab is empty / boring.**  
+A: Add a `Sensitivity:` block (see Examples 5–6). Without it, there is nothing to sweep.
+
+**Q: AI proposed a prompt but numbers did not change.**  
+A: Click **Apply**, then **Draw Model**, then **Simulate**.
+
+**Q: Can I write the prompt in Indonesian?**  
+A: Keywords and teaching UI are English-first. Notes in `#` can be any language; for reliable parsing, keep network syntax and distribution keywords in English.
+
+**Q: Max cycles 500 still feels short.**  
+A: Teaching cap protects shared hosts and keeps charts readable. For research-scale runs, export logic and continue in a research tool—or discuss with the course owner.
+
+**Q: Is sign-in required?**  
+A: No for teaching use.
+
+**Q: Who is this dedicated to?**  
+A: Professor Daniel W. Halpin and the CYCLONE tradition—see Prologue and Chapter 9.
+
+---
+
+# Part X — Teaching with Neo-CYCLONE
+
+## Chapter 11 — Notes for instructors (and peer mentors)
+
+With **dozens of concurrent learners**, small conventions prevent chaos.
+
+### 11.1 Baseline run for the whole class
+
+Agree once:
+
+- Example **1. Earthmoving** (or a course-specific prompt)  
+- Seed **12345**  
+- Max cycles **100** (or 200 if you prefer longer settling)  
+
+Everyone’s first Process Report should match. Then change **one** thing per exercise.
+
+### 11.2 Exercise patterns that work
+
+| Pattern | Prompt to students | What they submit |
+|---------|--------------------|------------------|
+| See waste | Run baseline; screenshot idleness | Which resource waits? Why? |
+| Fleet change | Apply trucks 3 vs 8; same seed | Unit cost + productivity table |
+| Uncertainty | Switch one task from const → tri | How steady-state band moves |
+| Branch | Example 2; mark a breakdown effect | Cycle markers / narrative |
+| Shared resource | Example 4; swap priorities | Who starves? |
+| Sensitivity | Example 5 or 6 | Best unit-cost combo + caution |
+
+### 11.3 AI Assistant in class
+
+- Allow Assistant for **explanation** and **prompt drafts**.  
+- Require **Apply → Draw → Simulate** before any grade claim.  
+- Remind rate limits if a lab shares one NAT/IP.  
+- Prefer questions from Chapter 7.4 so answers stay on-model.
+
+### 11.4 Assessment rubric (lightweight)
+
+| Criterion | Weak | Strong |
+|-----------|------|--------|
+| Model truth | Diagram contradicts prompt story | Cycles, meetings, counter match narrative |
+| Waste literacy | Only quotes total production | Discusses idle/busy and bottleneck |
+| Reproducibility | No seed / cycles | Seed, cycles, version cited |
+| Decision | “Looks good” | Unit cost or SA-informed recommendation |
+| Integrity | AI text pasted as proof | AI optional; engine results primary |
+
+### 11.5 Accessibility and access
+
+- No install; modern browser; English UI.  
+- Hard refresh if a deploy just landed and CSS looks missing.  
+- Manual always available from the header.
+
+---
+
 # Epilogue — A request to the reader
 
 When the diagram is clean and the numbers are stable, you have done what Halpin asked of a generation of students: **see the operation**. AI can speed the typing; it cannot replace that seeing.
 
 If you teach with Neo-CYCLONE, keep one run with seed **12345** as a shared baseline, then change one idea at a time—fleet, duration, branch, or priority—and ask what happened to **idleness** and **unit cost**. That discipline matters more than any single feature.
 
+If you are one of the growing number of people using this studio: thank you. Report confusing moments to your instructor or maintainer—the manual improves when real sessions leave fingerprints.
+
 ---
 
 **Quick path:** Example or Format Prompt → Draw Model → Simulate → Sensitivity (if planned) → AI Assistant (optional) → Export Excel / PNG.
 
-*AI-Assisted Construction Operation Simulation · AI-agent of Daniel W. Halpin's CYCLONE · Manual v1.6.5*
+*AI-Assisted Construction Operation Simulation · AI-agent of Daniel W. Halpin's CYCLONE · Manual v1.6.6*
