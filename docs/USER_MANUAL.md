@@ -2,7 +2,7 @@
 
 | | |
 |--|--|
-| **Version** | 1.6.12 |
+| **Version** | 1.6.13 |
 | **Product** | AI-Assisted Construction Operation Simulation |
 | **Dedication** | AI-agent of Daniel W. Halpin's CYCLONE |
 | **Language** | English (product & teaching surface) |
@@ -231,17 +231,7 @@ Example or Format Prompt → **Draw Model** → check diagram (Ch.4) → cycles 
 
 You do not draw QUEUE circles by hand in the prompt. You describe **resource cycles**. The builder creates queues, tasks, and arcs.
 
-### 3.1 Comments vs data
-
-`#` and `//` lines are **notes only**. The engine ignores them.
-
-### 3.2 Operation name (first data line after notes)
-
-```text
-Operation: Earthmoving
-```
-
-Aliases: `Model:`, `Title:`, `Op:`. Used for report title and Excel filename. Examples place this **after** their `#` block.
+Lines with `#` or `//` are notes only. After notes, first data line may be `Operation: Name` (aliases Model / Title / Op) for title and Excel filename.
 
 ### 3.3 Network — resource cycles
 
@@ -750,4 +740,4 @@ Neo-CYCLONE does **not** claim to supersede research simulators. It is **AI-Assi
 
 ---
 
-*AI-Assisted Construction Operation Simulation · Manual v1.6.12*
+*AI-Assisted Construction Operation Simulation · Manual v1.6.13*
