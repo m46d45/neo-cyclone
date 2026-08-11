@@ -2,7 +2,7 @@
 
 | | |
 |--|--|
-| **Version** | 1.6.13 |
+| **Version** | 1.6.14 |
 | **Product** | AI-Assisted Construction Operation Simulation |
 | **Dedication** | AI-agent of Daniel W. Halpin's CYCLONE |
 | **Language** | English (product & teaching surface) |
@@ -72,10 +72,7 @@ Construction work is full of **repetition**: load and haul, pour and return, lif
 
 Professor **Daniel W. Halpin** spent a career making that structure *visible*. His **CYCLONE** language (*CYCLic Operations NEtwork*) gave operations a simple network grammar: resources cycle through queues and work, meet when they must, and count completed production. From that grammar grew tools—**MicroCYCLONE**, then DISCO, PROSIDYC, COST, WebCYCLONE, and a wider family of construction simulation systems (see **References** at the end).
 
-**Neo-CYCLONE** is not a replacement for those research systems. It is a **teaching studio**: a place to meet Halpin’s ideas again, with a modern browser interface and an **AI Assistant** that stays tied to *your* model. The product name is deliberate:
-
-- **AI-Assisted Construction Operation Simulation** — the honest product description  
-- **AI-agent of Daniel W. Halpin's CYCLONE** — the dedication line  
+**Neo-CYCLONE** is not a replacement for those research systems. It is a **teaching studio**: a place to meet Halpin’s ideas again, with a modern browser interface and an **AI Assistant** that stays tied to *your* model. The product name is deliberate: **AI-Assisted Construction Operation Simulation**.
 
 AI here does not invent a new physics of construction. The **engine** is still a discrete-event CYCLONE-style simulator. AI helps you **phrase**, **inspect**, and **question** the model. You remain responsible for Draw Model, Simulate, and judgment.
 
@@ -233,7 +230,7 @@ You do not draw QUEUE circles by hand in the prompt. You describe **resource cyc
 
 Lines with `#` or `//` are notes only. After notes, first data line may be `Operation: Name` (aliases Model / Title / Op) for title and Excel filename.
 
-### 3.3 Network — resource cycles
+### 3.1 Network — resource cycles
 
 ```text
 Trucks: Load → Haul → Dump → Return
@@ -247,7 +244,7 @@ Loader: Load
 - **Multi-demand:** `Crane: LiftAtA | LiftAtB | LiftAtC`  
 - **Priority** (lower number = higher priority): MicroCYCLONE tradition.
 
-### 3.4 Production counter
+### 3.2 Production counter
 
 ```text
 Counter after: Dump
@@ -256,7 +253,7 @@ production = 12 m3
 
 Name the task(s) that mean “one production unit finished.” Multiple counters are allowed. Explicit is safer than relying on defaults.
 
-### 3.5 Durations (minutes)
+### 3.3 Durations (minutes)
 
 | Kind | Parameters | Typical use |
 |------|------------|-------------|
@@ -269,14 +266,14 @@ Name the task(s) that mean “one production unit finished.” Multiple counters
 | `pert` | a, m, b | Classic PERT-beta on [a,b] |
 | `gamma` | shape, scale | Flexible positive skew |
 
-### 3.6 Branch probability
+### 3.4 Branch probability
 
 ```text
 Branch:
 After DumpToPaver: RefillAsphalt p=0.85, Breakdown p=0.15
 ```
 
-### 3.7 GEN and CON
+### 3.5 GEN and CON
 
 Prefer **inline** form:
 
@@ -286,7 +283,7 @@ Trucks: GEN 5 → Scoop → CON 5 TruckFull → Haul&Return
 
 Only when unit logic needs scaling—not every model.
 
-### 3.8 Cost and sensitivity
+### 3.6 Cost and sensitivity
 
 ```text
 Cost:
@@ -300,11 +297,11 @@ Loader: 1..2
 
 USD per resource-hour. SA caps: ≤5 resources; ~150 combinations (ranges step up).
 
-### 3.9 Recommended block order
+### 3.7 Recommended block order
 
 **Operation → Network → Durations → Priority → Branch → Cost → Sensitivity (last).**
 
-### 3.10 Minimal custom prompt
+### 3.8 Minimal custom prompt
 
 ```text
 Operation: My Operation Name
@@ -455,38 +452,38 @@ Full geometric rules: [`docs/NOTATION_STANDARD.md`](./NOTATION_STANDARD.md).
 
 ## Chapter 5 — Simulation results
 
+After **Simulate**, the **Results** area is the place for process literacy—not only a green checkmark.
+
 ### 5.1 Process Report
 
-MicroCYCLONE-flavored summary: run length, production events, units per event, total production, first unit time, average time between units.
+MicroCYCLONE-style summary: how long the run lasted, how many production events occurred, units per event, total production, when the first unit appeared, and average time between units. Use it to answer: *Did we produce what we thought, at what overall pace?*
 
 ### 5.2 Productivity by cycle and steady state
 
-Chart starts at cycle **0**. Early noise is normal. **Steady state** teaching rule: about **5%** band over at least **10** cycles—shown as an **old-gold dashed** line you can quote in class.
+The units/hour chart starts at cycle **0**. Early cycles are often noisy (the system is filling). **Steady state** in Neo-CYCLONE is a practical teaching rule: productivity stays within about **5%** across a window of at least **10** cycles. The guide appears as an **old-gold dashed** line—so class can quote settled productivity, not the first spike.
 
 ### 5.3 Idleness and busy time
 
-Both % labels appear so tiny idle bars still tell a story. High idle on a costly resource is a design smell.
+For each resource, **idle %** and **busy %** are both labeled so a tiny idle bar still has a story. High idle on a costly resource is a design smell; high idle on a cheap buffer may be intentional. This is often the best classroom discussion in the whole app.
 
 ### 5.4 Cost Report
 
-cost ≈ count × (USD/h) × run hours; **unit cost** ≈ total ÷ production.
+When you supply hourly rates (USD per resource-hour): resource cost ≈ count × (USD/h) × run hours; **unit cost** ≈ total cost ÷ production. Unit cost bridges “how busy?” to “how expensive per unit produced?”—especially next to sensitivity charts.
 
 ### 5.5 Sensitivity Analysis tab
 
-When the prompt has `Sensitivity:`: pairwise productivity & unit-cost charts, best markers, idleness tables. Prefers a **Web Worker**.
+Appears when the prompt defines `Sensitivity:`. Compare combinations (e.g. trucks vs loaders): productivity and unit cost side by side, best markers, and idleness views. Pairwise comparison supports more than two resources within teaching caps (≤5 resources; ~150 combinations by stepping ranges). Batches prefer a **Web Worker** so the UI stays responsive; fallback is the main thread (same numbers). Single Simulate stays on the main thread.
 
 ### 5.6 Export discipline
 
-Excel + PNG; always note Operation, seed, max cycles, SA ranges.
+Report Excel (multi-sheet; name prefers `Operation:`), chart PNG, diagram PNG. For homework note Operation name, seed, max cycles, and any SA ranges.
 
 ### 5.7 How to discuss results in one minute
 
-1. Steady-state **units/hour**?  
-2. Highest **idle %**?  
-3. **Unit cost**?  
-4. What if we add one scarce resource—then test.
-
----
+1. What is steady-state units/hour?  
+2. Which resource has the highest idle %?  
+3. What is unit cost (if costs were entered)?  
+4. If I add one unit of the scarce resource, what do I expect—then test with SA or a re-run.
 
 ## Chapter 6 — Six Examples as a learning path
 
@@ -507,9 +504,16 @@ Selecting an Example fills the prompt only. **You** click Draw Model. Use Chapte
 
 ## Chapter 7 — What “AI-assisted” should mean here
 
+The Assistant sits under Results. It should feel like a teaching assistant who has read your board—not a search engine.
+
 ### 7.1 Purpose
 
-Explain *this* model and *last* run; propose Format Prompt edits; stay ≤20 lines. Must **not** silently re-simulate or invent another operation.
+- Explain *this* model’s cycles, COMBI/NORMAL, counter, GEN/CON, branch  
+- Point at bottleneck and idleness from the *last run*  
+- Propose a full Format Prompt edit when you ask to change fleet or durations  
+- Stay short (≤20 lines) so the studio remains the focus  
+
+It must **not** silently re-simulate, invent another operation, or replace CYCLONE with a mystery model.
 
 ### 7.2 Technology (honest)
 
@@ -518,63 +522,72 @@ Explain *this* model and *last* run; propose Format Prompt edits; stay ≤20 lin
 | **AI mode** | `XAI_API_KEY` on host | Compact CONTEXT snapshot only |
 | **Local mode** | No key / failure | English-first intent helper |
 
-Rate limits (~30 Assistant / hour / IP) protect the shared classroom host.
+Product UI, Manual, and keywords are English-first (international classroom). Rate limits: ~30 Assistant requests / hour / IP; ~20 AI DSL draft / hour / IP.
 
 ### 7.3 Chat UX
 
-Gold **You** bubbles (right); light **Assistant** (left); guidance in the **placeholder**. General chips: resources, bottleneck, productivity, unit cost.
+Gold **You** bubbles (right, compact); light Assistant (left). System guidance lives in the input **placeholder**. Quick chips are general: resources · bottleneck · productivity · unit cost.
 
 ### 7.4 Recommended questions
 
-Cycles · COMBI vs NORMAL · counter · GEN/CON · branch · fleet counts · idleness · bottleneck · productivity · steady state · unit cost · SA best combo · “why home-QUEUE idleness is waste.”
+- Explain resource cycles; COMBI vs NORMAL; where is the counter?  
+- How do GEN/CON or branch p work in this model?  
+- Fleet counts; highest idleness; likely bottleneck  
+- Last productivity; steady state yet; unit cost; idle vs busy %  
+- Edits using *your* resource names (then Apply → Draw → Simulate)  
+- SA: best unit cost / highest productivity combination  
+- Why home-QUEUE idleness is waste; why every resource needs a queue  
 
 ### 7.5 Boundary
 
-> Answers only about the **current** Format Prompt, drawn network, and **last** results. **Apply → Draw Model → Simulate** for any prompt change.
+Answers only about the **current** Format Prompt, drawn network, and **last** results. May **propose** edits; you must **Apply**, **Draw Model**, and **Simulate**.
 
 ### 7.6 Workflow
 
-Build & simulate → ask → if proposed prompt, Apply → Draw → Simulate → compare numbers.
+Build & simulate → ask → if a new prompt is proposed, Apply → Draw → Simulate → compare numbers.
 
 ### 7.7 Weak vs strong questions
 
 | Weak | Stronger |
 |------|----------|
-| “Make it better” | “Which resource has the highest idle %?” |
-| “Optimize everything” | “Propose trucks = 8; keep loader = 1.” |
+| “Make it better” | “Which resource has the highest idle % after this run?” |
+| “Optimize everything” | “Propose trucks = 8; keep loader = 1; I will re-simulate.” |
 | “What is CYCLONE?” with empty model | Draw Example 1, then “Explain this model’s cycles.” |
-
----
 
 ## Chapter 8 — Guardrails
 
-### 8.1 Simulation
+### 8.1 Simulation limits
 
 | Parameter | Default | Hard limit |
 |-----------|---------|------------|
 | Max cycles | 100 | **500** |
-| Seed | 12345 | — |
+| Seed | 12345 | — (dice = another path) |
 | Time unit | minutes | — |
 | SA resources | — | **5** |
-| SA combinations | — | **~150** |
+| SA combinations | — | **~150** (ranges step up) |
+
+Same seed + same model + same cycle limit → **identical** stochastic results. Seed is for reproducibility (homework, papers), not a fleet decision.
 
 ### 8.2 Performance
 
-Sensitivity prefers Web Worker; single Simulate on main thread.
+Sensitivity prefers a Web Worker; fallback main thread (same numbers, possible brief UI pause). Single Simulate on main thread—fast enough for teaching sizes.
 
 ### 8.3 AI & API
 
-30 Assistant / h / IP; 20 AI DSL draft / h / IP; replies ≤20 lines; local mode without key.
+- Assistant: ~30 / hour / IP  
+- AI DSL draft: ~20 / hour / IP  
+- Payload: compact CONTEXT only; replies ≤20 lines  
+- Without API key: local English helper still works  
+
+These limits do not change CYCLONE rules—they protect shared hosting and API cost.
 
 ### 8.4 Deploy and versions
 
-GitHub `main` → Vercel · [neo-cyclone.vercel.app](https://neo-cyclone.vercel.app/) · no sign-in required · cite footer version.
+GitHub `main` → Vercel · [neo-cyclone.vercel.app](https://neo-cyclone.vercel.app/). No sign-in required for teaching. Always cite the footer product version after a deploy.
 
 ### 8.5 Citing Neo-CYCLONE
 
 Product + version · URL · Operation · seed · max cycles · Simulation and/or Sensitivity · optional software DOI if your course requires it.
-
----
 
 ## Chapter 9 — FAQ (from real studio use)
 
@@ -740,4 +753,4 @@ Neo-CYCLONE does **not** claim to supersede research simulators. It is **AI-Assi
 
 ---
 
-*AI-Assisted Construction Operation Simulation · Manual v1.6.13*
+*AI-Assisted Construction Operation Simulation · Manual v1.6.14*
