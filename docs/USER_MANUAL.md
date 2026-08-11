@@ -2,7 +2,7 @@
 
 | | |
 |--|--|
-| **Version** | 1.6.10 |
+| **Version** | 1.6.11 |
 | **Product** | AI-Assisted Construction Operation Simulation |
 | **Dedication** | AI-agent of Daniel W. Halpin's CYCLONE |
 | **Language** | English (product & teaching surface) |
@@ -768,4 +768,4 @@ Neo-CYCLONE does **not** claim to supersede research simulators. It is **AI-Assi
 
 ---
 
-*AI-Assisted Construction Operation Simulation · Manual v1.6.10*
+*AI-Assisted Construction Operation Simulation · Manual v1.6.11*

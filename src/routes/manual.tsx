@@ -74,60 +74,296 @@ function ManualPage() {
         </section>
 
         <section>
-          <h2 className="font-display text-xl font-semibold text-foreground">Prologue</h2>
+          <h2 className="font-display text-xl font-semibold text-foreground">Prologue — Why this studio exists</h2>
           <div className="gold-rule my-3 max-w-xs" />
-          <p className="text-[13px] leading-relaxed text-foreground/90">
-            Halpin’s <strong>CYCLONE</strong> made waiting and cyclic work visible. Neo-CYCLONE is a browser{" "}
-            <strong>teaching studio</strong> in that tradition: discrete-event engine first, AI as co-pilot. Habit:{" "}
-            <strong>draw cycles until they tell the truth, then run the numbers</strong>. Bibliography is at the{" "}
-            <strong>end</strong> (References).
-          </p>
+          <div className="space-y-3 text-[13px] leading-relaxed text-foreground/90">
+            <p>
+              Construction work is full of <strong>repetition</strong>: load and haul, pour and return, lift and
+              place. Between those busy moments, resources wait. A truck queues at a loader. A crane sits while a
+              crew finishes tying rebar. That waiting is not always “laziness”; it is often{" "}
+              <strong>the structure of the process</strong>.
+            </p>
+            <p>
+              Professor <strong>Daniel W. Halpin</strong> spent a career making that structure <em>visible</em>. His{" "}
+              <strong>CYCLONE</strong> language (<em>CYCLic Operations NEtwork</em>) gave operations a simple network
+              grammar: resources cycle through queues and work, meet when they must, and count completed production.
+              From that grammar grew tools—<strong>MicroCYCLONE</strong>, then DISCO, PROSIDYC, COST, WebCYCLONE, and
+              a wider family of construction simulation systems (see <strong>References</strong> at the end of this
+              manual).
+            </p>
+            <p>
+              <strong>Neo-CYCLONE</strong> is not a replacement for those research systems. It is a{" "}
+              <strong>teaching studio</strong>: a place to meet Halpin’s ideas again, with a modern browser interface
+              and an AI Assistant that stays tied to <em>your</em> model. The product name is honest:{" "}
+              <strong>AI-Assisted Construction Operation Simulation</strong>.
+            </p>
+            <p>
+              AI here does not invent a new physics of construction. The <strong>engine</strong> is still a
+              discrete-event CYCLONE-style simulator. AI helps you <strong>phrase</strong>, <strong>inspect</strong>,
+              and <strong>question</strong> the model. You remain responsible for Draw Model, Simulate, and judgment.
+            </p>
+            <p className="rounded-[var(--radius-md)] border border-primary/25 bg-primary/5 px-3 py-2.5 text-[13px] text-foreground">
+              If you leave this manual with one habit, let it be this:{" "}
+              <strong>draw the cycles until they tell the truth, then run the numbers</strong>.
+            </p>
+          </div>
         </section>
 
         <section>
-          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">Part I</p>
+          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">
+            Part I — Ideas before buttons
+          </p>
           <h2 className="font-display mt-1 text-xl font-semibold text-foreground">
             Chapter 1 — Operations, flow, and idleness
           </h2>
           <div className="gold-rule my-3 max-w-xs" />
-          <p className="text-[13px] leading-relaxed text-foreground/90">
-            An operation is a repeatable production process (units/hour), not the whole Gantt. Resources that are
-            not working usually sit in a <strong>queue</strong>—that <strong>idleness</strong> is measurable waste.
-            Networks force clarity about meetings, order, and what one production unit means. The right-hand{" "}
-            <strong>CYCLONE Model</strong> is the picture of that logic (Chapter 4).
+
+          <h3 className="font-display text-base font-semibold text-foreground">
+            1.1 What we mean by “construction operation”
+          </h3>
+          <p className="mt-2 text-[13px] leading-relaxed text-foreground/90">
+            An <em>operation</em> here is a <strong>repeatable production process</strong>—often measured in units
+            per hour—not the whole project Gantt chart. Earthmoving a cut, paving a lane, loading dump trucks,
+            serving three zones with one crane, stocking brick and mortar for masons, or cycling forms in a precast
+            yard: each is an operation with <strong>resources</strong>, <strong>tasks</strong>, and{" "}
+            <strong>waiting</strong>.
+          </p>
+          <p className="mt-2 text-[13px] leading-relaxed text-foreground/90">
+            Thinking at the operation level matters for <strong>Lean Construction</strong> and{" "}
+            <strong>Project Production Management</strong>. Before you optimize a schedule bar, you need to see
+            whether the <em>process</em> itself produces flow or waste.
+          </p>
+
+          <h3 className="font-display mt-6 text-base font-semibold text-foreground">
+            1.2 Flow and idleness (waste you can measure)
+          </h3>
+          <p className="mt-2 text-[13px] leading-relaxed text-foreground/90">
+            In CYCLONE thinking, a resource that is not working is usually <strong>in a queue</strong>—waiting for a
+            partner, a space, or a task to open. That waiting time is <strong>idleness</strong>. It is not a moral
+            failure; it is a signal:
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs">
+            <li>Too few trucks → loader idle</li>
+            <li>Too many trucks → truck queue grows</li>
+            <li>Shared crane, wrong priority → one zone starves</li>
+          </ul>
+          <p className="mt-2 text-[13px] leading-relaxed text-foreground/90">
+            Neo-CYCLONE reports <strong>idle %</strong> and <strong>busy %</strong> so those signals are hard to
+            ignore. When you later hear “waste” in Lean language, you already have a picture for it.
+          </p>
+
+          <h3 className="font-display mt-6 text-base font-semibold text-foreground">1.3 Why a network language?</h3>
+          <p className="mt-2 text-[13px] leading-relaxed text-foreground/90">
+            You could describe an operation in paragraphs of natural language. Networks force clarity:
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs">
+            <li>Which resources exist?</li>
+            <li>In what order do they work?</li>
+            <li>Where do they wait?</li>
+            <li>Where do two resources <strong className="text-foreground">meet</strong> (e.g. truck + loader)?</li>
+            <li>What counts as <strong className="text-foreground">one unit of production</strong>?</li>
+          </ul>
+          <p className="mt-2 text-[13px] leading-relaxed text-foreground/90">
+            CYCLONE answered those questions with a small set of node types. Neo-CYCLONE keeps that spirit in the{" "}
+            <strong>logic</strong>, even when some glyphs and arrow colors are tuned for screen teaching (Chapter 4).
+          </p>
+
+          <h3 className="font-display mt-6 text-base font-semibold text-foreground">
+            1.4 What Neo-CYCLONE is — and is not
+          </h3>
+          <div className="mt-2 overflow-x-auto rounded-[var(--radius-md)] border border-border">
+            <table className="w-full min-w-[480px] text-left text-[11px]">
+              <thead className="border-b border-border bg-muted/40 text-[10px] uppercase text-muted-foreground">
+                <tr>
+                  <th className="px-2 py-1.5 font-medium">It is</th>
+                  <th className="px-2 py-1.5 font-medium">It is not</th>
+                </tr>
+              </thead>
+              <tbody className="text-foreground/90">
+                <tr className="border-b border-border/60">
+                  <td className="px-2 py-1.5">Browser teaching studio for cyclic construction operations</td>
+                  <td className="px-2 py-1.5">A full project controls ERP</td>
+                </tr>
+                <tr className="border-b border-border/60">
+                  <td className="px-2 py-1.5">Prompt → diagram → discrete-event simulation</td>
+                  <td className="px-2 py-1.5">Black-box “AI that simulates for you” without a model</td>
+                </tr>
+                <tr className="border-b border-border/60">
+                  <td className="px-2 py-1.5">MicroCYCLONE-style reports (process, cost, sensitivity)</td>
+                  <td className="px-2 py-1.5">A pixel-perfect reprint of 1970s/1990s paper figures</td>
+                </tr>
+                <tr>
+                  <td className="px-2 py-1.5">English-first, classroom-friendly limits</td>
+                  <td className="px-2 py-1.5">An unlimited free chat API</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-2 text-xs">You do not need to sign in to learn. Teaching use stands alone.</p>
+
+          <h3 className="font-display mt-6 text-base font-semibold text-foreground">1.5 The studio at a glance</h3>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-xs">
+            <li>
+              <strong className="text-foreground">Left:</strong> Example or Format Prompt → <strong className="text-foreground">Draw Model</strong>
+            </li>
+            <li>
+              <strong className="text-foreground">Right:</strong> <strong className="text-foreground">CYCLONE Model</strong>{" "}
+              diagram; cycles & seed → <strong className="text-foreground">Simulate</strong>
+            </li>
+            <li>
+              <strong className="text-foreground">Below:</strong> Results (Simulation · Sensitivity Analysis)
+            </li>
+            <li>
+              <strong className="text-foreground">Lower:</strong> AI Assistant (optional co-pilot)
+            </li>
+            <li>
+              <strong className="text-foreground">Header / footer:</strong> Manual link; product name · version · year
+              (cite version in homework)
+            </li>
+          </ul>
+          <p className="mt-2 text-[13px] leading-relaxed text-foreground/90">
+            The right-hand diagram is not decoration. Chapter 4 teaches you how to <strong>read</strong> it.
           </p>
         </section>
 
         <section>
-          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">Part II</p>
+          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">
+            Part II — Your first hour in the studio
+          </p>
           <h2 className="font-display mt-1 text-xl font-semibold text-foreground">
-            Chapter 2 — Fifteen minutes (Earthmoving)
+            Chapter 2 — Fifteen minutes that stick (Earthmoving)
           </h2>
           <div className="gold-rule my-3 max-w-xs" />
-          <ol className="list-decimal space-y-1.5 pl-5 text-xs">
-            <li>Load Example 1; read Operation, cycles, counter, cost, durations.</li>
+          <p className="text-[13px] leading-relaxed text-foreground/90">
+            A guided first run. Do it once with Example 1 even if you already “know trucks.”
+          </p>
+
+          <h3 className="font-display mt-5 text-base font-semibold text-foreground">2.1 Open the studio</h3>
+          <p className="mt-2 text-xs leading-relaxed">
+            Left: prompt, Example dropdown, <strong className="text-foreground">Draw Model</strong>. Right: empty
+            CYCLONE Model until you draw. Later below: Results and AI Assistant. Header: Manual. Footer: product,
+            version, year.
+          </p>
+
+          <h3 className="font-display mt-5 text-base font-semibold text-foreground">2.2 Load Example 1 — Earthmoving</h3>
+          <ol className="mt-2 list-decimal space-y-2 pl-5 text-xs leading-relaxed">
             <li>
-              Draw Model; check QUEUEs, COMBI Load, NORMAL hauls, golf-flag COUNTER, black forward / gold return.
+              Example → <strong className="text-foreground">1. Earthmoving</strong>. Read top to bottom:{" "}
+              <code className="text-foreground">#</code> notes, <code className="text-foreground">Operation:
+              Earthmoving</code>, truck cycle, loader at Load, counter after Dump, cost, durations in minutes.
             </li>
-            <li>Simulate; Process Report → productivity chart → idleness → cost.</li>
-            <li>Export once; optional AI chips; Apply → Draw → Simulate for any prompt edit.</li>
+            <li>
+              <strong className="text-foreground">Plain language:</strong> trucks load–haul–dump–return; loader
+              meets trucks at Load (<strong className="text-foreground">COMBI</strong>); production counts after
+              Dump (e.g. 12 m³).
+            </li>
+            <li>
+              Click <strong className="text-foreground">Draw Model</strong> (examples do not auto-draw).
+            </li>
+            <li>
+              Confirm home <strong className="text-foreground">QUEUE</strong>s, COMBI Load, NORMAL hauls, golf-flag{" "}
+              <strong className="text-foreground">COUNTER</strong>, solid black forward arcs and dashed gold
+              returns. Fix and re-draw until the picture matches the story—then Simulate.
+            </li>
           </ol>
+
+          <h3 className="font-display mt-5 text-base font-semibold text-foreground">2.3 Run parameters</h3>
+          <p className="mt-2 text-xs leading-relaxed">
+            <strong className="text-foreground">Max cycles</strong>: default 100, hard max 500.{" "}
+            <strong className="text-foreground">Seed</strong>: default 12345 — same seed + same model + same limit
+            → identical stochastic results. Dice picks another seed on purpose. Seed is for reproducibility
+            (homework, papers), not a fleet decision.
+          </p>
+
+          <h3 className="font-display mt-5 text-base font-semibold text-foreground">2.4 Simulate and read</h3>
+          <p className="mt-2 text-xs leading-relaxed">
+            Open <strong className="text-foreground">Simulation</strong>: Process Report first, then units/hour by
+            cycle (from cycle 0). Does productivity settle? Steady-state guide (~5% over ≥10 cycles) appears as an
+            old-gold dashed line. Then idleness: who waits, who works—often the best classroom discussion. Cost
+            Report appears when rates exist (unit cost = total ÷ production).
+          </p>
+
+          <h3 className="font-display mt-5 text-base font-semibold text-foreground">2.5 Export once</h3>
+          <p className="mt-2 text-xs leading-relaxed">
+            Report Excel (name prefers Operation:), chart PNG, diagram PNG. For assignments record seed, max cycles,
+            and Operation name.
+          </p>
+
+          <h3 className="font-display mt-5 text-base font-semibold text-foreground">2.6 Optional AI Assistant</h3>
+          <p className="mt-2 text-xs leading-relaxed">
+            Guidance lives in the input placeholder. Try general chips: resources, bottleneck, productivity, unit
+            cost. Replies ≤20 lines; bound to this model and last run. Proposed prompts need{" "}
+            <strong className="text-foreground">Apply → Draw Model → Simulate</strong>.
+          </p>
+
+          <h3 className="font-display mt-5 text-base font-semibold text-foreground">2.7 Quick path</h3>
+          <p className="mt-2 text-xs">
+            Example or Format Prompt → Draw Model → check diagram (Ch.4) → cycles & seed → Simulate → Sensitivity
+            (if planned) → AI Assistant (optional) → Export.
+          </p>
+
+          <h3 className="font-display mt-5 text-base font-semibold text-foreground">2.8 Common first-session mistakes</h3>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs">
+            <li>Expecting a diagram from Example alone</li>
+            <li>Simulating before the diagram matches the story</li>
+            <li>Assuming chat edits changed the engine without Apply</li>
+            <li>Comparing runs with different seeds</li>
+            <li>Reading only total production, ignoring idleness</li>
+            <li>Assuming every rectangle matches a photocopy of a 1992 book figure (see Ch.4)</li>
+          </ul>
         </section>
 
         <section>
           <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">Part III — Prompt & diagram</p>
           <h2 className="font-display mt-1 text-xl font-semibold text-foreground">
-            Chapter 3 — Format Prompt language
+            Chapter 3 — How to talk so the studio can build a network
           </h2>
           <div className="gold-rule my-3 max-w-xs" />
-          <p className="text-xs leading-relaxed">
-            <code className="text-foreground">#</code> notes ignored. Then{" "}
-            <code className="text-foreground">Operation:</code>, resource cycles, counts,{" "}
-            <code className="text-foreground">Counter after:</code>, durations (minutes), optional Priority,
-            Branch p, GEN/CON, Cost USD/h, Sensitivity last. Multi-demand:{" "}
-            <code className="text-foreground">A | B | C</code>.
+          <p className="text-[13px] leading-relaxed text-foreground/90">
+            You do not draw QUEUE circles by hand. You describe <strong>resource cycles</strong>; the builder creates
+            queues, tasks, and arcs. Students learn the logic of cycles, not pixel-pushing.
           </p>
-          <pre className="mt-3 max-h-48 overflow-auto rounded-[var(--radius-md)] border border-primary/20 bg-card p-3 font-mono text-[10px] text-foreground">
+          <h3 className="font-display mt-5 text-base font-semibold text-foreground">3.1–3.2 Comments and Operation</h3>
+          <p className="mt-2 text-xs leading-relaxed">
+            <code className="text-foreground">#</code> / <code className="text-foreground">//</code> = notes only.
+            First data line after notes: <code className="text-foreground">Operation: Earthmoving</code> (aliases
+            Model / Title / Op) for report title and Excel filename. Examples place it after their comment block.
+          </p>
+          <h3 className="font-display mt-5 text-base font-semibold text-foreground">3.3 Network</h3>
+          <p className="mt-2 text-xs leading-relaxed">
+            One sequence per resource; supporting resources share meeting tasks. Counts like{" "}
+            <code className="text-foreground">5 trucks, 1 loader</code>. Arrows: → · {"->"} · {"-->"} · {"=>"}.
+            Multi-demand: <code className="text-foreground">Crane: LiftAtA | LiftAtB | LiftAtC</code>. Priority:
+            lower number = higher priority when several demands wait.
+          </p>
+          <h3 className="font-display mt-5 text-base font-semibold text-foreground">
+            3.4 Counter, durations, branch, GEN/CON
+          </h3>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-xs">
+            <li>
+              <code className="text-foreground">Counter after:</code> exact task name(s); multi-counter allowed
+            </li>
+            <li>
+              Durations in <strong className="text-foreground">minutes</strong>: const, unif, tri, normal, lognormal,
+              beta (min,max,α,β), pert (a,m,b), gamma
+            </li>
+            <li>Branch p for forks (breakdown, rework)—probabilities should sum sensibly</li>
+            <li>
+              Inline GEN/CON when unit logic needs scaling:{" "}
+              <code className="text-foreground">GEN 5 → Scoop → CON 5 TruckFull → …</code>
+            </li>
+          </ul>
+          <h3 className="font-display mt-5 text-base font-semibold text-foreground">3.5 Cost, sensitivity, order</h3>
+          <p className="mt-2 text-xs leading-relaxed">
+            Cost in USD per resource-hour. Sensitivity last. Caps: ≤5 SA resources; ~150 combinations. Recommended
+            order:{" "}
+            <strong className="text-foreground">
+              Operation → Network → Durations → Priority → Branch → Cost → Sensitivity
+            </strong>
+            .
+          </p>
+          <h3 className="font-display mt-5 text-base font-semibold text-foreground">Live Format Prompt template</h3>
+          <pre className="mt-2 max-h-64 overflow-auto rounded-[var(--radius-md)] border border-primary/20 bg-card p-3 font-mono text-[10px] leading-snug text-foreground">
             {GENERAL_TEMPLATE}
           </pre>
 
