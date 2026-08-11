@@ -2,7 +2,7 @@
 
 | | |
 |--|--|
-| **Version** | 1.6.14 |
+| **Version** | 1.6.15 |
 | **Product** | AI-Assisted Construction Operation Simulation |
 | **Dedication** | AI-agent of Daniel W. Halpin's CYCLONE |
 | **Language** | English (product & teaching surface) |
@@ -209,11 +209,8 @@ Record **seed**, **max cycles**, and **Operation** name in assignments.
 
 Try chips: resources · bottleneck · productivity · unit cost. Replies ≤20 lines. Proposed prompts need **Apply → Draw Model → Simulate**.
 
-### 2.7 Quick path
 
-Example or Format Prompt → **Draw Model** → check diagram (Ch.4) → cycles & seed → **Simulate** → Sensitivity (if planned) → AI Assistant (optional) → Export.
-
-### 2.8 Common first-session mistakes
+### 2.7 Common first-session mistakes
 
 1. Expecting the diagram after only selecting an Example.  
 2. Simulating before the diagram matches the story.  
@@ -712,7 +709,6 @@ Thank you for using Neo-CYCLONE with care.
 
 ---
 
-**Quick path:** Example or Format Prompt → Draw Model → read the diagram (Ch.4) → Simulate → Sensitivity (if planned) → AI Assistant (optional) → Export.
 
 ---
 
@@ -753,4 +749,4 @@ Neo-CYCLONE does **not** claim to supersede research simulators. It is **AI-Assi
 
 ---
 
-*AI-Assisted Construction Operation Simulation · Manual v1.6.14*
+*AI-Assisted Construction Operation Simulation · Manual v1.6.15*
