@@ -2,7 +2,7 @@
 
 | | |
 |--|--|
-| **Version** | 1.7.1
+| **Version** | 1.7.2
 | **Product** | AI-Assisted Construction Operation Simulation |
 | **Live app** | [https://neo-cyclone.vercel.app/](https://neo-cyclone.vercel.app/) |
 | **Language** | English (product & teaching surface) |
@@ -679,4 +679,4 @@ Neo-CYCLONE does **not** claim to supersede research simulators. It is **AI-Assi
 
 ---
 
-*AI-Assisted Construction Operation Simulation · Manual v1.7.1*
+*AI-Assisted Construction Operation Simulation · Manual v1.7.2*
