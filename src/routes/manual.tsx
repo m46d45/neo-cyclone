@@ -19,7 +19,7 @@ function ManualPage() {
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
           <div className="flex items-center gap-2">
             <BookOpen className="size-4 text-primary" />
-            <h1 className="font-display text-base font-semibold">Neo-CYCLONE Manual</h1>
+            <h1 className="font-display text-lg font-semibold tracking-tight sm:text-xl">Neo-CYCLONE Manual</h1>
             <Badge variant="secondary" className="border-primary/25 bg-primary/10 text-primary">
               v{PRODUCT_VERSION}
             </Badge>
@@ -36,7 +36,12 @@ function ManualPage() {
 
       <main className="mx-auto max-w-3xl space-y-14 px-4 py-8 text-sm leading-relaxed text-muted-foreground">
         <div>
-          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">{PRODUCT_TAGLINE}</p>
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+            Neo-CYCLONE Manual
+          </h1>
+          <p className="mt-2 text-[11px] font-medium uppercase tracking-[0.14em] text-primary">
+            {PRODUCT_TAGLINE}
+          </p>
           <p className="mt-4 text-[13px] leading-relaxed text-foreground/90">
             For students, instructors, and practitioners who want to understand construction operations as{" "}
             <em>flow</em>. Includes diagram literacy (how Neo-CYCLONE draws CYCLONE) and places{" "}
