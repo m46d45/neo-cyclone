@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   GENERAL_TEMPLATE,
-  PRODUCT_DEDICATION,
   PRODUCT_TAGLINE,
   PRODUCT_VERSION,
 } from "@/lib/cyclone/prompt-template";
@@ -38,7 +37,6 @@ function ManualPage() {
       <main className="mx-auto max-w-3xl space-y-14 px-4 py-8 text-sm leading-relaxed text-muted-foreground">
         <div>
           <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">{PRODUCT_TAGLINE}</p>
-          <p className="mt-1 text-xs text-muted-foreground">{PRODUCT_DEDICATION}</p>
           <p className="mt-4 text-[13px] leading-relaxed text-foreground/90">
             For students, instructors, and practitioners who want to understand construction operations as{" "}
             <em>flow</em>. Includes diagram literacy (how Neo-CYCLONE draws CYCLONE) and places{" "}
@@ -704,7 +702,7 @@ function ManualPage() {
           <p className="mt-3">
             {PRODUCT_TAGLINE}
             <span className="mx-1.5">·</span>
-            {PRODUCT_DEDICATION} · Manual v{PRODUCT_VERSION}
+            Manual v{PRODUCT_VERSION}
           </p>
         </footer>
       </main>
