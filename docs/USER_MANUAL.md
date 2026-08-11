@@ -2,7 +2,7 @@
 
 | | |
 |--|--|
-| **Version** | 1.6.7 |
+| **Version** | 1.6.8 |
 | **Product** | AI-Assisted Construction Operation Simulation |
 | **Dedication** | AI-agent of Daniel W. Halpin's CYCLONE |
 | **Language** | English (product & teaching surface) |
@@ -604,37 +604,77 @@ Product + version · URL · Operation · seed · max cycles · Simulation and/or
 
 ## Chapter 9 — FAQ (from real studio use)
 
+### Drawing and the model diagram
+
 **Q: I selected an Example but nothing drew.**  
-A: Click **Draw Model**.
+A: Click **Draw Model**. Examples only paste the prompt.
 
 **Q: Why does the diagram not match the book figure exactly?**  
-A: Same CYCLONE *logic*; Neo-CYCLONE teaching *notation* (Chapter 4). Black/gold arrows and some shapes are intentional.
-
-**Q: COMBI vs NORMAL looks wrong.**  
-A: COMBI only when **two or more resources** must meet.
+A: Same CYCLONE *logic*; Neo-CYCLONE teaching *notation* (Chapter 4). Black/gold arrows and some shapes are intentional—not a bug.
 
 **Q: What do gold dashed arrows mean?**  
-A: Resource **return** to a home QUEUE. Black solid = forward work.
+A: Resource **return** to a **home QUEUE**. Solid black = forward work (including into staging before a COMBI).
 
-**Q: Excel name is ugly.**  
-A: Set `Operation: …` after `#` notes.
+**Q: COMBI vs NORMAL looks wrong.**  
+A: COMBI only when **two or more resources** must meet to start the task. Solo work → NORMAL. Re-read which resources list that task.
 
-**Q: Classmate got different productivity.**  
-A: Match seed, max cycles, and full prompt.
+**Q: Where is the production counter?**  
+A: Golf-flag node. Set with `Counter after: TaskName`. Multiple flags are allowed (e.g. tower crane zones).
+
+**Q: GEN and CON look like random triangles.**  
+A: ▽ GEN multiplies units on arrival; △ CON gathers n→1. Prefer inline on the cycle: `GEN 5 → Scoop → CON 5 TruckFull → …`. Not required in every model.
+
+### Simulation and results
+
+**Q: Why is Simulate not useful yet?**  
+A: Draw a model you trust first. Numbers without a truthful diagram are noise.
+
+**Q: My classmate got different productivity.**  
+A: Compare **seed**, **max cycles**, and whether the Format Prompt is identical (durations, branches, counts).
+
+**Q: What is the steady-state line?**  
+A: Teaching guide: productivity within about **5%** over a window of at least **10** cycles—old-gold dashed line on the units/hour chart. Quote that band in class, not the first noisy spike.
+
+**Q: Sensitivity tab is empty / boring.**  
+A: Add a `Sensitivity:` block (see Examples 5–6). Without ranges, there is nothing to sweep.
+
+**Q: Charts stop before my max cycles.**  
+A: Series follow completed production events; if the run hits time/logic limits earlier, the chart ends earlier. Check Process Report run length and cycle count.
+
+**Q: Where is cost?**  
+A: Only if the prompt has `Cost:` rates (USD per resource-hour). Then Cost Report shows totals and **unit cost**.
+
+### Prompt, Excel, language
+
+**Q: Excel file name looks like resource spaghetti.**  
+A: Add `Operation: ShortName` after `#` notes (before resource cycles).
+
+**Q: Can I write the prompt in Indonesian?**  
+A: `#` notes may be any language. Keep **network keywords**, task names used in counters, and distribution keywords in **English** for reliable parsing.
 
 **Q: AI proposed a prompt but numbers did not change.**  
-A: **Apply → Draw Model → Simulate**.
+A: Click **Apply**, then **Draw Model**, then **Simulate**. Nothing silent updates the engine.
 
-**Q: Sensitivity empty?**  
-A: Need a `Sensitivity:` block (Examples 5–6).
+**Q: AI only answers in English / very short.**  
+A: Product policy: English-first; replies capped (≤20 lines) so the studio stays primary.
 
-**Q: Indonesian prompt?**  
-A: `#` notes any language; keep network keywords and distributions in English for reliable parsing.
+### Access and limits
 
-**Q: Sign-in required?**  
+**Q: Is sign-in required?**  
 A: No for teaching use.
 
----
+**Q: Max cycles 500 still feels short.**  
+A: Teaching cap protects shared hosts and keeps charts readable. For research-scale work, use a research tool or discuss with the course owner.
+
+**Q: Rate limit on AI Assistant?**  
+A: About 30 requests / hour / IP on the shared host. Normal class pace is fine; lab NATs may share one IP.
+
+**Q: Who is this dedicated to?**  
+A: Professor Daniel W. Halpin and the CYCLONE tradition—see Prologue and References.
+
+**Q: Where is the full bibliography?**  
+A: **References** section at the **end** of this manual (after the Epilogue).
+
 
 # Part IX — Teaching with Neo-CYCLONE
 
@@ -728,4 +768,4 @@ Neo-CYCLONE does **not** claim to supersede research simulators. It is **AI-Assi
 
 ---
 
-*AI-Assisted Construction Operation Simulation · AI-agent of Daniel W. Halpin's CYCLONE · Manual v1.6.7*
+*AI-Assisted Construction Operation Simulation · AI-agent of Daniel W. Halpin's CYCLONE · Manual v1.6.8*

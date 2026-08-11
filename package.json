@@ -1,7 +1,7 @@
 {
   "name": "neo-cyclone",
   "private": true,
-  "version": "1.6.7",
+  "version": "1.6.8",
   "description": "AI-agent of Daniel W. Halpin's CYCLONE \u2014 construction operation simulation",
   "sideEffects": false,
   "type": "module",
