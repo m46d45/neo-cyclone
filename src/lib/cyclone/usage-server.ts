@@ -93,19 +93,21 @@ async function statsAbacus(): Promise<UsageStats> {
 
 export const recordUsage = createServerFn({ method: "POST" })
   .validator((input: { kind?: string; newVisitor?: boolean }) => {
-    const kind = input?.kind === "draw" || input?.kind === "simulate" ? input.kind : null;
+    const kind: UsageKind | null =
+      input?.kind === "draw" || input?.kind === "simulate" ? input.kind : null;
     return { kind, newVisitor: Boolean(input?.newVisitor) };
   })
   .handler(async ({ data }): Promise<{ ok: boolean }> => {
     if (!data.kind) return { ok: false };
+    const kind = data.kind;
     const visitor = requestVisitor();
     const rl = checkAiRateLimit(`usage:${visitor}`, { max: 60, windowMs: 60 * 60 * 1000 });
     if (!rl.allowed) return { ok: false };
     try {
       if (dbSource === "neon") {
-        await recordNeon(data.kind, visitor);
+        await recordNeon(kind, visitor);
       } else {
-        await recordAbacus(data.kind, data.newVisitor);
+        await recordAbacus(kind, data.newVisitor);
       }
       return { ok: true };
     } catch {
