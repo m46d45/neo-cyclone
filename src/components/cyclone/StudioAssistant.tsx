@@ -9,6 +9,7 @@ import { chatAssistant, clampAssistantReply } from "@/lib/cyclone/assistant-serv
 import { buildAssistantContext } from "@/lib/cyclone/assistant-context";
 import { uid } from "@/lib/cyclone/agent/session";
 import { PRODUCT_TAGLINE } from "@/lib/cyclone/prompt-template";
+import { recordStudioUse } from "@/lib/cyclone/usage-client";
 
 type UiMsg = {
   id: string;
@@ -134,6 +135,7 @@ export function StudioAssistant() {
         description: error || "Draw Model first, then Simulate.",
       });
     } else {
+      recordStudioUse("simulate");
       toast.success("Simulation re-run with current network");
     }
   }

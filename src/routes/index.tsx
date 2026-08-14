@@ -7,6 +7,7 @@ import { ResultsPanel } from "@/components/cyclone/ResultsPanel";
 import { StudioAssistant } from "@/components/cyclone/StudioAssistant";
 import { LogoMark } from "@/components/cyclone/LogoMark";
 import { PRODUCT_TAGLINE, PRODUCT_VERSION, PRODUCT_YEAR } from "@/lib/cyclone/prompt-template";
+import { UsageFooter } from "@/components/cyclone/UsageFooter";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({ component: StudioPage });
@@ -71,6 +72,7 @@ function StudioPage() {
           v{PRODUCT_VERSION}
           <span className="mx-1.5 text-border">·</span>
           {PRODUCT_YEAR}
+          <UsageFooter />
         </footer>
       </main>
     </div>

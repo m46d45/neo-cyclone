@@ -17,6 +17,7 @@ import { EXAMPLE_PROMPTS } from "@/lib/cyclone/example-prompts";
 import { parseCostAndSensitivity, applyCostsToModel } from "@/lib/cyclone/sensitivity";
 import { parsePriorityBlock, applyPrioritiesToModel } from "@/lib/cyclone/priority";
 import { t } from "@/lib/cyclone/agent/i18n";
+import { recordStudioUse } from "@/lib/cyclone/usage-client";
 
 function looksStructuredPrompt(prompt: string): boolean {
   return /[A-Za-z][A-Za-z0-9 _/-]{0,40}\s*:\s*.+(→|->|=>|\|)/m.test(prompt);
@@ -112,6 +113,7 @@ export function AIAssist() {
       }
       markModelReady(true);
       if (!opts?.quiet) toast.success(c.modelDrawn);
+      recordStudioUse("draw");
       return true;
     } finally {
       setLoading(false);

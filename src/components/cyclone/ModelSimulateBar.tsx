@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useCycloneStore, DEFAULT_SEED } from "@/lib/cyclone/store";
 import { t } from "@/lib/cyclone/agent/i18n";
 import { MAX_CYCLES_LIMIT, DEFAULT_MAX_CYCLES } from "@/lib/cyclone/run-limits";
+import { recordStudioUse } from "@/lib/cyclone/usage-client";
 
 /**
  * Under CYCLONE Model: set seed + max cycles, then run simulation.
@@ -125,6 +126,7 @@ export function ModelSimulateBar() {
         onClick={() => {
           const r = simulateNow();
           if (r.ok) {
+            recordStudioUse("simulate");
             toast.success(c.simSuccess);
             document
               .getElementById("results")

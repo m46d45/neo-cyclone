@@ -2,7 +2,7 @@
 
 | | |
 |--|--|
-| **Version** | 1.7.2
+| **Version** | 1.7.3
 | **Product** | AI-Assisted Construction Operation Simulation |
 | **Live app** | [https://neo-cyclone.vercel.app/](https://neo-cyclone.vercel.app/) |
 | **PDF manual** | [Neo-CYCLONE-User-Manual.pdf](./Neo-CYCLONE-User-Manual.pdf) |
@@ -521,6 +521,8 @@ Sensitivity prefers a **Web Worker**; fallback is the main thread with the same 
 AI limits: about 30 Assistant requests / hour / IP; about 20 AI DSL draft requests / hour / IP; compact CONTEXT only; replies short. Without an API key, the local English helper still works. These limits do **not** change CYCLONE rules; they protect hosting and API cost.
 
 Source of truth: **GitHub `main`** auto-deploys to **Vercel** at [neo-cyclone.vercel.app](https://neo-cyclone.vercel.app/). Teaching does not require sign-in. Always cite the footer **version** after a deploy.
+
+The studio footer can show **how many times** Draw Model and Simulate have been used. Counts are **anonymous** (no prompt text, no model). A durable worldwide total needs `DATABASE_URL` (Neon). Without it, you still see **this device** counts in the browser. Increments are rate-limited so a single IP cannot inflate the number.
 
 ### 8.3 Citing Neo-CYCLONE in homework or papers
 
