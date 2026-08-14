@@ -7,8 +7,7 @@ function fmt(n: number): string {
 }
 
 /**
- * Quiet studio-use tally. Global numbers only when the host has a durable
- * database (Neon). Always shows this-device counts from localStorage.
+ * Studio-use tally: worldwide Draw Model + Simulate, plus this-device.
  */
 export function UsageFooter() {
   const [local, setLocal] = useState({ models: 0, simulations: 0 });
@@ -41,8 +40,7 @@ export function UsageFooter() {
           <strong className="font-medium text-foreground/80">{fmt(global.models)}</strong> models drawn
           {global.visitors > 0 ? (
             <>
-              <span className="mx-1.5 text-border">·</span>
-              ~{fmt(global.visitors)} visitors
+              <span className="mx-1.5 text-border">·</span>~{fmt(global.visitors)} visitors
             </>
           ) : null}
         </>

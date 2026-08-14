@@ -4,6 +4,7 @@ const KEYS: Record<UsageKind, string> = {
   draw: "neo-cyclone-usage-draw",
   simulate: "neo-cyclone-usage-simulate",
 };
+const VISITOR_FLAG = "neo-cyclone-usage-visitor";
 
 export const USAGE_CHANGED = "neo-cyclone-usage";
 
@@ -24,10 +25,15 @@ export function localUsage(): { models: number; simulations: number } {
 
 export function recordStudioUse(kind: UsageKind) {
   writeLocal(kind, readLocal(kind) + 1);
+  let newVisitor = false;
   if (typeof window !== "undefined") {
+    if (!window.localStorage.getItem(VISITOR_FLAG)) {
+      window.localStorage.setItem(VISITOR_FLAG, "1");
+      newVisitor = true;
+    }
     window.dispatchEvent(new Event(USAGE_CHANGED));
   }
-  void recordUsage({ data: { kind } })
+  void recordUsage({ data: { kind, newVisitor } })
     .then(() => {
       if (typeof window !== "undefined") {
         window.dispatchEvent(new Event(USAGE_CHANGED));
