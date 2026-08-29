@@ -409,7 +409,7 @@ ResourceB: 120
               </thead>
               <tbody className="bg-card/40">
                                 <tr className="border-b border-border/70"><td className="px-2.5 py-2 align-top"><strong className="text-foreground">AI mode</strong></td><td className="px-2.5 py-2 align-top">Host has <code className="rounded bg-muted px-1 py-0.5 text-[12px] text-foreground">XAI_API_KEY</code> (for example on Vercel)</td><td className="px-2.5 py-2 align-top">Chat model sees a <strong className="text-foreground">compact CONTEXT</strong> snapshot only</td></tr>
-                <tr><td className="px-2.5 py-2 align-top"><strong className="text-foreground">Local mode</strong></td><td className="px-2.5 py-2 align-top">No key or API failure</td><td className="px-2.5 py-2 align-top">English-first intent helper for common studio questions</td></tr>
+                <tr><td className="px-2.5 py-2 align-top"><strong className="text-foreground">Local mode</strong></td><td className="px-2.5 py-2 align-top">No key or API failure</td><td className="px-2.5 py-2 align-top">Same studio questions and prompt edits (fleet counts, add a task after another). Apply → Draw → Simulate still required.</td></tr>
               </tbody>
             </table>
           </div>

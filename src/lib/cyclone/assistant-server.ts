@@ -1,6 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { checkAiRateLimit, clientKeyFromHeaders } from "./ai-rate-limit";
+import {
+  ASSISTANT_MAX_REPLY_LINES,
+  localAssistant as runLocalAssistant,
+} from "./assistant-local";
 
 export type AssistantRequest = {
   message: string;
@@ -18,8 +22,7 @@ export type AssistantResponse = {
   error: string | null;
 };
 
-/** Hard cap for assistant replies (teaching UI). */
-export const ASSISTANT_MAX_REPLY_LINES = 20;
+export { ASSISTANT_MAX_REPLY_LINES };
 
 const SYSTEM = `You are the Neo-CYCLONE AI Assistant — educational co-pilot for Halpin CYCLONE simulation.
 Product: AI-Assisted Construction Operation Simulation (international, English-first).
@@ -88,7 +91,7 @@ export const chatAssistant = createServerFn({ method: "POST" })
     const context = data.context || "(no studio context)";
     const apiKey = process.env.XAI_API_KEY;
     if (!apiKey) {
-      return finalizeLocal(localAssistant(message, data.prompt, context));
+      return finalizeLocal(runLocalAssistant(message, data.prompt, context));
     }
 
     try {
@@ -107,18 +110,17 @@ export const chatAssistant = createServerFn({ method: "POST" })
           model: "grok-4.5",
           max_tokens: 900,
           temperature: 0.25,
+          response_format: { type: "json_object" },
           messages: [
             { role: "system", content: SYSTEM },
+            ...historyMsgs.slice(-6),
             { role: "user", content: `CONTEXT:\n${context}\n\nUSER:\n${message}` },
-            ...historyMsgs.slice(0, 6),
           ],
         }),
       });
 
       if (!res.ok) {
-        const local = finalizeLocal(localAssistant(message, data.prompt, context));
-        local.error = `xAI API ${res.status}`;
-        return local;
+        return finalizeLocal(runLocalAssistant(message, data.prompt, context));
       }
 
       const body = (await res.json()) as { choices: { message: { content: string } }[] };
@@ -142,15 +144,24 @@ export const chatAssistant = createServerFn({ method: "POST" })
         source: "ai",
         error: null,
       };
-    } catch (e) {
-      const local = finalizeLocal(localAssistant(message, data.prompt, context));
-      local.error = e instanceof Error ? e.message : "request failed";
-      return local;
+    } catch {
+      return finalizeLocal(runLocalAssistant(message, data.prompt, context));
     }
   });
 
-function finalizeLocal(r: AssistantResponse): AssistantResponse {
-  return { ...r, reply: clampAssistantReply(r.reply) };
+function finalizeLocal(r: {
+  reply: string;
+  proposedPrompt: string | null;
+  suggestSimulate: boolean;
+}): AssistantResponse {
+  return {
+    ok: true,
+    reply: clampAssistantReply(r.reply),
+    proposedPrompt: r.proposedPrompt,
+    suggestSimulate: r.suggestSimulate,
+    source: "local",
+    error: null,
+  };
 }
 
 function parseAssistantJson(raw: string): {
@@ -199,183 +210,4 @@ function parseAssistantJson(raw: string): {
 function stripFences(text: string): string {
   const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
   return (fence?.[1] ?? text).trim();
-}
-
-function extractFleetCounts(prompt: string): { n: string; name: string }[] {
-  const out: { n: string; name: string }[] = [];
-  const seen = new Set<string>();
-  for (const m of prompt.matchAll(
-    /(\d+)\s+(trucks?|loaders?|cranes?|helpers?|masons?|excavators?|pavers?|crew|crews|forms?|buckets?)\b/gi,
-  )) {
-    const name = m[2]!.trim();
-    const key = name.toLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push({ n: m[1]!, name });
-  }
-  return out.slice(0, 12);
-}
-
-function parseIdleFromContext(context: string): { resourceLabel: string; idlePct: number; busyPct: number; n: number }[] {
-  const out: { resourceLabel: string; idlePct: number; busyPct: number; n: number }[] = [];
-  for (const m of context.matchAll(
-    /idle\s+([^:]+):\s*idlePct=([\d.]+)\s+busyPct=([\d.]+)\s+n=(\d+)/gi,
-  )) {
-    out.push({
-      resourceLabel: m[1]!.trim(),
-      idlePct: Number(m[2]),
-      busyPct: Number(m[3]),
-      n: Number(m[4]),
-    });
-  }
-  return out;
-}
-
-function hasSimResults(context: string): boolean {
-  return /cyclesCompleted:\s*\d+/i.test(context) && !/\(none — user has not simulated yet\)/i.test(context);
-}
-
-function parseProductivityHint(context: string): string {
-  const uph = context.match(/last unitsPerHour:\s*([\d.]+)/i);
-  const cycles = context.match(/cyclesCompleted:\s*(\d+)/i);
-  const unitCost = context.match(/unitCostUsd=([\d.]+)/i);
-  const bits: string[] = [];
-  if (cycles) bits.push(`${cycles[1]} cycles`);
-  if (uph) bits.push(`units/hour ≈ ${Number(uph[1]).toFixed(3)}`);
-  if (unitCost) bits.push(`unit cost ≈ ${Number(unitCost[1]).toFixed(4)} USD`);
-  return bits.join(", ");
-}
-
-/** Compact model summary from CONTEXT network section (≤ ~12 bullets). */
-function compactModelSummary(prompt: string, context: string): string {
-  const out: string[] = [];
-  const name = context.match(/model:\s*(.+)/i)?.[1]?.trim();
-  if (name && name !== "unnamed") out.push(`Model: ${name}`);
-
-  const combis = [...context.matchAll(/- COMBI:([^\n]+)/g)].map((m) => m[1]!.trim().split(" ")[0]!);
-  const normals = [...context.matchAll(/- NORMAL:([^\n]+)/g)].map((m) => m[1]!.trim().split(" ")[0]!);
-  const queues = [...context.matchAll(/- QUEUE:([^\n]+)/g)].map((m) => m[1]!.trim().split(" ")[0]!);
-  const counters = [...context.matchAll(/- COUNTER:([^\n]+)/g)].map((m) => m[1]!.trim().split(" ")[0]!);
-
-  const fleet = extractFleetCounts(prompt);
-  if (fleet.length) {
-    out.push("Fleet: " + fleet.map((c) => `${c.n}× ${c.name}`).join(", "));
-  }
-  if (queues.length) out.push(`Queues: ${queues.slice(0, 6).join(", ")}${queues.length > 6 ? "…" : ""}`);
-  if (combis.length) out.push(`COMBI: ${combis.slice(0, 5).join(", ")}${combis.length > 5 ? "…" : ""}`);
-  if (normals.length) out.push(`NORMAL: ${normals.slice(0, 5).join(", ")}${normals.length > 5 ? "…" : ""}`);
-  if (counters.length) out.push(`Counter: ${counters.join(", ")}`);
-
-  if (hasSimResults(context)) {
-    const hint = parseProductivityHint(context);
-    if (hint) out.push(`Last run: ${hint}`);
-  } else {
-    out.push("Not simulated yet — Draw Model then Simulate for metrics.");
-  }
-
-  if (out.length === 0) {
-    const lines = prompt.trim() ? prompt.trim().split(/\n/).filter(Boolean).length : 0;
-    out.push(lines ? `Prompt loaded (${lines} lines). Draw Model for network summary.` : "No prompt yet.");
-  }
-  return out.slice(0, ASSISTANT_MAX_REPLY_LINES).join("\n");
-}
-
-function localAssistant(message: string, prompt: string, context: string): AssistantResponse {
-  const q = message.toLowerCase();
-  let reply = "";
-  let proposedPrompt: string | null = null;
-  let suggestSimulate = false;
-
-  const asksBottleneck =
-    /bottleneck|most (problem|critical|idle|busy)|which resource|waste|highest idle/i.test(q);
-
-  if (asksBottleneck) {
-    const idleStats = parseIdleFromContext(context);
-    if (idleStats.length) {
-      const sorted = [...idleStats].sort((a, b) => b.idlePct - a.idlePct);
-      const worst = sorted[0]!;
-      reply =
-        "Home-QUEUE idleness (waste):\n" +
-        sorted
-          .slice(0, 8)
-          .map((r) => `• ${r.resourceLabel}: idle ${r.idlePct.toFixed(1)}% · busy ${r.busyPct.toFixed(1)}%`)
-          .join("\n") +
-        `\nHighest idle: ${worst.resourceLabel} (${worst.idlePct.toFixed(1)}%).`;
-    } else {
-      reply = "Run Simulate first, then ask about the bottleneck.";
-    }
-  }
-
-  if (/how many|fleet|jumlah|berapa|resources\?/.test(q) && prompt) {
-    const counts = extractFleetCounts(prompt);
-    if (counts.length) {
-      reply += (reply ? "\n" : "") + "Fleet:\n" + counts.map((c) => `• ${c.n} × ${c.name}`).join("\n");
-    } else {
-      reply += (reply ? "\n" : "") + "No clear fleet counts in the Format Prompt.";
-    }
-  }
-
-  if (/explain|summary|describe|jelaskan|model/.test(q)) {
-    reply = compactModelSummary(prompt, context);
-  }
-
-  if (/productiv|produktiv|units per|steady|hasil/.test(q)) {
-    if (hasSimResults(context)) {
-      const hint = parseProductivityHint(context);
-      reply += (reply ? "\n" : "") + (hint ? `Productivity: ${hint}.` : "Last run metrics are in context.");
-    } else {
-      reply += (reply ? "\n" : "") + "No results yet. Draw Model, then Simulate.";
-    }
-  }
-
-  if (!asksBottleneck && /idle|waste|util|busy/.test(q)) {
-    const idleStats = parseIdleFromContext(context);
-    if (idleStats.length) {
-      reply +=
-        (reply ? "\n" : "") +
-        "Idleness:\n" +
-        idleStats
-          .slice(0, 8)
-          .map((r) => `• ${r.resourceLabel}: idle ${r.idlePct.toFixed(1)}% / busy ${r.busyPct.toFixed(1)}%`)
-          .join("\n");
-    }
-  }
-
-  const setMatch =
-    message.match(/(?:set|change|make)\s+(\w+)\s+(?:to|=)?\s*(\d+)/i) ||
-    message.match(/(\d+)\s+(trucks?|loaders?|cranes?|helpers?|masons?)/i);
-  if (setMatch && prompt) {
-    let n: string;
-    let name: string;
-    if (/^\d+$/.test(setMatch[1]!) && setMatch[2]) {
-      n = setMatch[1]!;
-      name = setMatch[2]!;
-    } else {
-      name = setMatch[1]!;
-      n = setMatch[2]!;
-    }
-    const re = new RegExp(`(\\d+)(\\s+)(${escapeRe(name)}s?)\\b`, "i");
-    if (re.test(prompt)) {
-      proposedPrompt = prompt.replace(re, `${n}$2$3`);
-      reply += (reply ? "\n" : "") + `Propose: set ${name} → ${n}. Click Apply, then Draw + Simulate.`;
-      suggestSimulate = true;
-    }
-  }
-
-  if (/help|keyword|command/.test(q)) {
-    reply +=
-      (reply ? "\n" : "") +
-      "Try: Resources? · Bottleneck? · Productivity? · Set trucks to 8.";
-  }
-
-  if (!reply) {
-    reply =
-      "Local mode (no XAI_API_KEY). Short chips: Resources? · Bottleneck? · Productivity? · Set trucks to 8.";
-  }
-
-  return { ok: true, reply, proposedPrompt, suggestSimulate, source: "local", error: null };
-}
-
-function escapeRe(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

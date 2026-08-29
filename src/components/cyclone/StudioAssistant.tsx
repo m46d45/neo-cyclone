@@ -96,10 +96,6 @@ export function StudioAssistant() {
       agentPush({ role: "agent", text: assistantMsg.text });
       if (res.error === "rate_limited") {
         toast.message("Rate limit", { description: res.reply });
-      } else if (res.source === "local") {
-        toast.message("Assistant: local mode", {
-          description: "Set XAI_API_KEY on Vercel for full free-form chat",
-        });
       }
     } catch (e) {
       const err = e instanceof Error ? e.message : "Assistant failed";

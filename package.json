@@ -1,7 +1,7 @@
 {
   "name": "neo-cyclone",
   "private": true,
-  "version": "1.7.4",
+  "version": "1.7.5",
   "description": "AI-agent of Daniel W. Halpin's CYCLONE \u2014 construction operation simulation",
   "sideEffects": false,
   "type": "module",
@@ -18,7 +18,7 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview --host 0.0.0.0 --port 8080",
     "typecheck": "tsc --noEmit",
-    "test": "node --test 'scripts/**/*.test.mjs'",
+    "test": "node --test 'scripts/**/*.test.mjs' && node --experimental-strip-types --test src/lib/cyclone/assistant-local.test.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
     "manual:pdf": "node scripts/generate-manual-pdf.mjs"

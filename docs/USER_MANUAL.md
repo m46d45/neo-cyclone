@@ -2,7 +2,7 @@
 
 | | |
 |--|--|
-| **Version** | 1.7.4
+| **Version** | 1.7.5
 | **Product** | AI-Assisted Construction Operation Simulation |
 | **Live app** | [https://neo-cyclone.vercel.app/](https://neo-cyclone.vercel.app/) |
 | **PDF manual** | [Neo-CYCLONE-User-Manual.pdf](./Neo-CYCLONE-User-Manual.pdf) |
@@ -475,7 +475,7 @@ It must **not** silently re-simulate, invent another operation, or replace CYCLO
 | Mode | When | Behavior |
 |------|------|----------|
 | **AI mode** | Host has `XAI_API_KEY` (for example on Vercel) | Chat model sees a **compact CONTEXT** snapshot only |
-| **Local mode** | No key or API failure | English-first intent helper for common studio questions |
+| **Local mode** | No key or API failure | Same studio questions and prompt edits (fleet counts, add a task after another). Apply → Draw → Simulate still required. |
 
 Product UI, Manual, and keywords are English-first for an international classroom. Rate limits on the shared host (about **30** Assistant requests per hour per IP) protect classroom use from abuse; normal class pace is fine.
 
