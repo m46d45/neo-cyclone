@@ -1,0 +1,118 @@
+Neo-CYCLONE v1.7.5 — reviewer reproduction prompts
+================================================================================
+Studio: https://neo-cyclone.vercel.app/
+Source: https://github.com/m46d45/neo-cyclone  (tag / package version 1.7.5)
+Engine entry points: parseOperationDescription + runCyclone
+  src/lib/cyclone/nl-parser.ts
+  src/lib/cyclone/engine.ts
+
+Seed list (all tabulated stochastic runs):
+  12345, 1, 7, 13, 21, 42, 99, 2024, 2026, 31415
+
+Stop rule: Max cycles = 100.
+Product horizon = 100 × 60 = 6000 min (engine run-limits.ts).
+  Girder cycle ≈ 99 min → every girder run stops at 60 cycles / ≈ 5990 min.
+  Pavement cycle is shorter → every pavement run completes 100 cycles.
+
+Do not paste Table 6 (μ, σ of ln X) into a Duration line.
+The engine lognormal token is mean and sd of duration in minutes.
+
+
+---------- 5.1 Deterministic earthmoving (Table 3) ----------
+Operation: Earthmoving_Validation
+
+Trucks: Load → Haul → Dump → Return
+Loader: Load
+Spotter: Dump
+4 trucks, 1 loader, 1 spotter
+
+Counter after: Dump
+production = 1 load
+
+Durations:
+Load: const 7
+Haul: const 8
+Dump: const 5
+Return: const 6
+
+Cycles: 100
+Seed: 12345
+
+
+---------- 5.2 PC-I girder / Cinapel (Table 4) ----------
+Operation: PCI_Girder_Cinapel
+
+Trucks: LiftToTruck → Travel → PlaceToLifter → Return
+Lifter: PlaceToLifter → Lift → PlaceGirder → Brace → ReturnLifter
+ErectionTeam: PlaceGirder → Brace
+1 truck, 1 lifter, 1 ErectionTeam
+
+Counter after: Brace
+production = 1 girder
+
+Durations:
+LiftToTruck: tri 15, 18, 20
+Travel: tri 12, 15, 17
+PlaceToLifter: tri 15, 18, 20
+Return: tri 10, 12, 15
+Lift: const 35
+PlaceGirder: tri 15, 18, 20
+Brace: tri 13, 17, 20
+ReturnLifter: tri 10, 12, 15
+
+Cycles: 100
+Seed: <one of the ten seeds>
+
+
+---------- 6. Pavement scenarios 1–7 (Table 7) ----------
+Common block (only Discharge mean/sd and production increment change):
+
+Operation: RigidPavement_<code>
+
+Trucks: Away → Discharge → Return
+Paver: Discharge
+N Trucks = 5, n Paver = 1
+
+Counter after: Discharge
+production = <vol> m3
+
+Durations:
+Away: lognormal 8.0 3.2
+Discharge: lognormal <mean> <sd>
+Return: lognormal 8.0 3.2
+
+Cycles: 100
+Seed: <one of the ten seeds>
+
+Sc  code              vol   Discharge mean  Discharge sd
+1   Baseline10        10    11.05           5.27
+2   Volume4            4     5.52            2.31
+3   Volume8            8    13.43            8.3
+4   Sedang            10    10.01            7.27
+5   Panjang           10     9.94            3.16
+6   SSC               10     9.3             4.07
+7   MPM-A             10     9.95            6.32
+
+Example — Sc 1, seed 12345 (archived Table 7 point estimate 52.7 m³/h):
+
+Operation: RigidPavement_Baseline10
+
+Trucks: Away → Discharge → Return
+Paver: Discharge
+n Trucks = 5, n Paver = 1
+
+Counter after: Discharge
+production = 10 m3
+
+Durations:
+Away: lognormal 8.0 3.2
+Discharge: lognormal 11.05 5.27
+Return: lognormal 8.0 3.2
+
+Cycles: 100
+Seed: 12345
+
+
+---------- Expected seed-12345 pavement productivities (m³/h) ----------
+  Sc1 52.70   Sc2 40.46   Sc3 33.68   Sc4 58.53
+  Sc5 57.84   Sc6 62.65   Sc7 59.02

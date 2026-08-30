@@ -1,0 +1,7 @@
+Suggested replacement for draft Table 4,,,,
+"Stochastic PC-I girder erection, Cinapel Bridge. Neo-CYCLONE v1.7.5 versus published WebCYCLONE (Abduh et al.).",,,,
+Metric,WebCYCLONE (published),Neo-CYCLONE seed 12345,Neo-CYCLONE 10-seed mean (range),Difference of mean vs published
+Units per hour (girder/h),0.615,0.6,0.601 (0.600–0.601),−2.3%
+Units per minute,0.010256,0.010003,0.010012,−2.4%
+Completed cycles in these exports,—,60,60 in every seed,—
+Simulation clock (min),—,5998,5 993 (mean),—
