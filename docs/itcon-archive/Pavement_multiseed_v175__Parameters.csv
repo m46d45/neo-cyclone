@@ -1,0 +1,8 @@
+Sc,Scenario,Production_per_cycle_m3,Discharge_mean_min,Discharge_sd_min,Away_mean,Away_sd,Return_mean,Return_sd,Field_m3h
+1,Baseline 10 m3,10,11.05,5.27,8.0,3.2,8.0,3.2,59.8
+2,Volume 4 m3,4,5.52,2.31,8.0,3.2,8.0,3.2,48.2
+3,Volume 8 m3,8,13.43,8.3,8.0,3.2,8.0,3.2,43.7
+4,Length Sedang,10,10.01,7.27,8.0,3.2,8.0,3.2,53.1
+5,Length Panjang,10,9.94,3.16,8.0,3.2,8.0,3.2,58.8
+6,Supplier SSC,10,9.3,4.07,8.0,3.2,8.0,3.2,67.0
+7,Supplier MPM-A,10,9.95,6.32,8.0,3.2,8.0,3.2,52.0
