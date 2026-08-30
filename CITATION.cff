@@ -9,21 +9,22 @@ authors:
     email: "abduh@itb.ac.id"
     affiliation: "Institut Teknologi Bandung"
 abstract: >-
-  AI-Assisted Construction Operation Simulation — web studio for Halpin-style
-  CYCLONE modeling, discrete-event simulation, cost and sensitivity analysis,
-  with an optional studio-bound AI Assistant.
+  Browser-based open CYCLONE framework for construction operations simulation.
+  Structured prompt, deterministic parser, in-browser discrete-event engine.
+  Optional constrained assistant may read a completed run; it does not build
+  the network that is executed.
 keywords:
   - construction operations
   - discrete-event simulation
   - CYCLONE
-  - MicroCYCLONE
-  - educational software
-  - sensitivity analysis
+  - browser-based simulation
 license: MIT
 repository-code: "https://github.com/m46d45/neo-cyclone"
 url: "https://neo-cyclone.vercel.app/"
-version: "1.6.2.1"
-date-released: "2026-08-10"
+version: "1.7.5"
+date-released: "2026-08-30"
 identifiers:
+  - type: url
+    value: "https://github.com/m46d45/neo-cyclone/releases/tag/v1.7.5"
   - type: doi
     value: "10.5281/zenodo.21864969"
