@@ -7,12 +7,24 @@
 
 Web studio for construction operation simulation with Halpin Activity Cycle Diagrams (QUEUE, COMBI, NORMAL, COUNTER), a structured prompt, a deterministic parser, and a discrete-event engine that runs in the browser (utilisation, production, productivity). An optional constrained assistant may read a completed run; it does not build the network that is executed.
 
-**Live studio:** https://neo-cyclone.vercel.app/  
+**Live studio:** https://neo-cyclone.vercel.app/ (demo only — may track `main`)  
 **Manual:** https://neo-cyclone.vercel.app/manual  
 **ITcon tag (v1.7.5):** https://github.com/m46d45/neo-cyclone/releases/tag/v1.7.5  
 **ITcon archive:** https://github.com/m46d45/neo-cyclone/tree/v1.7.5/docs/itcon-archive  
+**Paper version freeze:** [docs/PAPER_VERSION_FREEZE.md](./docs/PAPER_VERSION_FREEZE.md)  
 **Zenodo (concept DOI):** https://doi.org/10.5281/zenodo.21864969  
 **Author:** Muhamad Abduh ([ORCID](https://orcid.org/0000-0001-6926-6665)) · abduh@itb.ac.id
+
+## Paper versions (frozen for review)
+
+| Manuscript | Claimed version | Reproduce from |
+|---|---|---|
+| **ITcon** | **v1.7.5** | Tag [`v1.7.5`](https://github.com/m46d45/neo-cyclone/releases/tag/v1.7.5) (commit `e6ff10d…`) + [`docs/itcon-archive`](./docs/itcon-archive/) |
+| **Software Impacts (OSP)** | **v1.6.2.1** | Tag [`v1.6.2.1`](https://github.com/m46d45/neo-cyclone/releases/tag/v1.6.2.1) |
+
+Software used for the **ITcon reported results** is Neo-CYCLONE **v1.7.5**. Reviewers should reproduce from that tag (or a Zenodo deposit of that tag), **not** from a later deployment of the live studio. Do not bump `PRODUCT_VERSION` / `package.json` version / `CITATION.cff` version, and do not change the engine files listed in the freeze note, while those manuscripts are under review.
+
+Full rules: [docs/PAPER_VERSION_FREEZE.md](./docs/PAPER_VERSION_FREEZE.md).
 
 ## Citation
 

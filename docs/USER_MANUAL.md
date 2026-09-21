@@ -682,4 +682,4 @@ Neo-CYCLONE does **not** claim to supersede research simulators. It is **AI-Assi
 
 ---
 
-*AI-Assisted Construction Operation Simulation · Manual v1.7.2*
+*AI-Assisted Construction Operation Simulation · Manual v1.7.5*

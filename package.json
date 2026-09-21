@@ -2,7 +2,7 @@
   "name": "neo-cyclone",
   "private": true,
   "version": "1.7.5",
-  "description": "AI-agent of Daniel W. Halpin's CYCLONE \u2014 construction operation simulation",
+  "description": "Browser-based CYCLONE framework for construction operations simulation (structured prompt + in-browser engine)",
   "sideEffects": false,
   "type": "module",
   "engines": {

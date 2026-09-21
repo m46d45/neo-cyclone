@@ -164,7 +164,8 @@ export const PRODUCT_TAGLINE = "AI-Assisted Construction Operation Simulation";
 /** Dedication line — Halpin lineage (footer / manual). */
 export const PRODUCT_DEDICATION = "AI-agent of Daniel W. Halpin's CYCLONE";
 
-/** App release label for footer / citation. Keep in sync with manual badge. */
+/** App release label for footer / citation. Keep in sync with manual badge.
+ *  FROZEN at 1.7.5 for ITcon review — see docs/PAPER_VERSION_FREEZE.md. */
 export const PRODUCT_VERSION = "1.7.5";
 
 /** Copyright / release year. */

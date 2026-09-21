@@ -1,7 +1,11 @@
 Neo-CYCLONE v1.7.5 — reviewer reproduction prompts
 ================================================================================
-Studio: https://neo-cyclone.vercel.app/
-Source: https://github.com/m46d45/neo-cyclone  (tag / package version 1.7.5)
+PIN: GitHub tag v1.7.5 (commit e6ff10dfe630c6f8cf11d18af4b47d4767c3064f).
+Reproduce from that tag + this file. The live studio may track main and is
+not the archival pin. See docs/PAPER_VERSION_FREEZE.md.
+
+Studio (demo only): https://neo-cyclone.vercel.app/
+Source: https://github.com/m46d45/neo-cyclone/releases/tag/v1.7.5
 Engine entry points: parseOperationDescription + runCyclone
   src/lib/cyclone/nl-parser.ts
   src/lib/cyclone/engine.ts

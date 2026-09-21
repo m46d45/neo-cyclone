@@ -1,15 +1,20 @@
 # Software Impacts — Code metadata (final)
 
+> **Version freeze:** OSP C1 is pinned to GitHub tag **`v1.6.2.1`**. Do not retarget
+> this table to 1.7.x while the Software Impacts manuscript is under review.
+> The ITcon manuscript cites **v1.7.5** separately — see
+> [../PAPER_VERSION_FREEZE.md](../PAPER_VERSION_FREEZE.md).
+
 | Nr | Code metadata description | Value |
 |----|---------------------------|--------|
 | **C1** | Current code version | v1.6.2.1 |
-| **C2** | Permanent link to code/repository | https://github.com/m46d45/neo-cyclone |
+| **C2** | Permanent link to code/repository | https://github.com/m46d45/neo-cyclone/releases/tag/v1.6.2.1 |
 | **C3** | Permanent link to Reproducible Capsule | https://doi.org/10.5281/zenodo.21864969 |
 | **C4** | Legal Code License | MIT License |
 | **C5** | Code versioning system used | git |
 | **C6** | Software code languages, tools, and services used | TypeScript; React 19; Vite; TanStack Start; Zustand; Recharts; optional xAI chat API; Vercel hosting |
 | **C7** | Compilation requirements, operating environments & dependencies | Node.js 20+ for development/build; modern evergreen browser for end users; `npm install`, `npm run build` |
-| **C8** | Link to developer documentation/manual | https://neo-cyclone.vercel.app/manual ; https://github.com/m46d45/neo-cyclone/blob/main/docs/USER_MANUAL.md |
+| **C8** | Link to developer documentation/manual | https://neo-cyclone.vercel.app/manual ; https://github.com/m46d45/neo-cyclone/blob/v1.6.2.1/docs/USER_MANUAL.md |
 | **C9** | Support email for questions | abduh@itb.ac.id |
 
 ## Software citation (References [10])

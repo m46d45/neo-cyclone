@@ -3,10 +3,15 @@
 Reproducibility pack for the manuscript
 **Neo-CYCLONE: A Browser-Based Open CYCLONE Framework for Construction Operations Simulation — Application to Rigid Pavement Production.**
 
+> **Version freeze:** reported results are pinned to GitHub tag **`v1.7.5`**
+> (commit `e6ff10dfe630c6f8cf11d18af4b47d4767c3064f`). Reproduce from that tag
+> (or this tree at that tag), not from a later `main` commit or from assuming
+> the live studio always matches. See [../PAPER_VERSION_FREEZE.md](../PAPER_VERSION_FREEZE.md).
+
 | Item | Location |
 |---|---|
-| Source tag / version | `package.json` → `1.7.5` |
-| Studio | https://neo-cyclone.vercel.app/ |
+| Source tag / version | GitHub tag `v1.7.5` · `package.json` → `1.7.5` |
+| Studio (demo only) | https://neo-cyclone.vercel.app/ — may track `main`; not the archival pin |
 | Engine | `src/lib/cyclone/nl-parser.ts` (`parseOperationDescription`) + `src/lib/cyclone/engine.ts` (`runCyclone`) |
 | Seeds | `12345, 1, 7, 13, 21, 42, 99, 2024, 2026, 31415` |
 | Stop rule | `maxCycles = 100`; product horizon `100 × 60 = 6000` min |
@@ -29,6 +34,18 @@ The engine token `lognormal a b` is **mean and sd of duration in minutes**. Tabl
 
 - Girder, seed `12345`: **0.600** girder/h after 60 cycles (horizon cuts a ~99 min cycle). Ten-seed mean **0.601**. Published WebCYCLONE ≈ 0.615 (−2.3%).
 - Pavement Sc 1, seed `12345`, Discharge `lognormal 11.05 5.27`, production = 10 m³: **52.70 m³/h**, truck wait 28.4 min, paver idle 0.5%. Ten-seed mean **54.0 m³/h**.
+
+### Where those metrics appear in the UI / result object
+
+After **Simulate** on the pinned build:
+
+| Archive wording | Where to read it |
+|---|---|
+| Productivity (m³/h or girder/h) | Results → process / counter **units per hour** (`unitsPerHour` on the primary counter) |
+| Truck wait (min) | Results → queue table **Avg wait time** for the trucks home / waiting queue (not the productivity cell) |
+| Paver idle (%) | Results → **resource idleness** for the paver (`resourceIdleStats` / idle %) |
+
+Exact labels follow the drawn home-queue names (e.g. `Trucks Idle`, `Paver Idle`).
 
 ## Ranking (pavement, 10 seeds)
 
