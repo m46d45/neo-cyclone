@@ -6,6 +6,10 @@
 **Software version:** v1.6.2.1  
 **DOI:** https://doi.org/10.5281/zenodo.21864969  
 
+> **Freeze:** C1 / this draft cite tag `v1.6.2.1`. Do not retarget to 1.7.x
+> during OSP review. ITcon uses v1.7.5 separately
+> (`docs/PAPER_VERSION_FREEZE.md`).
+
 ---
 
 ## Authors
@@ -32,13 +36,13 @@ Neo-CYCLONE is open educational software for **AI-Assisted Construction Operatio
 | Nr | Code metadata description | Please fill in this column |
 |----|---------------------------|----------------------------|
 | C1 | Current code version | v1.6.2.1 |
-| C2 | Permanent link to code/repository used for this code version | https://github.com/m46d45/neo-cyclone |
+| C2 | Permanent link to code/repository used for this code version | https://github.com/m46d45/neo-cyclone/releases/tag/v1.6.2.1 |
 | C3 | Permanent link to Reproducible Capsule | https://doi.org/10.5281/zenodo.21864969 |
 | C4 | Legal Code License | MIT License |
 | C5 | Code versioning system used | git |
 | C6 | Software code languages, tools, and services used | TypeScript; React 19; Vite; TanStack Start; Zustand; Recharts; optional xAI chat API; Vercel hosting |
 | C7 | Compilation requirements, operating environments & dependencies | Node.js 20+ for development/build; modern evergreen browser for end users; `npm install`, `npm run build` |
-| C8 | If available Link to developer documentation/manual | https://neo-cyclone.vercel.app/manual ; https://github.com/m46d45/neo-cyclone/blob/main/docs/USER_MANUAL.md |
+| C8 | If available Link to developer documentation/manual | https://neo-cyclone.vercel.app/manual ; https://github.com/m46d45/neo-cyclone/blob/v1.6.2.1/docs/USER_MANUAL.md |
 | C9 | Support email for questions | abduh@itb.ac.id |
 
 ---
