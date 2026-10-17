@@ -74,7 +74,7 @@ function slug(s: string): string {
 }
 
 function uniqueId(base: string, used: Set<string>): string {
-  let id = slug(base);
+  const id = slug(base);
   if (!used.has(id)) {
     used.add(id);
     return id;
@@ -1049,7 +1049,7 @@ export function parseExplicitResourceCycles(text: string): {
   const seen = new Set<string>();
 
   const bracket = [
-    ...text.matchAll(/(\d+)\s*([A-Za-z][A-Za-z0-9 \-]{1,28}?)\s*\[\s*([^\]]+?)\s*\]/g),
+    ...text.matchAll(/(\d+)\s*([A-Za-z][A-Za-z0-9 -]{1,28}?)\s*\[\s*([^\]]+?)\s*\]/g),
   ];
   for (const m of bracket) {
     const count = Math.max(1, Math.floor(Number(m[1])));
@@ -1077,7 +1077,7 @@ export function parseExplicitResourceCycles(text: string): {
       continue;
     }
     // New resource cycle line re-enables parsing when it looks like a cycle
-    const m = line.match(/^(?:(\d+)\s+)?([A-Za-z][A-Za-z0-9 \-]{1,28}?)\s*:\s*(.+)$/);
+    const m = line.match(/^(?:(\d+)\s+)?([A-Za-z][A-Za-z0-9 -]{1,28}?)\s*:\s*(.+)$/);
     if (!m) continue;
     if (/^(counter\s+after|count\s+at|production(\s+after)?|production\s+unit)\s*$/i.test(m[2]!.trim())) continue;
     if (/^production\s*$/i.test(m[2]!.trim())) continue;
@@ -1107,7 +1107,7 @@ export function parseExplicitResourceCycles(text: string): {
       (/\[/.test(rhs) && /\]/.test(rhs));
     if (!looksLikeCycle) {
       // bare "Loader: Load" single task is OK for supporting resources
-      if (!/^[A-Za-z][A-Za-z0-9 \/-]{0,30}$/.test(rhs)) continue;
+      if (!/^[A-Za-z][A-Za-z0-9 /-]{0,30}$/.test(rhs)) continue;
     }
 
     section = "cycle";
@@ -1184,7 +1184,7 @@ function mergeAlsoServes(cycles: ResourceCycle[], id: string, itinerary: string[
 function splitSteps(s: string): string[] {
   return s
     .split(/\s*(?:→|-->|->|=>|—|,|;|\|)\s*/)
-    .map((x) => x.trim().replace(/\s*[\(\[].*$/, ""))
+    .map((x) => x.trim().replace(/\s*[([].*$/, ""))
     .filter((x) => x.length > 0 && x.length < 40)
     .slice(0, 12);
 }
@@ -1338,7 +1338,7 @@ export function buildOperationFromText(text: string): CycloneModel | null {
 
   const explicit = parseExplicitResourceCycles(raw);
   let resources: ResourceCycle[];
-  let durations: Record<string, DurationDist> = {
+  const durations: Record<string, DurationDist> = {
     ...parseDurationBlock(raw),
     ...(explicit?.inlineDurations ?? {}),
   };

@@ -125,7 +125,7 @@ a {{ color:#8a7018; text-decoration:none; }}
 </style></head><body>
 <section class="cover">
   <h1>Neo-CYCLONE</h1>
-  <p class="tagline">AI-Assisted Construction Operation Simulation</p>
+  <p class="tagline">A Browser-Based Open CYCLONE Framework for Construction Operations Simulation</p>
   <div class="gold-rule"></div>
   <p class="blurb">User Manual for students, instructors, and practitioners who want to understand construction operations as <em>flow</em>—in the spirit of Daniel W. Halpin’s CYCLONE.</p>
   <div class="meta">
@@ -174,7 +174,7 @@ await page.pdf({
   displayHeaderFooter: true,
   headerTemplate: "<div></div>",
   footerTemplate: `<div style="width:100%;font-size:8.5px;color:#6b6560;font-family:Segoe UI,sans-serif;padding:0 14mm;display:flex;justify-content:space-between;">
-    <span>Neo-CYCLONE · AI-Assisted Construction Operation Simulation</span>
+    <span>Neo-CYCLONE · Browser-Based Open CYCLONE Framework</span>
     <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
   </div>`,
   margin: { top: "16mm", bottom: "18mm", left: "15mm", right: "15mm" },

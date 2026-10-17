@@ -15,7 +15,7 @@ export const PHASE_ORDER: PhaseId[] = [
 
 const copy = {
   title: "Neo-CYCLONE",
-  subtitle: "AI-agent of Daniel W. Halpin's CYCLONE",
+  subtitle: "A Browser-Based Open CYCLONE Framework for Construction Operations Simulation",
   simulate: "Simulate",
   simulating: "Running…",
   drawModel: "Draw Model",

@@ -19,10 +19,11 @@ Web studio for construction operation simulation with Halpin Activity Cycle Diag
 
 | Manuscript | Claimed version | Reproduce from |
 |---|---|---|
+| **ICE session / IGLC candidate** | **v1.8.0** | This tree (`package.json`, footer). Not tagged and not deployed until the author approves. |
 | **ITcon** | **v1.7.5** | Tag [`v1.7.5`](https://github.com/m46d45/neo-cyclone/releases/tag/v1.7.5) (commit `e6ff10d…`) + [`docs/itcon-archive`](./docs/itcon-archive/) |
 | **Software Impacts (OSP)** | **v1.6.2.1** | Tag [`v1.6.2.1`](https://github.com/m46d45/neo-cyclone/releases/tag/v1.6.2.1) |
 
-Software used for the **ITcon reported results** is Neo-CYCLONE **v1.7.5**. Reviewers should reproduce from that tag (or a Zenodo deposit of that tag), **not** from a later deployment of the live studio. Do not bump `PRODUCT_VERSION` / `package.json` version / `CITATION.cff` version, and do not change the engine files listed in the freeze note, while those manuscripts are under review.
+Software used for the **ITcon reported results** is Neo-CYCLONE **v1.7.5**. Reviewers should reproduce from that tag (or a Zenodo deposit of that tag). Tags `v1.7.5` and `v1.6.2.1` stay where they are. The working version on this branch is **v1.8.0** (same pavement and girder productivities; branch empirical share corrected). Do not retarget the OSP manuscript to 1.8.0.
 
 Full rules: [docs/PAPER_VERSION_FREEZE.md](./docs/PAPER_VERSION_FREEZE.md).
 

@@ -3,6 +3,7 @@ import { Toaster } from "sonner";
 import { AuthProvider } from "@/lib/auth/provider";
 import { CreatedWithGrokBanner } from "@/components/created-with-grok-banner";
 import appCss from "../styles.css?url";
+import { PRODUCT_PAPER_TITLE } from "@/lib/cyclone/prompt-template";
 
 const APP_NAME = "Neo-CYCLONE";
 const host = import.meta.env.VITE_PUBLIC_HOSTNAME;
@@ -18,8 +19,7 @@ export const Route = createRootRoute({
       { title: APP_NAME },
       {
         name: "description",
-        content:
-          "Neo-CYCLONE — AI-agent of Daniel W. Halpin's CYCLONE. Construction operation simulation with Activity Cycle Diagrams.",
+        content: PRODUCT_PAPER_TITLE,
       },
       { name: "apple-mobile-web-app-title", content: APP_NAME },
       { name: "theme-color", content: "#ffffff" },

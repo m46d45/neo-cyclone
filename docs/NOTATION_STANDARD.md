@@ -264,4 +264,4 @@ Pipe `|` on a resource line = **multi-demand** from one home QUEUE (**not** a se
 
 ---
 
-*AI-agent of Daniel W. Halpin's CYCLONE · Notation Standard v1.1*
+*A Browser-Based Open CYCLONE Framework for Construction Operations Simulation · Notation Standard v1.1*

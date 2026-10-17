@@ -1,6 +1,6 @@
 /**
  * Teaching examples for Neo-CYCLONE (Halpin / MicroCYCLONE tradition).
- * Six construction-operation presets — features staged for teaching:
+ * Six teaching presets, plus three paper cases (7–9) for the ICE session:
  *   1 Earthmoving — classic cycles, cost, steady-state
  *   2 Asphalt — branch p breakdown
  *   3 Excavator — GEN/CON inline
@@ -11,6 +11,12 @@
  * Source orientation: Halpin & Riggs, Planning and Analysis of Construction
  * Operations (Wiley, 1992) — simplified for first contact.
  */
+
+import {
+  DETERMINISTIC_EARTHMOVING_PROMPT,
+  PAVEMENT_CASES,
+  pavementPrompt,
+} from "./paper-cases";
 
 export type ExamplePrompt = {
   id: string;
@@ -287,7 +293,30 @@ MoveToStorage: tri 8, 12, 18
 CleanForm: tri 10, 15, 22
 `,
   },
-
+  {
+    id: "paper-earthmoving",
+    title: "7. Paper — Deterministic earthmoving",
+    goal: "ITcon deterministic check: constant durations, loader + spotter.",
+    source: "ITcon archive, Earthmoving_Validation.",
+    features: ["const durations", "COMBI Load", "COMBI Dump"],
+    prompt: DETERMINISTIC_EARTHMOVING_PROMPT,
+  },
+  {
+    id: "paper-pavement-sc1",
+    title: "8. Paper — Pavement Sc 1 (10 m³)",
+    goal: "Rigid pavement baseline. Seed 12345 → 52.70 m³/h. Field 59.8 m³/h.",
+    source: "ITcon archive, RigidPavement_Baseline10.",
+    features: ["lognormal", "field comparison"],
+    prompt: pavementPrompt(PAVEMENT_CASES[0]!),
+  },
+  {
+    id: "paper-pavement-sc6",
+    title: "9. Paper — Pavement Sc 6 (SSC)",
+    goal: "Supplier SSC. Seed 12345 → 62.65 m³/h. Field 67.0 m³/h.",
+    source: "ITcon archive, RigidPavement_SSC.",
+    features: ["lognormal", "field comparison"],
+    prompt: pavementPrompt(PAVEMENT_CASES[5]!),
+  },
 ];
 
 export function getExampleById(id: string): ExamplePrompt | undefined {

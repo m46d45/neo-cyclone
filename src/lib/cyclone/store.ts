@@ -142,7 +142,8 @@ export const useCycloneStore = create<CycloneStore>((set, get) => ({
   },
 
   run: () => {
-    let { model, seed, maxTime, maxCycles, agent } = get();
+    const { seed, agent } = get();
+    let { model, maxTime, maxCycles } = get();
     maxCycles = clampMaxCycles(maxCycles);
     maxTime = horizonForCycles(maxCycles, maxTime);
     let sensPlan = model.sensitivity ?? [];

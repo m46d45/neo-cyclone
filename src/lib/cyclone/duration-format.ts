@@ -253,7 +253,7 @@ export function parseDurationBlock(text: string): Record<string, DurationDist> {
 
     // gamma mean X sd Y for Task
     const gms = line.match(
-      /^([A-Za-z][A-Za-z0-9 \/_-]{0,32}?)\s*:\s*gamma\s+mean\s+(\d+(?:\.\d+)?)\s+sd\s+(\d+(?:\.\d+)?)/i,
+      /^([A-Za-z][A-Za-z0-9 /_-]{0,32}?)\s*:\s*gamma\s+mean\s+(\d+(?:\.\d+)?)\s+sd\s+(\d+(?:\.\d+)?)/i,
     );
     if (gms) {
       const d = parseGammaMeanSd(Number(gms[2]), Number(gms[3]));
@@ -271,7 +271,7 @@ export function parseDurationBlock(text: string): Record<string, DurationDist> {
       }
     }
 
-    const m = line.match(/^(?:[-\u2022*]\s*)?([A-Za-z][A-Za-z0-9 \/_-]{0,32}?)\s*:\s*(.+)$/);
+    const m = line.match(/^(?:[-\u2022*]\s*)?([A-Za-z][A-Za-z0-9 /_-]{0,32}?)\s*:\s*(.+)$/);
     if (!m) continue;
     const task = m[1]!.trim();
     if (/^\d/.test(task)) continue;
@@ -290,7 +290,7 @@ export function parseDurationBlock(text: string): Record<string, DurationDist> {
   if (oneLine) {
     const chunks = oneLine[1]!.split(/[;|]/).map((c) => c.trim()).filter(Boolean);
     for (const ch of chunks) {
-      const m = ch.match(/^([A-Za-z][A-Za-z0-9 \/_-]*)\s*[=:]\s*(.+)$/);
+      const m = ch.match(/^([A-Za-z][A-Za-z0-9 /_-]*)\s*[=:]\s*(.+)$/);
       if (!m) continue;
       const dist = parseDurationToken(m[2]!);
       if (dist) out[norm(m[1]!)] = dist;
@@ -323,14 +323,14 @@ export function parseStepsWithInlineDurations(stepChunk: string): {
   const durations: Record<string, DurationDist> = {};
 
   for (const part of parts) {
-    const m = part.match(/^(.+?)\s*[\(\[]\s*(.+?)\s*[\)\]]\s*$/);
+    const m = part.match(/^(.+?)\s*[([]\s*(.+?)\s*[)\]]\s*$/);
     if (m) {
       const label = m[1]!.trim();
       const dist = parseDurationToken(m[2]!);
       labels.push(label);
       if (dist) durations[norm(label)] = dist;
     } else {
-      labels.push(part.replace(/\s*[\(\[].*$/, "").trim());
+      labels.push(part.replace(/\s*[([].*$/, "").trim());
     }
   }
 

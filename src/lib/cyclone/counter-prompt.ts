@@ -36,7 +36,7 @@ function parseProductionAmount(text: string): { amount: number; unit: string } {
   let amount = 1;
   let unit = "unit";
   const prodEq = text.match(
-    /production\s*[=:]\s*(\d+(?:\.\d+)?)\s*([A-Za-zµμ³3\/\-]{0,16})?/i,
+    /production\s*[=:]\s*(\d+(?:\.\d+)?)\s*([A-Za-zµμ³3/-]{0,16})?/i,
   );
   if (prodEq) {
     amount = Math.max(0.001, Number(prodEq[1]));
@@ -50,7 +50,7 @@ function parseProductionAmount(text: string): { amount: number; unit: string } {
       unit = normalizeUnit(loose[2]!);
     }
   }
-  const unitOnly = text.match(/production\s*unit\s*[=:]\s*([A-Za-zµμ³30-9\/\-]{1,16})/i);
+  const unitOnly = text.match(/production\s*unit\s*[=:]\s*([A-Za-zµμ³30-9/-]{1,16})/i);
   if (unitOnly) unit = normalizeUnit(unitOnly[1]!);
   return { amount, unit };
 }
