@@ -172,7 +172,7 @@ export const PRODUCT_DEDICATION = "Application to Rigid Pavement Production";
 /** App release label for footer / citation.
  *  v1.7.5 remains the immutable ITcon tag. This tree is the ICE / IGLC candidate.
  *  See docs/PAPER_VERSION_FREEZE.md. */
-export const PRODUCT_VERSION = "1.8.0";
+export const PRODUCT_VERSION = "1.8.1";
 
 /** Copyright / release year. */
 export const PRODUCT_YEAR = 2026;

@@ -47,7 +47,7 @@ test("validation CSV is one data row with version, seed, waits, and idle", () =>
   assert.equal(cells[1], "RigidPavement_Baseline10");
   assert.equal(cells[2], "12345");
   assert.equal(cells[3], "100");
-  assert.equal(PRODUCT_VERSION, "1.8.0");
+  assert.equal(PRODUCT_VERSION, "1.8.1");
 });
 
 test("10-seed archive has one row per paper seed", () => {
@@ -70,7 +70,7 @@ test("Excel report carries version and prompt text", () => {
   const result = runCyclone(model!, { seed: 12345, maxCycles: 100, maxTime: 6000 });
   const prompt = "Operation: RigidPavement_SSC\nproduction = 10 m3";
   const xml = buildSimulationReportExcel(model!, result, prompt);
-  assert.match(xml, /1\.8\.0/);
+  assert.match(xml, /1\.8\.1/);
   assert.match(xml, /RigidPavement_SSC/);
   assert.match(xml, /production = 10 m3/);
   assert.match(xml, /Browser-Based Open CYCLONE Framework/);
