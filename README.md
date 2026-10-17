@@ -23,7 +23,15 @@ Web studio for construction operation simulation with Halpin Activity Cycle Diag
 | **ITcon** | **v1.7.5** | Tag [`v1.7.5`](https://github.com/m46d45/neo-cyclone/releases/tag/v1.7.5) (commit `e6ff10d…`) + [`docs/itcon-archive`](./docs/itcon-archive/) |
 | **Software Impacts (OSP)** | **v1.6.2.1** | Tag [`v1.6.2.1`](https://github.com/m46d45/neo-cyclone/releases/tag/v1.6.2.1) |
 
-Software used for the **ITcon reported results** is Neo-CYCLONE **v1.7.5**. Reviewers should reproduce from that tag (or a Zenodo deposit of that tag). Tags `v1.7.5` and `v1.6.2.1` stay where they are. The working version on this branch is **v1.8.0** (same pavement and girder productivities; branch empirical share corrected). Do not retarget the OSP manuscript to 1.8.0.
+Software used for the **ITcon reported results** is Neo-CYCLONE **v1.7.5**. Reviewers should reproduce from that tag (or a Zenodo deposit of that tag). Tags `v1.7.5`, `v1.6.2.1`, and `v1.8.0` stay where they are. The working version on this branch is **v1.8.1**, a security patch of v1.8.0 with the same simulation results. Do not retarget the OSP manuscript to 1.8.0.
+
+## Release checklist
+
+Before every release:
+
+1. Upgrade all @tanstack/* to latest before every release.
+2. Run `npm audit --audit-level=high`, `npm test`, `npm run typecheck`, `npm run lint`, and `npm run build`.
+3. Do not move tags `v1.7.5`, `v1.6.2.1`, or `v1.8.0`.
 
 Full rules: [docs/PAPER_VERSION_FREEZE.md](./docs/PAPER_VERSION_FREEZE.md).
 
