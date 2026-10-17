@@ -4,23 +4,28 @@ updates:
     directory: /
     schedule:
       interval: weekly
-    open-pull-requests-limit: 10
+    # Two version groups plus a few security PRs. Major version PRs are ignored.
+    open-pull-requests-limit: 5
+    # Refresh package-lock.json only. package.json ranges already allow minor
+    # and patch, and rewriting those ranges in a group left the lockfile missing
+    # transitive entries (npm ci: "Missing: lru-cache@… from lock file").
+    versioning-strategy: lockfile-only
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
     groups:
       tanstack:
         patterns:
           - "@tanstack/*"
-      security:
-        applies-to: security-updates
-        patterns:
-          - "*"
-        exclude-patterns:
-          - "@tanstack/*"
-      versions:
-        applies-to: version-updates
         update-types:
           - minor
           - patch
+      minor-and-patch:
         patterns:
           - "*"
         exclude-patterns:
           - "@tanstack/*"
+        update-types:
+          - minor
+          - patch
