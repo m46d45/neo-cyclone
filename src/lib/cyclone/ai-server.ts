@@ -10,6 +10,10 @@ export const generateCycloneDsl = createServerFn({ method: "POST" })
     prompt: String(input?.prompt ?? "").slice(0, 2000),
   }))
   .handler(async ({ data }) => {
+    const apiKey = process.env.XAI_API_KEY;
+    if (!apiKey) {
+      return { ok: false, error: "AI unavailable", dsl: null, source: "none" as const };
+    }
     let clientKey = "anon";
     try {
       const req = getRequest();
@@ -104,7 +108,7 @@ Duration kinds: constant, uniform, triangular, normal, lognormal, beta (min,max,
     const body = (await res.json()) as {
       choices: { message: { content: string } }[];
     };
-    let raw = stripFences(body.choices[0]?.message.content ?? "");
+    const raw = stripFences(body.choices[0]?.message.content ?? "");
 
     const asDsl = parseDsl(raw);
     if (asDsl.ok) {

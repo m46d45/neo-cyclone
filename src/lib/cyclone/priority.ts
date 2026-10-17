@@ -40,7 +40,7 @@ export function parsePriorityBlock(text: string): Record<string, number> {
     }
     if (!inBlock) {
       // Inline: Task (priority 1) or Task prio 1
-      const m = line.match(/^([A-Za-z][A-Za-z0-9 _/-]{0,40}?)\s*[\(:]\s*(?:priority|prio|pri)\s*[=:]?\s*(\d+)/i);
+      const m = line.match(/^([A-Za-z][A-Za-z0-9 _/-]{0,40}?)\s*[(:]\s*(?:priority|prio|pri)\s*[=:]?\s*(\d+)/i);
       if (m) {
         const lab = m[1]!.trim();
         const p = Math.max(1, Math.floor(Number(m[2])));

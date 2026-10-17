@@ -1,224 +1,56 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8"/>
-<title>Neo-CYCLONE User Manual v1.7.5</title>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/><title>Neo-CYCLONE User Manual v1.8.0</title>
 <style>
-  @page {
-    size: A4;
-    margin: 18mm 16mm 20mm 16mm;
-    @bottom-center {
-      content: "Neo-CYCLONE User Manual · v1.7.5 · Page " counter(page);
-      font-family: "Segoe UI", system-ui, sans-serif;
-      font-size: 8.5pt;
-      color: #6b6560;
-    }
-  }
-  * { box-sizing: border-box; }
-  body {
-    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-    font-size: 10.5pt;
-    line-height: 1.55;
-    color: #1a1814;
-    background: #fff;
-    max-width: 100%;
-  }
-  .cover {
-    page-break-after: always;
-    min-height: 240mm;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 12mm 8mm;
-    border-top: 6px solid #c9a227;
-  }
-  .cover .mark {
-    width: 48px; height: 48px;
-    border: 3px solid #1a1814;
-    border-radius: 50%;
-    position: relative;
-    margin-bottom: 18px;
-  }
-  .cover .mark::after {
-    content: "";
-    position: absolute;
-    right: 6px; bottom: 8px;
-    width: 14px; height: 3px;
-    background: #c9a227;
-    transform: rotate(-35deg);
-  }
-  .cover h1 {
-    font-size: 28pt;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    margin: 0 0 8px;
-    color: #1a1814;
-    border: none;
-    page-break-after: avoid;
-  }
-  .cover .tagline {
-    font-size: 11pt;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: #c9a227;
-    font-weight: 600;
-    margin: 0 0 24px;
-  }
-  .cover .blurb {
-    font-size: 12pt;
-    max-width: 420px;
-    color: #3d3830;
-    line-height: 1.65;
-  }
-  .cover .meta {
-    margin-top: 36px;
-    font-size: 9.5pt;
-    color: #5c564e;
-    line-height: 1.7;
-  }
-  .cover .meta strong { color: #1a1814; }
-  .gold-rule {
-    height: 2px;
-    width: 64px;
-    background: linear-gradient(90deg, #c9a227, #e8d48b);
-    margin: 10px 0 16px;
-  }
-  h1 {
-    font-size: 18pt;
-    margin: 28px 0 10px;
-    color: #1a1814;
-    page-break-after: avoid;
-    border-bottom: 2px solid #c9a227;
-    padding-bottom: 6px;
-  }
-  /* first h1 after cover is the MD title — hide duplicate if needed */
-  h2 {
-    font-size: 14pt;
-    margin: 22px 0 8px;
-    color: #1a1814;
-    page-break-after: avoid;
-  }
-  h3 {
-    font-size: 11.5pt;
-    margin: 16px 0 6px;
-    color: #2a2520;
-    page-break-after: avoid;
-  }
-  p { margin: 0 0 9px; orphans: 3; widows: 3; }
-  ul, ol { margin: 6px 0 12px; padding-left: 1.3em; }
-  li { margin-bottom: 4px; }
-  strong { color: #1a1814; }
-  a { color: #8a7018; text-decoration: none; }
-  code {
-    font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
-    font-size: 9pt;
-    background: #f5f1e8;
-    border: 1px solid #e5dcc8;
-    border-radius: 3px;
-    padding: 0 4px;
-  }
-  pre {
-    background: #f7f4ed;
-    border: 1px solid #e0d6c2;
-    border-left: 4px solid #c9a227;
-    border-radius: 4px;
-    padding: 10px 12px;
-    overflow: hidden;
-    font-size: 8.5pt;
-    line-height: 1.45;
-    page-break-inside: avoid;
-    margin: 10px 0 14px;
-  }
-  pre code {
-    background: none;
-    border: none;
-    padding: 0;
-    font-size: inherit;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 10px 0 16px;
-    font-size: 9pt;
-    page-break-inside: avoid;
-  }
-  th {
-    background: #f0ebe0;
-    color: #3d3830;
-    text-align: left;
-    font-weight: 600;
-    font-size: 8pt;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    padding: 7px 8px;
-    border-bottom: 2px solid #c9a227;
-  }
-  td {
-    padding: 7px 8px;
-    border-bottom: 1px solid #e8e2d6;
-    vertical-align: top;
-  }
-  tr:nth-child(even) td { background: #fcfaf6; }
-  blockquote {
-    margin: 14px 0;
-    padding: 12px 16px;
-    border: 1px solid #e0d4a8;
-    border-left: 4px solid #c9a227;
-    background: #fbf7eb;
-    border-radius: 4px;
-    font-size: 11pt;
-    page-break-inside: avoid;
-  }
-  .faq {
-    margin: 10px 0;
-    padding: 8px 12px;
-    border: 1px solid #ebe5d8;
-    border-radius: 4px;
-    background: #fdfcfa;
-    page-break-inside: avoid;
-  }
-  .faq .q { font-weight: 600; margin: 0 0 4px; }
-  .faq .a { margin: 0; color: #3d3830; }
-  .footer-note {
-    margin-top: 24px;
-    font-size: 9pt;
-    color: #6b6560;
-    font-style: italic;
-  }
-  /* avoid huge empty pages */
-  h2 { page-break-before: auto; }
-</style>
-</head>
-<body>
-  <section class="cover">
-    <div class="mark" aria-hidden="true"></div>
-    <h1>Neo-CYCLONE</h1>
-    <p class="tagline">AI-Assisted Construction Operation Simulation</p>
-    <div class="gold-rule"></div>
-    <p class="blurb">
-      User Manual for students, instructors, and practitioners who want to understand
-      construction operations as <em>flow</em>—queues, meetings, idleness, and production—
-      in the spirit of Daniel W. Halpin’s CYCLONE.
-    </p>
-    <div class="meta">
-      <div><strong>Version</strong> 1.7.5</div>
-      <div><strong>Live studio</strong> https://neo-cyclone.vercel.app/</div>
-      <div><strong>Language</strong> English</div>
-      <div><strong>References</strong> at the end of this document</div>
-    </div>
-  </section>
-  <main>
+@page { size: A4; margin: 16mm 15mm 18mm 15mm; }
+body { font-family: "Segoe UI","Helvetica Neue",Arial,sans-serif; font-size:10.5pt; line-height:1.55; color:#1a1814; }
+.cover { page-break-after:always; min-height:240mm; display:flex; flex-direction:column; justify-content:center; padding:12mm 8mm; border-top:6px solid #c9a227; }
+.cover h1 { font-size:28pt; margin:0 0 8px; border:none; }
+.cover .tagline { font-size:11pt; letter-spacing:0.14em; text-transform:uppercase; color:#c9a227; font-weight:600; }
+.cover .blurb { font-size:12pt; max-width:420px; color:#3d3830; line-height:1.65; margin-top:16px; }
+.cover .meta { margin-top:36px; font-size:9.5pt; color:#5c564e; line-height:1.7; }
+.gold-rule { height:2px; width:64px; background:linear-gradient(90deg,#c9a227,#e8d48b); margin:10px 0 16px; }
+h1 { font-size:18pt; margin:28px 0 10px; border-bottom:2px solid #c9a227; padding-bottom:6px; page-break-after:avoid; }
+h2 { font-size:14pt; margin:22px 0 8px; page-break-after:avoid; }
+h3 { font-size:11.5pt; margin:16px 0 6px; page-break-after:avoid; }
+p { margin:0 0 9px; }
+ul,ol { margin:6px 0 12px; padding-left:1.3em; }
+li { margin-bottom:4px; }
+code { font-family:Consolas,"Courier New",monospace; font-size:9pt; background:#f5f1e8; border:1px solid #e5dcc8; border-radius:3px; padding:0 4px; }
+pre { background:#f7f4ed; border:1px solid #e0d6c2; border-left:4px solid #c9a227; border-radius:4px; padding:10px 12px; font-size:8.5pt; page-break-inside:avoid; margin:10px 0 14px; white-space:pre-wrap; }
+pre code { background:none; border:none; padding:0; }
+table { width:100%; border-collapse:collapse; margin:10px 0 16px; font-size:9pt; page-break-inside:avoid; }
+th { background:#f0ebe0; text-align:left; font-size:8pt; text-transform:uppercase; padding:7px 8px; border-bottom:2px solid #c9a227; }
+td { padding:7px 8px; border-bottom:1px solid #e8e2d6; vertical-align:top; }
+tr:nth-child(even) td { background:#fcfaf6; }
+blockquote { margin:14px 0; padding:12px 16px; border:1px solid #e0d4a8; border-left:4px solid #c9a227; background:#fbf7eb; border-radius:4px; page-break-inside:avoid; }
+.faq { margin:10px 0; padding:8px 12px; border:1px solid #ebe5d8; border-radius:4px; page-break-inside:avoid; }
+.faq .q { font-weight:600; margin:0 0 4px; } .faq .a { margin:0; }
+.footer-note { margin-top:24px; font-size:9pt; color:#6b6560; font-style:italic; }
+a { color:#8a7018; text-decoration:none; }
+</style></head><body>
+<section class="cover">
+  <h1>Neo-CYCLONE</h1>
+  <p class="tagline">A Browser-Based Open CYCLONE Framework for Construction Operations Simulation</p>
+  <div class="gold-rule"></div>
+  <p class="blurb">User Manual for students, instructors, and practitioners who want to understand construction operations as <em>flow</em>—in the spirit of Daniel W. Halpin’s CYCLONE.</p>
+  <div class="meta">
+    <div><strong>Version</strong> 1.8.0</div>
+    <div><strong>Live studio</strong> https://neo-cyclone.vercel.app/</div>
+    <div><strong>Language</strong> English</div>
+    <div><strong>References</strong> at the end of this document</div>
+  </div>
+</section>
+<main>
 <h1>Neo-CYCLONE — User Manual</h1>
-<table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><strong>Version</strong></td><td>1.7.5</td></tr><tr><td><strong>Product</strong></td><td>AI-Assisted Construction Operation Simulation</td></tr><tr><td><strong>Live app</strong></td><td><a href="https://neo-cyclone.vercel.app/">https://neo-cyclone.vercel.app/</a></td></tr><tr><td><strong>Language</strong></td><td>English (product & teaching surface)</td></tr><tr><td><strong>Audience</strong></td><td>Students, instructors, and practitioners</td></tr><tr><td><strong>Notation detail</strong></td><td><a href="./NOTATION_STANDARD.md">NOTATION_STANDARD.md</a></td></tr></tbody></table>
+<table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><strong>Version</strong></td><td>1.8.0</td></tr><tr><td><strong>Product</strong></td><td>Neo-CYCLONE: A Browser-Based Open CYCLONE Framework for Construction Operations Simulation — Application to Rigid Pavement Production</td></tr><tr><td><strong>Live app</strong></td><td><a href="https://neo-cyclone.vercel.app/">https://neo-cyclone.vercel.app/</a></td></tr><tr><td><strong>PDF manual</strong></td><td><a href="./Neo-CYCLONE-User-Manual.pdf">Neo-CYCLONE-User-Manual.pdf</a></td></tr><tr><td><strong>Language</strong></td><td>English (product & teaching surface)</td></tr><tr><td><strong>Audience</strong></td><td>Students, instructors, and practitioners</td></tr><tr><td><strong>Notation detail</strong></td><td><a href="./NOTATION_STANDARD.md">NOTATION_STANDARD.md</a></td></tr></tbody></table>
 <p>This manual is written for people—not for scrapers. Read it with the <a href="https://neo-cyclone.vercel.app/">studio</a> open in another tab. You can finish the first run in about fifteen minutes (Chapter 2), or take an hour for the full story. <strong>References</strong> are at the <strong>end</strong>.</p>
 <h1>Prologue — Why this studio exists</h1>
 <p>Construction work is full of <strong>repetition</strong>: load and haul, pour and return, lift and place. Between those busy moments, resources wait. A truck sits at a loader. A crane waits while a crew finishes tying rebar. That waiting is not always “laziness.” Very often it is <strong>the structure of the process</strong>—how work and idle time are braided together on a real site.</p>
 <p>Professor <strong>Daniel W. Halpin</strong> spent a career making that structure <em>visible</em>. His <strong>CYCLONE</strong> language (<em>CYCLic Operations NEtwork</em>) gave construction operations a small, honest network grammar: resources wait in queues, they work for a duration, they meet when they must, and a counter records completed production. From that grammar grew a family of tools—<strong>MicroCYCLONE</strong>, then DISCO, PROSIDYC, COST, WebCYCLONE, and related systems. The full reading list sits in <strong>References</strong> at the end of this manual.</p>
-<p><strong>Neo-CYCLONE</strong> does not claim to replace those research systems. It is a <strong>teaching studio</strong>: a browser place to meet Halpin’s ideas again, with a modern interface and an AI Assistant that stays tied to <em>your</em> model. The product name is plain on purpose: <strong>AI-Assisted Construction Operation Simulation</strong>.</p>
+<p><strong>Neo-CYCLONE</strong> does not claim to replace those research systems. It is a <strong>teaching studio</strong>: a browser place to meet Halpin’s ideas again, with a modern interface and an assistant that stays tied to <em>your</em> model. The paper title is the product name: <strong>A Browser-Based Open CYCLONE Framework for Construction Operations Simulation — Application to Rigid Pavement Production</strong>.</p>
 <p>AI here does not invent a new physics of construction. The <strong>engine</strong> is still a discrete-event, CYCLONE-style simulator. AI helps you phrase a model, inspect a diagram, and ask questions about the last run. <strong>You</strong> still click Draw Model, still Simulate, still judge whether the story is true.</p>
 <p>If you leave with one habit, make it this:</p>
 <blockquote><strong>Draw the cycles until they tell the truth, then run the numbers.</strong></blockquote>
-<h2 id="chapter-1-operations-flow-and-idleness">Chapter 1 — Operations, flow, and idleness</h2>
+<h2>Chapter 1 — Operations, flow, and idleness</h2>
 <h3>1.1 What we mean by a construction operation</h3>
 <p>An <em>operation</em> in this studio is a <strong>repeatable production process</strong>—often measured in units per hour—not the whole project Gantt chart. Earthmoving a cut, paving a lane, loading dump trucks, serving three zones with one crane, stocking brick and mortar for masons, cycling forms in a precast yard: each is an operation with <strong>resources</strong>, <strong>tasks</strong>, and <strong>waiting</strong>.</p>
 <p>Thinking at the operation level matters for <strong>Lean Construction</strong> and <strong>Project Production Management</strong>. Before you “optimize” a schedule bar, you need to see whether the <em>process</em> itself produces flow or waste. Neo-CYCLONE is built for that first, stubborn look.</p>
@@ -236,7 +68,7 @@
 <h3>1.5 The studio at a glance</h3>
 <table><thead><tr><th>Area</th><th>What you do there</th></tr></thead><tbody><tr><td><strong>Left</strong></td><td>Choose an Example or write a Format Prompt, then <strong>Draw Model</strong></td></tr><tr><td><strong>Right</strong></td><td>Inspect the <strong>CYCLONE Model</strong> diagram; set cycles and seed; <strong>Simulate</strong></td></tr><tr><td><strong>Below</strong></td><td><strong>Results</strong> — Simulation and Sensitivity Analysis</td></tr><tr><td><strong>Lower</strong></td><td><strong>AI Assistant</strong> (optional co-pilot)</td></tr><tr><td><strong>Header</strong></td><td>This Manual</td></tr><tr><td><strong>Footer</strong></td><td>Product name, version, year — cite the version in homework</td></tr></tbody></table>
 <p>The right-hand diagram is not decoration. Chapter 4 is the legend for that panel.</p>
-<h2 id="chapter-2-fifteen-minutes-that-stick-earthmoving-">Chapter 2 — Fifteen minutes that stick (Earthmoving)</h2>
+<h2>Chapter 2 — Fifteen minutes that stick (Earthmoving)</h2>
 <p>This chapter is a guided first run. Do it once with Example 1 even if you already “know trucks.” Muscle memory for the studio matters more than cleverness on day one.</p>
 <h3>2.1 Open the studio</h3>
 <p>Go to the live app. You should see a prompt area and Example dropdown on the left, an empty <strong>CYCLONE Model</strong> on the right until you draw, and later—after a run—Results and the AI Assistant below. The footer shows product name, version, and year.</p>
@@ -271,7 +103,7 @@ Durations: …</code></pre>
 <p>If you open the <strong>AI Assistant</strong>, try the general chips: resources, bottleneck, productivity, unit cost. Answers stay short. If the assistant proposes a new prompt, nothing changes in the engine until you <strong>Apply</strong>, then <strong>Draw Model</strong>, then <strong>Simulate</strong>. That three-step gate is intentional.</p>
 <h3>2.6 Mistakes that waste a first session</h3>
 <ol><li>Expecting a diagram after only selecting an Example.</li><li>Simulating before the diagram matches the story.</li><li>Changing fleet size in chat and assuming the engine already changed.</li><li>Comparing runs with different seeds.</li><li>Reading only total production and ignoring <strong>idleness</strong>.</li><li>Assuming every rectangle must match a photocopy of a 1992 book figure (see Chapter 4).</li></ol>
-<h2 id="chapter-3-how-to-talk-so-the-studio-can-build-a-network">Chapter 3 — How to talk so the studio can build a network</h2>
+<h2>Chapter 3 — How to talk so the studio can build a network</h2>
 <p>You do not draw QUEUE circles freehand in the prompt. You describe <strong>resource cycles</strong>. The builder creates queues, tasks, and arcs. Students learn the <em>logic</em> of cycles—not pixel-pushing.</p>
 <h3>3.1 Notes, operation name, and resource cycles</h3>
 <p>Lines that start with <code>#</code> or <code>//</code> are <strong>notes only</strong>. Use them for teaching context; the engine ignores them.</p>
@@ -333,7 +165,7 @@ Cost:
 ResourceA: 80
 ResourceB: 120</code></pre>
 <p>Replace the names with <em>your</em> operation. Draw Model. If the diagram lies, the prompt is incomplete—not “the AI failed.” The live <strong>Format Prompt</strong> panel in the studio shows the canonical template; prefer that order so people and software read the same story.</p>
-<h2 id="chapter-4-reading-the-model-how-neo-cyclone-draws-cyclone">Chapter 4 — Reading the model: how Neo-CYCLONE draws CYCLONE</h2>
+<h2>Chapter 4 — Reading the model: how Neo-CYCLONE draws CYCLONE</h2>
 <p>Users spend a long time staring at the <strong>CYCLONE Model</strong> panel. This chapter is the legend for that panel: how we model, what each symbol means, and where we deliberately differ from textbook Halpin figures while keeping the same <em>ideas</em>.</p>
 <h3>4.1 Modeling idea (the same spirit as Halpin)</h3>
 <p>Neo-CYCLONE still models a <strong>cyclic construction operation</strong> as:</p>
@@ -363,7 +195,7 @@ ResourceB: 120</code></pre>
 <h3>4.7 Checklist before you Simulate</h3>
 <ol><li>Every resource has a visible <strong>home QUEUE</strong>.</li><li>True meetings are <strong>COMBI</strong>; solo work is <strong>NORMAL</strong>.</li><li><strong>Counter after:</strong> names match real tasks.</li><li>Gold dashed returns only into home idles.</li><li>GEN/CON only if unit logic needs them.</li><li>Branch probabilities look like a real split of the world.</li><li><code>Operation:</code> is set if you care about Excel and report names.</li></ol>
 <p>Full geometric rules live in <a href="./NOTATION_STANDARD.md"><code>docs/NOTATION_STANDARD.md</code></a>.</p>
-<h2 id="chapter-5-simulation-results">Chapter 5 — Simulation results</h2>
+<h2>Chapter 5 — Simulation results</h2>
 <p>After <strong>Simulate</strong>, the Results area is for process literacy—not only a green checkmark. Walk the panels in the order below the first few times; later you will jump to the question you care about.</p>
 <h3>5.1 Process Report</h3>
 <p>This is the MicroCYCLONE-flavored summary: how long the run lasted, how many production events occurred, units per event, total production, when the first unit appeared, and the average time between units. Use it to answer, in plain language: <em>Did we produce what we thought, at what overall pace?</em></p>
@@ -382,36 +214,38 @@ ResourceB: 120</code></pre>
 <p>Export Excel and PNG when you need figures for slides or homework. Always note Operation name, seed, max cycles, and any sensitivity ranges.</p>
 <p>In one minute of class discussion:</p>
 <ol><li>What is steady-state <strong>units/hour</strong>?</li><li>Which resource has the highest <strong>idle %</strong>?</li><li>What is <strong>unit cost</strong> (if costs were entered)?</li><li>If we add one unit of the scarce resource, what do we <em>expect</em>—then test with Sensitivity or a re-run.</li></ol>
-<h2 id="chapter-6-six-examples-as-a-learning-path">Chapter 6 — Six Examples as a learning path</h2>
+<h2>Chapter 6 — Six Examples as a learning path</h2>
 <p>Selecting an Example only fills the prompt. <strong>You</strong> click Draw Model. Keep Chapter 4 open in your mind while you look at each diagram.</p>
 <table><thead><tr><th>#</th><th>Name</th><th>What you should notice</th></tr></thead><tbody><tr><td>1</td><td><strong>Earthmoving</strong></td><td>Classic two-resource cycle; cost; steady state. No branch, no SA—learn the spine first.</td></tr><tr><td>2</td><td><strong>Asphalt Paving</strong></td><td>Meeting at dump-to-paver; <strong>branch</strong> breakdown then refill; count after pave.</td></tr><tr><td>3</td><td><strong>Loading Dump Truck</strong></td><td>Inline <strong>GEN/CON</strong>: excavator scoops fill a truck before haul-return.</td></tr><tr><td>4</td><td><strong>Tower Crane</strong></td><td>Multi-demand `</td></tr><tr><td>5</td><td><strong>Masonry</strong></td><td>Face stocks; helper multi-demand; <strong>sensitivity</strong> introduction.</td></tr><tr><td>6</td><td><strong>Precast Plant</strong></td><td>Longer line production; richer SA—systems thinking.</td></tr></tbody></table>
 <p><strong>Suggested path:</strong> 1 → 2 → 3 for mechanics; 4 for shared resources; 5–6 for decisions under sensitivity. Rewrite any example. Change counts. Break a duration. Re-draw. That is the point.</p>
-<h2 id="chapter-7-what-ai-assisted-should-mean-here">Chapter 7 — What “AI-assisted” should mean here</h2>
+<p>Examples <strong>7–9</strong> are the paper cases: deterministic earthmoving, rigid pavement Sc 1 (10 m³), and pavement Sc 6 (SSC). Keep seed <strong>12345</strong> when you want the archived productivities. After Simulate, use <strong>Validation CSV</strong> and, on the pavement cases, <strong>10-seed archive</strong> plus the field comparison card.</p>
+<h2>Chapter 7 — What “AI-assisted” should mean here</h2>
 <p>The Assistant sits under Results. It should feel like a teaching assistant who has read your board—not like a search engine that invents another project.</p>
 <h3>7.1 Purpose and honest technology</h3>
 <p>The Assistant should:</p>
 <ul><li>Explain <em>this</em> model’s cycles, COMBI versus NORMAL, counter, GEN/CON, and branch.</li><li>Point at bottleneck and idleness from the <em>last run</em>.</li><li>Propose a full Format Prompt edit when you ask to change fleet or durations.</li><li>Stay short (about ≤20 lines) so the studio remains the focus.</li></ul>
 <p>It must <strong>not</strong> silently re-simulate, invent another operation, or replace CYCLONE with a mystery model.</p>
-<table><thead><tr><th>Mode</th><th>When</th><th>Behavior</th></tr></thead><tbody><tr><td><strong>AI mode</strong></td><td>Host has <code>XAI_API_KEY</code> (for example on Vercel)</td><td>Chat model sees a <strong>compact CONTEXT</strong> snapshot only</td></tr><tr><td><strong>Local mode</strong></td><td>No key or API failure</td><td>English-first intent helper for common studio questions</td></tr></tbody></table>
-<p>Product UI, Manual, and keywords are English-first for an international classroom. Rate limits on the shared host (about <strong>30</strong> Assistant requests per hour per IP) protect classroom use from abuse; normal class pace is fine.</p>
+<table><thead><tr><th>Mode</th><th>When</th><th>Behavior</th></tr></thead><tbody><tr><td><strong>AI mode</strong></td><td>Host has <code>XAI_API_KEY</code> (for example on Vercel)</td><td>Chat model sees a <strong>compact CONTEXT</strong> snapshot only</td></tr><tr><td><strong>Local mode</strong></td><td>No key or API failure</td><td>Same studio questions and prompt edits (fleet counts, add a task after another). Apply → Draw → Simulate still required.</td></tr></tbody></table>
+<p>Product UI, Manual, and keywords are English-first for an international classroom. Cloud AI answers are limited to about <strong>30</strong> Assistant requests per hour per IP. Local answers are not counted.</p>
 <h3>7.2 How the chat behaves</h3>
 <ul><li><strong>You</strong> — gold bubble, right-aligned, compact (WhatsApp-style).</li><li><strong>Assistant</strong> — light bubble, left-aligned.</li><li>System guidance lives in the <strong>placeholder</strong> of the input box, not as a permanent chat bubble.</li><li>Quick chips are <strong>general</strong> (no truck-only assumptions): resources, bottleneck, productivity, unit cost.</li></ul>
 <h3>7.3 Boundary, workflow, and better questions</h3>
 <blockquote>The AI Assistant answers only about the <strong>current</strong> Format Prompt, drawn CYCLONE network, and <strong>last</strong> simulation or sensitivity results. It may <strong>propose</strong> Format Prompt edits; you must <strong>Apply</strong>, <strong>Draw Model</strong>, and <strong>Simulate</strong> for changes to take effect.</blockquote>
 <p>Workflow: build and simulate a model you understand → ask focused questions → if a new prompt is proposed, Apply → Draw → Simulate → compare numbers. Do not accept a quantitative claim without a run.</p>
 <table><thead><tr><th>Weaker</th><th>Stronger</th></tr></thead><tbody><tr><td>“Make it better.”</td><td>“Which resource has the highest idle % after this run?”</td></tr><tr><td>“Optimize everything.”</td><td>“Propose trucks = 8; keep loader = 1; I will re-simulate.”</td></tr><tr><td>“What is CYCLONE?” with an empty model</td><td>Draw Example 1 first, then “Explain this model’s resource cycles.”</td></tr></tbody></table>
-<h2 id="chapter-8-limits-deploy-and-integrity">Chapter 8 — Limits, deploy, and integrity</h2>
+<h2>Chapter 8 — Limits, deploy, and integrity</h2>
 <p>Teaching studios need guardrails so a shared host stays fair and numbers stay interpretable.</p>
 <h3>8.1 Simulation and sensitivity caps</h3>
 <table><thead><tr><th>Parameter</th><th>Default</th><th>Hard limit</th><th>Notes</th></tr></thead><tbody><tr><td>Max cycles</td><td>100</td><td><strong>500</strong></td><td>Teaching cap; the UI clamps higher values</td></tr><tr><td>Seed</td><td>12345</td><td>—</td><td>Reproducibility; dice for alternate paths</td></tr><tr><td>Time unit</td><td>minutes</td><td>—</td><td>Stated in the Format Prompt header</td></tr><tr><td>SA resources</td><td>—</td><td><strong>5</strong></td><td>Extra ranges ignored with a note</td></tr><tr><td>SA combinations</td><td>—</td><td><strong>~150</strong></td><td>Step increases; not a silent mid-axis cut</td></tr></tbody></table>
 <h3>8.2 Performance, AI, and deploy</h3>
 <p>Sensitivity prefers a <strong>Web Worker</strong>; fallback is the main thread with the same engine. Single Simulate runs on the main thread—appropriate for teaching sizes.</p>
-<p>AI limits: about 30 Assistant requests / hour / IP; about 20 AI DSL draft requests / hour / IP; compact CONTEXT only; replies short. Without an API key, the local English helper still works. These limits do <strong>not</strong> change CYCLONE rules; they protect hosting and API cost.</p>
+<p>AI limits: about 30 cloud Assistant requests / hour / IP; about 20 AI DSL draft requests / hour / IP. Local answers are not counted. Compact CONTEXT only; replies short. Without an API key, the local English helper still works. These limits do <strong>not</strong> change CYCLONE rules; they protect hosting and API cost.</p>
 <p>Source of truth: <strong>GitHub <code>main</code></strong> auto-deploys to <strong>Vercel</strong> at <a href="https://neo-cyclone.vercel.app/">neo-cyclone.vercel.app</a>. Teaching does not require sign-in. Always cite the footer <strong>version</strong> after a deploy.</p>
+<p>The studio footer can show <strong>how many times</strong> Draw Model and Simulate have been used. Counts are <strong>anonymous</strong> (no prompt text, no model). Worldwide totals are stored in a durable counter (or in your own Neon database if <code>DATABASE_URL</code> is set). You also see <strong>this device</strong> counts in the browser. Increments are rate-limited so a single IP cannot inflate the number.</p>
 <h3>8.3 Citing Neo-CYCLONE in homework or papers</h3>
 <p>Include:</p>
 <ol><li>Product name and version (footer).</li><li>URL of the live app.</li><li>Operation name, seed, and max cycles.</li><li>Whether results came from Simulation only or also Sensitivity.</li><li>Optional: software DOI if your course requires a formal software citation.</li></ol>
-<h2 id="chapter-9-faq-from-real-studio-use">Chapter 9 — FAQ from real studio use</h2>
+<h2>Chapter 9 — FAQ from real studio use</h2>
 <h3>Drawing and the model diagram</h3>
 <div class="faq"><p class="q"><strong>Q: I selected an Example but nothing drew.</strong>  </p><p class="a">A: Click <strong>Draw Model</strong>. Examples only paste the prompt.</p></div>
 <div class="faq"><p class="q"><strong>Q: Why does the diagram not match the book figure exactly?</strong>  </p><p class="a">A: Same CYCLONE <em>logic</em>; Neo-CYCLONE teaching <em>notation</em> (Chapter 4). Black and gold arrows and some shapes are intentional—not a bug.</p></div>
@@ -431,7 +265,7 @@ ResourceB: 120</code></pre>
 <div class="faq"><p class="q"><strong>Q: The AI proposed a prompt but numbers did not change.</strong>  </p><p class="a">A: Click <strong>Apply</strong>, then <strong>Draw Model</strong>, then <strong>Simulate</strong>. Nothing silent updates the engine.</p></div>
 <div class="faq"><p class="q"><strong>Q: Is sign-in required?</strong>  </p><p class="a">A: No for teaching use.</p></div>
 <div class="faq"><p class="q"><strong>Q: Where is the bibliography?</strong>  </p><p class="a">A: <strong>References</strong> at the <strong>end</strong> of this manual, after the Epilogue.</p></div>
-<h2 id="chapter-10-notes-for-instructors-and-peer-mentors">Chapter 10 — Notes for instructors and peer mentors</h2>
+<h2>Chapter 10 — Notes for instructors and peer mentors</h2>
 <p>With many concurrent learners, small conventions prevent chaos.</p>
 <h3>10.1 Baseline and exercise patterns</h3>
 <p>Agree once for the whole class:</p>
@@ -460,8 +294,7 @@ ResourceB: 120</code></pre>
 <h3>Related lineage</h3>
 <ol><li>Work in the Halpin circle and peers: AbouRizk & Halpin; Hijazi; Lutz; Gonzalez-Quevedo; Abraham; project-level CYCLONE studies; AbouRizk et al. (2011) and related synthesis.</li><li>Related systems students may meet later: <strong>UM-CYCLONE</strong> (Ioannou), <strong>STROBOSCOPE</strong> (Martinez), <strong>Simphony / Simphony.NET</strong> (AbouRizk et al.).</li></ol>
 <h3>How Neo-CYCLONE relates</h3>
-<p>Neo-CYCLONE does <strong>not</strong> claim to supersede research simulators. It is <strong>AI-Assisted Construction Operation Simulation</strong>—a studio for first principles: flow, idleness, cyclic networks, transparent discrete-event logic, and responsible AI beside that engine. Diagram notation follows this product’s standard (Chapter 4; <code>NOTATION_STANDARD.md</code>) while remaining in Halpin’s tradition.</p>
-<p class="footer-note">AI-Assisted Construction Operation Simulation · Manual v1.7.5</p>
-  </main>
-</body>
-</html>
+<p>Neo-CYCLONE does <strong>not</strong> claim to supersede research simulators. It is <strong>a browser-based open CYCLONE framework for construction operations simulation</strong>—a studio for first principles: flow, idleness, cyclic networks, transparent discrete-event logic, and an assistant beside that engine. Diagram notation follows this product’s standard (Chapter 4; <code>NOTATION_STANDARD.md</code>) while remaining in Halpin’s tradition.</p>
+<p class="footer-note">A Browser-Based Open CYCLONE Framework for Construction Operations Simulation · Manual v1.8.0</p>
+</main>
+</body></html>

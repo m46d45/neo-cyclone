@@ -21,10 +21,10 @@ keywords:
 license: MIT
 repository-code: "https://github.com/m46d45/neo-cyclone"
 url: "https://neo-cyclone.vercel.app/"
-version: "1.7.5"
-date-released: "2026-08-30"
+version: "1.8.0"
+date-released: "2026-10-17"
 identifiers:
   - type: url
-    value: "https://github.com/m46d45/neo-cyclone/releases/tag/v1.7.5"
+    value: "https://github.com/m46d45/neo-cyclone"
   - type: doi
     value: "10.5281/zenodo.21864969"

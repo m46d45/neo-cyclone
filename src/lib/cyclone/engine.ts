@@ -736,27 +736,31 @@ export function runCyclone(model: CycloneModel, config: SimConfig): SimResult {
     };
   });
 
-  const fromTotals = new Map<string, number>();
+  // Empirical share is among declared-p arcs only. A COMBI also fans out
+  // deterministically (truck continues, paver returns). Counting that fan-out
+  // in the denominator made p=0.85 look like 40%.
+  const probTotals = new Map<string, number>();
   for (const l of model.links) {
+    if (l.probability == null) continue;
     const hits = branchHits.get(l.id) ?? 0;
-    fromTotals.set(l.from, (fromTotals.get(l.from) ?? 0) + hits);
+    probTotals.set(l.from, (probTotals.get(l.from) ?? 0) + hits);
   }
 
   const branchStats: BranchStat[] = model.links
     .map((l) => {
-      const hits = branchHits.get(l.id) ?? 0;
-      const total = fromTotals.get(l.from) ?? 0;
+      if (l.probability == null) return null;
       const outs = outArcs.get(l.from) ?? [];
-      const isBranchNode =
-        outs.length > 1 && outs.some((o) => o.probability != null);
+      const isBranchNode = outs.some((o) => o.probability != null);
       if (!isBranchNode) return null;
+      const hits = branchHits.get(l.id) ?? 0;
+      const total = probTotals.get(l.from) ?? 0;
       return {
         linkId: l.id,
         fromId: l.from,
         toId: l.to,
         fromLabel: nodeById.get(l.from)?.label ?? l.from,
         toLabel: nodeById.get(l.to)?.label ?? l.to,
-        probability: l.probability ?? null,
+        probability: l.probability,
         timesTaken: hits,
         empiricalShare: total > 0 ? hits / total : 0,
       };

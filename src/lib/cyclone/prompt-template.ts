@@ -37,8 +37,8 @@ export function stripPromptComments(text: string): string {
  */
 export const GENERAL_TEMPLATE = `# ============================================================
 # FORMAT PROMPT — Neo-CYCLONE
-# AI-Assisted Construction Operation Simulation
-# AI-agent of Daniel W. Halpin's CYCLONE
+# A Browser-Based Open CYCLONE Framework for Construction Operations Simulation
+# Application to Rigid Pavement Production
 # ------------------------------------------------------------
 # # and // = notes only (ignored). Durations in minutes.
 # You do NOT draw QUEUE circles or arrows here.
@@ -158,15 +158,21 @@ export const DIST_TABLE = `# Quick reference (same order as Format Prompt)
 # Run: max cycles default 100, limit 500 · seed 12345
 # Notes: # …  or  // …`;
 
+/** Paper title. ITcon / IGLC identity for meta, manual, and exports. */
+export const PRODUCT_PAPER_TITLE =
+  "Neo-CYCLONE: A Browser-Based Open CYCLONE Framework for Construction Operations Simulation — Application to Rigid Pavement Production";
+
 /** Primary product descriptor (header, manual, exports). */
-export const PRODUCT_TAGLINE = "AI-Assisted Construction Operation Simulation";
+export const PRODUCT_TAGLINE =
+  "A Browser-Based Open CYCLONE Framework for Construction Operations Simulation";
 
-/** Dedication line — Halpin lineage (footer / manual). */
-export const PRODUCT_DEDICATION = "AI-agent of Daniel W. Halpin's CYCLONE";
+/** Second clause of the paper title. */
+export const PRODUCT_DEDICATION = "Application to Rigid Pavement Production";
 
-/** App release label for footer / citation. Keep in sync with manual badge.
- *  FROZEN at 1.7.5 for ITcon review — see docs/PAPER_VERSION_FREEZE.md. */
-export const PRODUCT_VERSION = "1.7.5";
+/** App release label for footer / citation.
+ *  v1.7.5 remains the immutable ITcon tag. This tree is the ICE / IGLC candidate.
+ *  See docs/PAPER_VERSION_FREEZE.md. */
+export const PRODUCT_VERSION = "1.8.0";
 
 /** Copyright / release year. */
 export const PRODUCT_YEAR = 2026;

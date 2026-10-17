@@ -25,7 +25,7 @@ export type AssistantResponse = {
 export { ASSISTANT_MAX_REPLY_LINES };
 
 const SYSTEM = `You are the Neo-CYCLONE AI Assistant — educational co-pilot for Halpin CYCLONE simulation.
-Product: AI-Assisted Construction Operation Simulation (international, English-first).
+Product: Neo-CYCLONE, a browser-based open CYCLONE framework for construction operations simulation (international, English-first).
 LANGUAGE: Prefer English. If the user clearly writes in another language, you may reply in that language; otherwise use English. Keep task/resource names as in CONTEXT.
 RULES:
 1. Ground answers in CONTEXT (especially last-run idleness for bottleneck questions).
@@ -69,6 +69,12 @@ export const chatAssistant = createServerFn({ method: "POST" })
       };
     }
 
+    const context = data.context || "(no studio context)";
+    const apiKey = process.env.XAI_API_KEY;
+    if (!apiKey) {
+      return finalizeLocal(runLocalAssistant(message, data.prompt, context));
+    }
+
     let clientKey = "anon";
     try {
       const req = getRequest();
@@ -78,20 +84,13 @@ export const chatAssistant = createServerFn({ method: "POST" })
     }
     const rl = checkAiRateLimit(`assistant:${clientKey}`, { max: 30, windowMs: 60 * 60 * 1000 });
     if (!rl.allowed) {
+      const local = finalizeLocal(runLocalAssistant(message, data.prompt, context));
       return {
-        ok: false,
-        reply: `Rate limit reached for AI Assistant (30 requests / hour). Try again in about ${rl.retryAfterSec}s.`,
-        proposedPrompt: null,
-        suggestSimulate: false,
-        source: "none",
-        error: "rate_limited",
+        ...local,
+        reply: clampAssistantReply(
+          `Cloud AI quota is full for this hour. This answer is local and was not counted.\n${local.reply}`,
+        ),
       };
-    }
-
-    const context = data.context || "(no studio context)";
-    const apiKey = process.env.XAI_API_KEY;
-    if (!apiKey) {
-      return finalizeLocal(runLocalAssistant(message, data.prompt, context));
     }
 
     try {

@@ -2,8 +2,8 @@
 
 | | |
 |--|--|
-| **Version** | 1.7.5
-| **Product** | AI-Assisted Construction Operation Simulation |
+| **Version** | 1.8.0
+| **Product** | Neo-CYCLONE: A Browser-Based Open CYCLONE Framework for Construction Operations Simulation — Application to Rigid Pavement Production |
 | **Live app** | [https://neo-cyclone.vercel.app/](https://neo-cyclone.vercel.app/) |
 | **PDF manual** | [Neo-CYCLONE-User-Manual.pdf](./Neo-CYCLONE-User-Manual.pdf) |
 | **Language** | English (product & teaching surface) |
@@ -23,7 +23,7 @@ Construction work is full of **repetition**: load and haul, pour and return, lif
 
 Professor **Daniel W. Halpin** spent a career making that structure *visible*. His **CYCLONE** language (*CYCLic Operations NEtwork*) gave construction operations a small, honest network grammar: resources wait in queues, they work for a duration, they meet when they must, and a counter records completed production. From that grammar grew a family of tools—**MicroCYCLONE**, then DISCO, PROSIDYC, COST, WebCYCLONE, and related systems. The full reading list sits in **References** at the end of this manual.
 
-**Neo-CYCLONE** does not claim to replace those research systems. It is a **teaching studio**: a browser place to meet Halpin’s ideas again, with a modern interface and an AI Assistant that stays tied to *your* model. The product name is plain on purpose: **AI-Assisted Construction Operation Simulation**.
+**Neo-CYCLONE** does not claim to replace those research systems. It is a **teaching studio**: a browser place to meet Halpin’s ideas again, with a modern interface and an assistant that stays tied to *your* model. The paper title is the product name: **A Browser-Based Open CYCLONE Framework for Construction Operations Simulation — Application to Rigid Pavement Production**.
 
 AI here does not invent a new physics of construction. The **engine** is still a discrete-event, CYCLONE-style simulator. AI helps you phrase a model, inspect a diagram, and ask questions about the last run. **You** still click Draw Model, still Simulate, still judge whether the story is true.
 
@@ -455,6 +455,8 @@ Selecting an Example only fills the prompt. **You** click Draw Model. Keep Chapt
 
 **Suggested path:** 1 → 2 → 3 for mechanics; 4 for shared resources; 5–6 for decisions under sensitivity. Rewrite any example. Change counts. Break a duration. Re-draw. That is the point.
 
+Examples **7–9** are the paper cases: deterministic earthmoving, rigid pavement Sc 1 (10 m³), and pavement Sc 6 (SSC). Keep seed **12345** when you want the archived productivities. After Simulate, use **Validation CSV** and, on the pavement cases, **10-seed archive** plus the field comparison card.
+
 ---
 
 ## Chapter 7 — What “AI-assisted” should mean here
@@ -477,7 +479,7 @@ It must **not** silently re-simulate, invent another operation, or replace CYCLO
 | **AI mode** | Host has `XAI_API_KEY` (for example on Vercel) | Chat model sees a **compact CONTEXT** snapshot only |
 | **Local mode** | No key or API failure | Same studio questions and prompt edits (fleet counts, add a task after another). Apply → Draw → Simulate still required. |
 
-Product UI, Manual, and keywords are English-first for an international classroom. Rate limits on the shared host (about **30** Assistant requests per hour per IP) protect classroom use from abuse; normal class pace is fine.
+Product UI, Manual, and keywords are English-first for an international classroom. Cloud AI answers are limited to about **30** Assistant requests per hour per IP. Local answers are not counted.
 
 ### 7.2 How the chat behaves
 
@@ -518,7 +520,7 @@ Teaching studios need guardrails so a shared host stays fair and numbers stay in
 
 Sensitivity prefers a **Web Worker**; fallback is the main thread with the same engine. Single Simulate runs on the main thread—appropriate for teaching sizes.
 
-AI limits: about 30 Assistant requests / hour / IP; about 20 AI DSL draft requests / hour / IP; compact CONTEXT only; replies short. Without an API key, the local English helper still works. These limits do **not** change CYCLONE rules; they protect hosting and API cost.
+AI limits: about 30 cloud Assistant requests / hour / IP; about 20 AI DSL draft requests / hour / IP. Local answers are not counted. Compact CONTEXT only; replies short. Without an API key, the local English helper still works. These limits do **not** change CYCLONE rules; they protect hosting and API cost.
 
 Source of truth: **GitHub `main`** auto-deploys to **Vercel** at [neo-cyclone.vercel.app](https://neo-cyclone.vercel.app/). Teaching does not require sign-in. Always cite the footer **version** after a deploy.
 
@@ -678,8 +680,8 @@ Selected literature on **CYCLONE**, **MicroCYCLONE**, and applications by **Dani
 
 ### How Neo-CYCLONE relates
 
-Neo-CYCLONE does **not** claim to supersede research simulators. It is **AI-Assisted Construction Operation Simulation**—a studio for first principles: flow, idleness, cyclic networks, transparent discrete-event logic, and responsible AI beside that engine. Diagram notation follows this product’s standard (Chapter 4; `NOTATION_STANDARD.md`) while remaining in Halpin’s tradition.
+Neo-CYCLONE does **not** claim to supersede research simulators. It is **a browser-based open CYCLONE framework for construction operations simulation**—a studio for first principles: flow, idleness, cyclic networks, transparent discrete-event logic, and an assistant beside that engine. Diagram notation follows this product’s standard (Chapter 4; `NOTATION_STANDARD.md`) while remaining in Halpin’s tradition.
 
 ---
 
-*AI-Assisted Construction Operation Simulation · Manual v1.7.5*
+*A Browser-Based Open CYCLONE Framework for Construction Operations Simulation · Manual v1.8.0*

@@ -151,7 +151,7 @@ export function AIAssist() {
             <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
               <span className="whitespace-nowrap">Example</span>
               <select
-                className="max-w-[240px] rounded-[var(--radius-sm)] border border-border bg-background px-1.5 py-1 text-[10px] text-foreground"
+                className="max-w-[11rem] rounded-[var(--radius-sm)] border border-border bg-background px-1.5 py-1 text-[10px] text-foreground sm:max-w-[18rem]"
                 value={exampleId}
                 disabled={loading}
                 onChange={(e) => loadExample(e.target.value)}
